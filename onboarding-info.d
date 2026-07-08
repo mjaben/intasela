@@ -1,5 +1,6 @@
 First name
 Last name
+Username
 Email address
 Password
 Confirm Password

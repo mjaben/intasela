@@ -1,76 +1,86 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import PostCard from "@/components/PostCard";
 import AdSlot from "@/components/AdSlot";
+import CreatePost from "@/components/CreatePost";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function Home() {
-  const dummyPosts = [
-    {
-      id: 1,
-      author: "Shee_dah",
-      content: "I've always struggled with articulating my thoughts. Ironically, I write fairly well, but when it comes to expressing what's in my head out loud, I often find myself stumbling over words. Building on Intasela is going to change that. Excited to earn while I learn!",
-      earned: 1250,
-    },
-    {
-      id: 2,
-      author: "Salem King",
-      content: "Just dropped a new video on how to maximize your points on this platform. The key is consistent, high-quality comments on trending posts.",
-      earned: 840,
-    },
-    {
-      id: 3,
-      author: "TechSis_Lagos",
-      content: "The mint green UI on dark mode is absolutely beautiful. It genuinely feels like a premium workspace rather than a noisy timeline.",
-      earned: 2200,
-    },
-    {
-      id: 4,
-      author: "UX_Design_God",
-      content: "This is exactly what I was talking about in my recent newsletter. Creators need platforms that prioritize aesthetics and monetization seamlessly.",
-      earned: 3100,
-      resela: {
-        author: "TechSis_Lagos",
-        content: "The mint green UI on dark mode is absolutely beautiful. It genuinely feels like a premium workspace rather than a noisy timeline."
-      }
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(true);
+  
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/posts");
+      const data = await res.json();
+      setPosts(data);
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   return (
     <div className="w-full max-w-[650px] mx-auto border-x border-border min-h-screen">
       {/* Top Header */}
-      <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border p-4 z-10 flex justify-between items-center">
-        <h1 className="text-xl font-bold">For You</h1>
+      <header className="sticky top-0 bg-background/90 backdrop-blur-md border-b border-border z-10 flex">
+        <button className="flex-1 text-center py-4 text-white font-bold border-b-2 border-[#3BC492]">For you</button>
+        <button className="flex-1 text-center py-4 text-gray-500 font-medium hover:text-gray-300 transition-colors">Following</button>
       </header>
 
       {/* Composer (What's on your mind?) */}
-      <div className="p-4 border-b border-border flex gap-4">
-        <div className="w-10 h-10 rounded-full bg-primary/20 shrink-0"></div>
-        <div className="flex-1">
-          <input 
-            type="text" 
-            placeholder="What's on your mind?" 
-            className="w-full bg-transparent outline-none text-lg placeholder:text-muted-foreground mt-2"
-          />
-          <div className="flex justify-between items-center mt-6">
-            <button className="flex items-center gap-2 text-primary font-semibold hover:opacity-80 transition-opacity">
-              <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADWUlEQVR4nO2Z228MURjAf13b3ZmdnY67uj4I0rrfmqpL4tlf4MED8Uy8CIl4EfHqkQcEIRGCuEZoaV/WJaUa19pqog+ElGJptaojI2dlne7MzmxHO2p+yfew+c45c74zO+e7QUhISDHEgTE5ohSxxnRghrROtMCcGJDAR24Dn4APQs5L+jRgSvIiRz9F/O7IWcOSfdI6jWLuVyADfAMacvTlQJf0nPdeDHkCzGXoSAopRAT4gUdDKgkeo4A+LxOeBtSQUqDXy4Q6YBrBfCPPhnsTIf89UeAOwWQCkHI7WBVOKIhMB9pHgiFTgNcjwZCJwNuRYMg4Eb/984aMBj56CQOsWCuo6cWj4d5EiEQZHmgGSggmHSKTdEU/waXHrSGek5chpk9kiq5ire8El34vg3vFNfy3mAVcBl5KkhaFDqv64kvO3imcz9/Cqp7sBGZKMgvYA5z2y5DjgObPnm03Y3crVjo45BJRTwiMd3YqIMyWamSBYRVwWIQWVpGuG3jjML5cXLGm+LDfAVeBdcW8+mv4ww7gFbAVmA+M9XiJlACTgPXiItjt9dVbpzZYakQ2Z6WnfjBerFftdoJVuvzsw4MPANsc9JFIJLLRMMoeK0o8o+vJdkVRdomDtGMLcMTtBgwvMb8DVpFgjY0urmlaasH8yszxowfNxnv15sULp8yqqqVdyaR21yEEqQBa3G4g6rUsaYP1wEX5FIqi7F69asXXdEuT2dba/FvSLU3myprqTGlp6V6bNTVRtXdNd5E9kVxahYMbgK7rbefOnvjDiKzcrL1kxuOxjIj5Bh0HXvDBkLSdIaqqdN5O1eY1pK212dQ0rUuUfmRi4moeUqy/1px8CsMoe3byxKG8RtxvbDBjsVi3zUc/LPUE29ZENBrdunzZki/plgcDDNm0aUOvrmuHHG7UjBeH+JzB8xiYZ6OLJpOJ2oqK2Z8PHthv3knVmfW3rvwyQlXVNw6+xxAtQdf02HxsXtPlhQUObPNow7iXUNXORELtSCa1YwUc6BgR5rjmg8uenhNNwGL8rzS+8zKhXUSh2bayk7fNVjamSqG/lXOsldrTWdGLs4PJBQLOAdyQ2srXJf3lnHZxjxhjBYfbc8ackdaQpS9Pi9t0IQ+LPISQkBBGAD8BZOg7Dzgq1soAAAAASUVORK5CYII=" alt="Add media" className="w-5 h-5 object-contain invert" />
-              <span>Media</span>
+      <div className="p-4 border-b border-border">
+        {isAuthenticated ? (
+          <CreatePost onPostCreated={fetchPosts} />
+        ) : showLoginPrompt ? (
+          <div className="text-center py-6 relative">
+            <button 
+              onClick={() => setShowLoginPrompt(false)} 
+              className="absolute top-2 right-2 text-gray-500 hover:text-white transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
-            <button className="bg-primary text-primary-foreground px-6 py-1.5 rounded-full font-bold text-sm">Post</button>
+            <p className="text-gray-400 mb-4">Log in to join the conversation and start earning!</p>
+            <a href="/login" className="bg-[#3BC492] text-black font-bold px-6 py-2 rounded-full inline-block">Log In</a>
           </div>
-        </div>
+        ) : null}
       </div>
 
       {/* Feed */}
       <div className="flex flex-col">
-        <PostCard {...dummyPosts[0]} />
-        
-        {/* In-feed AdSense Slot */}
-        <div className="px-6 py-2">
-          <AdSlot format="horizontal" />
-        </div>
-        
-        <PostCard {...dummyPosts[1]} />
-        <PostCard {...dummyPosts[2]} />
-        <PostCard {...dummyPosts[3]} />
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading posts...</div>
+        ) : posts.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No posts yet. Be the first to post!</div>
+        ) : (
+          posts.map((post, index) => (
+            <div key={post.id}>
+              <PostCard 
+                id={post.id}
+                author={post.author.firstName || post.author.username} 
+                content={post.content} 
+                earned={post.earned}
+                // Add any other props your PostCard expects
+              />
+              
+              {/* Insert Ad every 3 posts */}
+              {(index + 1) % 3 === 0 && (
+                <div className="px-6 py-2">
+                  <AdSlot format="horizontal" />
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

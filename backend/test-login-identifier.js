@@ -1,0 +1,1 @@
+const test = async () = const res = await fetch('http://localhost:3001/auth/login', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({identifier: 'alexaben291@gmail.com', password: 'password123'})}); console.log(res.status, await res.text()); }; test();  

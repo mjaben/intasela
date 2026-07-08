@@ -4,8 +4,10 @@ import SidebarNav from "@/components/SidebarNav";
 import RightSidebar from "@/components/RightSidebar";
 
 export const metadata: Metadata = {
-  title: "Intasela - The Creator Economy Platform",
-  description: "A social platform where creators earn.",
+  title: "Intasela",
+  description: "Premium Social Network and Creator Economy Platform",
+  manifest: "/manifest.json",
+  themeColor: "#3BC492",
 };
 
 export default function RootLayout({
