@@ -20,32 +20,61 @@ model User {
   email         String       @unique
   phone         String?
   password      String
-  username      String       @unique
-  avatarUrl     String?
-  walletBalance Float        @default(0.0)
+  username           String       @unique
+  lastUsernameChange DateTime?
+  avatarUrl          String?
+  coverUrl           String?
+  walletBalance      Float        @default(0.0)
   
   // Optional Onboarding Fields
   country       String?
   state         String?
   lga           String?
   occupation    String?
+  bio           String?      @db.Text
   creatorType   String?
   interests     Json?        // Storing top 3 interests as a JSON array
   
   posts         Post[]
   engagements   Engagement[]
+  
+  followers     Follows[]    @relation("following")
+  following     Follows[]    @relation("follower")
+  
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
 
+model Follows {
+  followerId  String
+  followingId String
+  follower    User @relation("follower", fields: [followerId], references: [id])
+  following   User @relation("following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+}
+
 model Post {
-  id          Int          @id @default(autoincrement())
-  content     String       @db.Text
-  authorId    String
-  author      User         @relation(fields: [authorId], references: [id])
-  earned      Float        @default(0.0)
-  engagements Engagement[]
-  createdAt   DateTime     @default(now())
+  id             Int          @id @default(autoincrement())
+  content        String       @db.Text
+  authorId       String
+  author         User         @relation(fields: [authorId], references: [id])
+  earned         Float        @default(0.0)
+  viewsCount     Int          @default(0)
+  
+  // Reply System (Tree structure)
+  parentId       Int?
+  conversationId Int?
+  parent         Post?        @relation("PostReplies", fields: [parentId], references: [id])
+  replies        Post[]       @relation("PostReplies")
+  
+  // Quote System
+  quotedPostId   Int?
+  quotedPost     Post?        @relation("PostQuotes", fields: [quotedPostId], references: [id])
+  quotes         Post[]       @relation("PostQuotes")
+  
+  engagements    Engagement[]
+  createdAt      DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
 

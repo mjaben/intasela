@@ -41,18 +41,25 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("../users/users.service");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
+const bullmq_1 = require("@nestjs/bullmq");
+const bullmq_2 = require("bullmq");
 let AuthService = class AuthService {
     usersService;
     jwtService;
-    constructor(usersService, jwtService) {
+    userQueue;
+    constructor(usersService, jwtService, userQueue) {
         this.usersService = usersService;
         this.jwtService = jwtService;
+        this.userQueue = userQueue;
     }
     async validateUser(identifier, pass) {
         const user = await this.usersService.findByEmailOrUsername(identifier);
@@ -84,13 +91,21 @@ let AuthService = class AuthService {
             password: hashedPassword,
         });
         const { password, ...result } = newUser;
+        this.userQueue.add('send-welcome-email', {
+            email: result.email,
+            username: result.username,
+        }).catch(err => {
+            console.warn('Failed to enqueue welcome email (Redis might be down):', err.message);
+        });
         return this.login(result);
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, bullmq_1.InjectQueue)('user-tasks')),
     __metadata("design:paramtypes", [users_service_1.UsersService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        bullmq_2.Queue])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

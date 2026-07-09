@@ -15,7 +15,9 @@ export default function Home() {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch("http://localhost:3001/posts");
+      const token = localStorage.getItem("access_token");
+      const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch("http://localhost:3001/posts", { headers });
       const data = await res.json();
       setPosts(data);
     } catch (error) {
@@ -30,7 +32,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="w-full max-w-[650px] mx-auto border-x border-border min-h-screen">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen">
       {/* Top Header */}
       <header className="sticky top-0 bg-background/90 backdrop-blur-md border-b border-border z-10 flex">
         <button className="flex-1 text-center py-4 text-white font-bold border-b-2 border-[#3BC492]">For you</button>
@@ -66,10 +68,18 @@ export default function Home() {
             <div key={post.id}>
               <PostCard 
                 id={post.id}
-                author={post.author.firstName || post.author.username} 
+                author={{
+                  name: post.author.firstName || post.author.username,
+                  username: post.author.username,
+                  avatarUrl: post.author.avatarUrl,
+                  isFollowing: post.author.isFollowing
+                }}
                 content={post.content} 
                 earned={post.earned}
-                // Add any other props your PostCard expects
+                stats={post.stats}
+                userInteractions={post.userInteractions}
+                quotedPost={post.quotedPost}
+                onDelete={(id) => setPosts((prev) => prev.filter(p => p.id !== id))}
               />
               
               {/* Insert Ad every 3 posts */}

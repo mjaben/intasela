@@ -8,6 +8,18 @@ interface PostInteraction {
 
 interface FeedState {
   interactions: Record<number, PostInteraction>;
+  composerState: {
+    isOpen: boolean;
+    mode: 'CREATE' | 'REPLY' | 'QUOTE';
+    targetPost?: {
+      id: number;
+      author: string;
+      content: string;
+      avatarUrl?: string;
+    };
+  };
+  openComposer: (mode: 'CREATE' | 'REPLY' | 'QUOTE', targetPost?: any) => void;
+  closeComposer: () => void;
   toggleLike: (postId: number) => void;
   toggleBookmark: (postId: number) => void;
   initPost: (postId: number, initialLikeCount: number) => void;
@@ -15,6 +27,18 @@ interface FeedState {
 
 export const useFeedStore = create<FeedState>((set) => ({
   interactions: {},
+  composerState: {
+    isOpen: false,
+    mode: 'CREATE'
+  },
+  
+  openComposer: (mode, targetPost) => set({
+    composerState: { isOpen: true, mode, targetPost }
+  }),
+  
+  closeComposer: () => set({
+    composerState: { isOpen: false, mode: 'CREATE', targetPost: undefined }
+  }),
   
   initPost: (postId, initialLikeCount) => set((state) => ({
     interactions: {

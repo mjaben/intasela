@@ -17,48 +17,285 @@ let PostsService = class PostsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async getFeed() {
-        return this.prisma.post.findMany({
+    getAuthorSelect(currentUserId) {
+        return {
+            id: true,
+            firstName: true,
+            lastName: true,
+            username: true,
+            avatarUrl: true,
+            creatorType: true,
+            ...(currentUserId && {
+                followers: {
+                    where: { followerId: currentUserId }
+                }
+            })
+        };
+    }
+    async getFeed(currentUserId) {
+        const posts = await this.prisma.post.findMany({
+            where: { parentId: null },
             orderBy: { createdAt: 'desc' },
             include: {
                 author: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        username: true,
-                        avatarUrl: true,
-                        creatorType: true,
-                    }
+                    select: this.getAuthorSelect(currentUserId)
                 },
                 _count: {
-                    select: { engagements: true }
+                    select: { replies: true, engagements: true }
+                },
+                engagements: true,
+                quotedPost: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                username: true,
+                                avatarUrl: true,
+                            }
+                        }
+                    }
                 }
             },
             take: 20,
         });
+        return posts.map(post => this.formatPost(post, currentUserId));
     }
-    async createPost(userId, content) {
+    async getPostsByUsername(username, currentUserId) {
+        const user = await this.prisma.user.findUnique({ where: { username } });
+        if (!user)
+            return [];
+        const posts = await this.prisma.post.findMany({
+            where: {
+                OR: [
+                    { author: { username }, parentId: null },
+                    { engagements: { some: { type: 'RESELA', userId: user.id } } }
+                ]
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: this.getAuthorSelect(currentUserId)
+                },
+                _count: {
+                    select: { replies: true, engagements: true }
+                },
+                engagements: true,
+                quotedPost: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                username: true,
+                                avatarUrl: true,
+                            }
+                        }
+                    }
+                }
+            },
+        });
+        const formattedPosts = posts.map(post => {
+            const formatted = this.formatPost(post, currentUserId);
+            const isReselaByProfile = post.author.username !== username;
+            if (isReselaByProfile) {
+                formatted.reselaedBy = username;
+            }
+            return formatted;
+        });
+        formattedPosts.sort((a, b) => {
+            const postA = posts.find(p => p.id === a.id);
+            const postB = posts.find(p => p.id === b.id);
+            const reselaA = postA?.engagements.find(e => e.type === 'RESELA' && e.userId === user.id);
+            const dateA = reselaA ? new Date(reselaA.createdAt).getTime() : new Date(a.createdAt).getTime();
+            const reselaB = postB?.engagements.find(e => e.type === 'RESELA' && e.userId === user.id);
+            const dateB = reselaB ? new Date(reselaB.createdAt).getTime() : new Date(b.createdAt).getTime();
+            return dateB - dateA;
+        });
+        return formattedPosts;
+    }
+    async getRepliesByUsername(username, currentUserId) {
+        const posts = await this.prisma.post.findMany({
+            where: {
+                author: { username },
+                parentId: { not: null }
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: this.getAuthorSelect(currentUserId)
+                },
+                _count: { select: { replies: true, engagements: true } },
+                engagements: true,
+                quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } },
+                parent: {
+                    include: {
+                        author: { select: this.getAuthorSelect(currentUserId) },
+                        _count: { select: { replies: true, engagements: true } },
+                        engagements: true,
+                        quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
+                    }
+                }
+            },
+        });
+        return posts.map(post => this.formatPost(post, currentUserId));
+    }
+    async getLikesByUsername(username, currentUserId) {
+        const posts = await this.prisma.post.findMany({
+            where: {
+                engagements: {
+                    some: {
+                        user: { username },
+                        type: 'LIKE'
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: this.getAuthorSelect(currentUserId)
+                },
+                _count: { select: { replies: true, engagements: true } },
+                engagements: true,
+                quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
+            },
+        });
+        return posts.map(post => this.formatPost(post, currentUserId));
+    }
+    formatPost(post, currentUserId) {
+        if (!post)
+            return null;
+        const likes = post.engagements ? post.engagements.filter((e) => e.type === 'LIKE') : [];
+        const reselas = post.engagements ? post.engagements.filter((e) => e.type === 'RESELA') : [];
+        const isLiked = currentUserId ? likes.some((e) => e.userId === currentUserId) : false;
+        const isReselaed = currentUserId ? reselas.some((e) => e.userId === currentUserId) : false;
+        const isFollowing = currentUserId && post.author?.followers && post.author.followers.length > 0;
+        const { engagements, parent, author, ...rest } = post;
+        return {
+            ...rest,
+            author: author ? { ...author, isFollowing } : undefined,
+            parent: parent ? this.formatPost(parent, currentUserId) : undefined,
+            stats: {
+                likes: likes.length,
+                reselas: reselas.length,
+                replies: post._count?.replies || 0,
+                views: post.viewsCount || 0
+            },
+            userInteractions: {
+                isLiked,
+                isReselaed
+            }
+        };
+    }
+    async getPostById(postId, currentUserId) {
+        const post = await this.prisma.post.findUnique({
+            where: { id: postId },
+            include: {
+                author: {
+                    select: this.getAuthorSelect(currentUserId)
+                },
+                _count: { select: { replies: true, engagements: true } },
+                engagements: true,
+                quotedPost: {
+                    include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } }
+                },
+                replies: {
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        author: { select: this.getAuthorSelect(currentUserId) },
+                        _count: { select: { replies: true, engagements: true } },
+                        engagements: true,
+                        quotedPost: {
+                            include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } }
+                        }
+                    }
+                },
+                parent: {
+                    include: {
+                        author: { select: this.getAuthorSelect(currentUserId) },
+                        _count: { select: { replies: true, engagements: true } },
+                        engagements: true,
+                        quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
+                    }
+                }
+            }
+        });
+        if (!post)
+            return null;
+        const formatPost = (p) => {
+            if (!p)
+                return null;
+            const likes = p.engagements ? p.engagements.filter((e) => e.type === 'LIKE') : [];
+            const reselas = p.engagements ? p.engagements.filter((e) => e.type === 'RESELA') : [];
+            const isLiked = currentUserId ? likes.some((e) => e.userId === currentUserId) : false;
+            const isReselaed = currentUserId ? reselas.some((e) => e.userId === currentUserId) : false;
+            const { engagements, parent, ...rest } = p;
+            return {
+                ...rest,
+                parent: parent ? formatPost(parent) : undefined,
+                stats: { likes: likes.length, reselas: reselas.length, replies: p._count?.replies || 0, views: p.viewsCount || 0 },
+                userInteractions: { isLiked, isReselaed }
+            };
+        };
+        const formattedMainPost = formatPost(post);
+        if (formattedMainPost && post.replies) {
+            formattedMainPost.replies = post.replies.map(formatPost);
+        }
+        return formattedMainPost;
+    }
+    async createPost(userId, content, parentId, quotedPostId) {
         return this.prisma.post.create({
             data: {
                 content,
                 authorId: userId,
+                parentId: parentId || null,
+                conversationId: parentId || null,
+                quotedPostId: quotedPostId || null,
             },
-            include: {
-                author: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        username: true,
-                        avatarUrl: true,
-                        creatorType: true,
-                    }
-                },
-                _count: {
-                    select: { engagements: true }
-                }
+        });
+    }
+    async toggleEngagement(userId, postId, type) {
+        const existing = await this.prisma.engagement.findUnique({
+            where: {
+                userId_postId_type: { userId, postId, type }
             }
+        });
+        if (existing) {
+            await this.prisma.engagement.delete({
+                where: { id: existing.id }
+            });
+            return { status: 'removed' };
+        }
+        else {
+            await this.prisma.engagement.create({
+                data: { userId, postId, type }
+            });
+            return { status: 'added' };
+        }
+    }
+    async incrementView(postId) {
+        return this.prisma.post.update({
+            where: { id: postId },
+            data: { viewsCount: { increment: 1 } }
+        });
+    }
+    async deletePost(postId, userId) {
+        const post = await this.prisma.post.findUnique({
+            where: { id: postId },
+        });
+        if (!post) {
+            throw new Error("Post not found");
+        }
+        if (post.authorId !== userId) {
+            throw new Error("Not authorized to delete this post");
+        }
+        await this.prisma.engagement.deleteMany({
+            where: { postId }
+        });
+        return this.prisma.post.delete({
+            where: { id: postId }
         });
     }
 };

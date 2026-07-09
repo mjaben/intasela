@@ -10,6 +10,7 @@ interface UserState {
   walletBalance: number;
   isAuthenticated: boolean;
   login: (userData: any) => void;
+  updateUser: (userData: any) => void;
   logout: () => void;
   updateBalance: (amount: number) => void;
 }
@@ -25,6 +26,10 @@ export const useUserStore = create<UserState>()(
         user: userData, 
         isAuthenticated: true 
       }),
+      
+      updateUser: (userData) => set((state) => ({
+        user: { ...state.user, ...userData } as any
+      })),
       
       logout: () => {
         if (typeof window !== 'undefined') {

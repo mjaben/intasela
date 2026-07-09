@@ -8,18 +8,38 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
+const bullmq_1 = require("@nestjs/bullmq");
+const serve_static_1 = require("@nestjs/serve-static");
+const path_1 = require("path");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_module_1 = require("./prisma/prisma.module");
 const users_module_1 = require("./users/users.module");
 const auth_module_1 = require("./auth/auth.module");
 const posts_module_1 = require("./posts/posts.module");
+const uploads_module_1 = require("./uploads/uploads.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, users_module_1.UsersModule, auth_module_1.AuthModule, posts_module_1.PostsModule],
+        imports: [
+            bullmq_1.BullModule.forRoot({
+                connection: {
+                    host: 'localhost',
+                    port: 6379,
+                },
+            }),
+            prisma_module_1.PrismaModule,
+            users_module_1.UsersModule,
+            auth_module_1.AuthModule,
+            posts_module_1.PostsModule,
+            uploads_module_1.UploadsModule,
+            serve_static_1.ServeStaticModule.forRoot({
+                rootPath: (0, path_1.join)(__dirname, '..', 'uploads'),
+                serveRoot: '/uploads',
+            }),
+        ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })

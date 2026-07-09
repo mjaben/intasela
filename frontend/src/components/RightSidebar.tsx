@@ -1,8 +1,66 @@
+"use client";
+
 import AdSlot from "./AdSlot";
+import { useFollowStore } from "@/store/useFollowStore";
+import { useUserStore } from "@/store/useUserStore";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+function RecommendedUser({ user }: { user: { name: string, username: string } }) {
+  const router = useRouter();
+  const isAuthenticated = useUserStore(s => s.isAuthenticated);
+  const globalFollowState = useFollowStore(s => s.followMap[user.username]);
+  const setFollow = useFollowStore(s => s.setFollow);
+  const isFollowing = globalFollowState ?? false;
+  const [loading, setLoading] = useState(false);
+
+  const handleFollow = async () => {
+    if (!isAuthenticated) return router.push("/login");
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const method = isFollowing ? 'DELETE' : 'POST';
+      const res = await fetch(`http://localhost:3001/users/${user.username}/follow`, {
+        method,
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setFollow(user.username, !isFollowing);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isFollowing) return null; // Hide from recommendations if followed
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+          <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user.username}`} alt="avatar" className="w-full h-full" />
+        </div>
+        <div>
+          <div onClick={() => router.push(`/@${user.username}`)} className="font-semibold text-sm leading-tight hover:underline cursor-pointer">{user.name}</div>
+          <div className="text-[13px] text-muted-foreground">@{user.username}</div>
+        </div>
+      </div>
+      <button 
+        onClick={handleFollow}
+        disabled={loading}
+        className="bg-foreground text-background text-sm font-bold py-1 px-4 rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
+      >
+        Follow
+      </button>
+    </div>
+  );
+}
 
 export default function RightSidebar() {
   return (
-    <aside className="w-[350px] h-screen sticky top-0 flex flex-col pt-4 pl-8 pb-6 border-l border-border hidden lg:flex overflow-y-auto no-scrollbar">
+    <aside className="w-[350px] h-screen sticky top-0 flex flex-col pt-4 pl-8 pb-6 hidden lg:flex overflow-y-auto no-scrollbar">
       
       {/* Search */}
       <div className="mb-6 relative">
@@ -66,20 +124,7 @@ export default function RightSidebar() {
             { name: "UI/UX Daily", username: "uiux_daily" },
             { name: "Startup Founder", username: "startupguy" },
           ].map((user, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                  <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user.username}`} alt="avatar" className="w-full h-full" />
-                </div>
-                <div>
-                  <div className="font-semibold text-sm leading-tight hover:underline cursor-pointer">{user.name}</div>
-                  <div className="text-[13px] text-muted-foreground">@{user.username}</div>
-                </div>
-              </div>
-              <button className="bg-foreground text-background text-sm font-bold py-1 px-4 rounded-full hover:opacity-90 transition-opacity">
-                Follow
-              </button>
-            </div>
+            <RecommendedUser key={i} user={user} />
           ))}
         </div>
       </div>
