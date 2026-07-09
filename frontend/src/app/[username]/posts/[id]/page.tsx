@@ -76,7 +76,9 @@ export default function PostDetail() {
           author={{
             name: post.author.firstName || post.author.username,
             username: post.author.username,
-            avatarUrl: post.author.avatarUrl
+            avatarUrl: post.author.avatarUrl,
+            isFollowing: post.author.isFollowing,
+            isFollower: post.author.isFollower
           }}
           content={post.content} 
           earned={post.earned || 0}
@@ -125,7 +127,9 @@ export default function PostDetail() {
               author={{
                 name: reply.author.firstName || reply.author.username,
                 username: reply.author.username,
-                avatarUrl: reply.author.avatarUrl
+                avatarUrl: reply.author.avatarUrl,
+                isFollowing: reply.author.isFollowing,
+                isFollower: reply.author.isFollower
               }}
               content={reply.content} 
               earned={reply.earned || 0}

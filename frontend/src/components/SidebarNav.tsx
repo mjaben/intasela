@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useUserStore } from "@/store/useUserStore";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useNotificationStore } from "@/store/useNotificationStore";
+import { useEffect } from "react";
 
 export default function SidebarNav() {
   const { openComposer } = useFeedStore();
@@ -11,6 +13,32 @@ export default function SidebarNav() {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const logout = useUserStore((state) => state.logout);
   const router = useRouter();
+  const pathname = usePathname();
+  const { unreadCount, setUnreadCount } = useNotificationStore();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (pathname === '/activity') {
+        setUnreadCount(0);
+      } else {
+        const fetchCount = async () => {
+          try {
+            const token = localStorage.getItem("access_token");
+            const res = await fetch("http://localhost:3001/notifications/unread-count", {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              setUnreadCount(data.count);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        };
+        fetchCount();
+      }
+    }
+  }, [isAuthenticated, pathname, setUnreadCount]);
 
   const handleLogout = () => {
     logout();
@@ -67,11 +95,15 @@ export default function SidebarNav() {
           <Link
             key={item.name}
             href={getNavHref(item)}
-            className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-[15px]"
+            className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-[15px] relative"
           >
-            <div className="w-[22px] h-[22px] flex items-center justify-center">
-              {/* Added 'invert' class so black icons turn white in dark mode */}
+            <div className="w-[22px] h-[22px] flex items-center justify-center relative">
               <img src={item.icon} alt={item.name} className="w-full h-full object-contain invert" />
+              {item.name === "Activity" && unreadCount > 0 && (
+                <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 border border-background">
+                  {unreadCount > 20 ? "20+" : unreadCount}
+                </div>
+              )}
             </div>
             {item.name}
           </Link>

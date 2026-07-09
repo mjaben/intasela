@@ -17,12 +17,12 @@ export declare class UsersService {
         coverUrl?: string;
     }): Promise<{
         id: string;
+        email: string;
+        username: string;
         firstName: string;
         lastName: string;
-        email: string;
         phone: string | null;
         password: string;
-        username: string;
         lastUsernameChange: Date | null;
         avatarUrl: string | null;
         coverUrl: string | null;
@@ -48,18 +48,18 @@ export declare class UsersService {
     getFollowers(username: string): Promise<{
         name: string;
         id: string;
+        username: string;
         firstName: string;
         lastName: string;
-        username: string;
         avatarUrl: string | null;
         bio: string | null;
     }[]>;
     getFollowing(username: string): Promise<{
         name: string;
         id: string;
+        username: string;
         firstName: string;
         lastName: string;
-        username: string;
         avatarUrl: string | null;
         bio: string | null;
     }[]>;

@@ -50,6 +50,9 @@ export class UsersService {
         ...(currentUserId && {
           followers: {
             where: { followerId: currentUserId }
+          },
+          following: {
+            where: { followingId: currentUserId }
           }
         }),
         _count: {
@@ -64,14 +67,15 @@ export class UsersService {
 
     if (!user) return null;
 
-    const { followers, _count, ...rest } = user as any;
+    const { followers, following, _count, ...rest } = user as any;
     return {
       ...rest,
       name: `${user.firstName} ${user.lastName}`,
       followers: _count?.followers || 0,
-      following: _count?.following || 0,
+      followingCount: _count?.following || 0, // renaming to not clash with `following` array
       postsCount: _count?.posts || 0,
-      isFollowing: followers && followers.length > 0
+      isFollowing: followers && followers.length > 0,
+      isFollower: following && following.length > 0
     };
   }
 
@@ -122,12 +126,22 @@ export class UsersService {
 
     if (existingFollow) throw new BadRequestException('You are already following this user');
 
-    return this.prisma.follows.create({
+    const follow = await this.prisma.follows.create({
       data: {
         followerId,
         followingId: followingUser.id,
       }
     });
+
+    await this.prisma.notification.create({
+      data: {
+        recipientId: followingUser.id,
+        actorId: followerId,
+        type: 'FOLLOW',
+      }
+    });
+
+    return follow;
   }
 
   async unfollowUser(followerId: string, followingUsername: string) {

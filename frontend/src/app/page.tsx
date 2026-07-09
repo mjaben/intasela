@@ -72,7 +72,8 @@ export default function Home() {
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,
                   avatarUrl: post.author.avatarUrl,
-                  isFollowing: post.author.isFollowing
+                  isFollowing: post.author.isFollowing,
+                  isFollower: post.author.isFollower
                 }}
                 content={post.content} 
                 earned={post.earned}

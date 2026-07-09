@@ -57,6 +57,9 @@ let UsersService = class UsersService {
                 ...(currentUserId && {
                     followers: {
                         where: { followerId: currentUserId }
+                    },
+                    following: {
+                        where: { followingId: currentUserId }
                     }
                 }),
                 _count: {
@@ -70,14 +73,15 @@ let UsersService = class UsersService {
         });
         if (!user)
             return null;
-        const { followers, _count, ...rest } = user;
+        const { followers, following, _count, ...rest } = user;
         return {
             ...rest,
             name: `${user.firstName} ${user.lastName}`,
             followers: _count?.followers || 0,
-            following: _count?.following || 0,
+            followingCount: _count?.following || 0,
             postsCount: _count?.posts || 0,
-            isFollowing: followers && followers.length > 0
+            isFollowing: followers && followers.length > 0,
+            isFollower: following && following.length > 0
         };
     }
     async updateProfile(userId, data) {
@@ -120,12 +124,20 @@ let UsersService = class UsersService {
         });
         if (existingFollow)
             throw new common_1.BadRequestException('You are already following this user');
-        return this.prisma.follows.create({
+        const follow = await this.prisma.follows.create({
             data: {
                 followerId,
                 followingId: followingUser.id,
             }
         });
+        await this.prisma.notification.create({
+            data: {
+                recipientId: followingUser.id,
+                actorId: followerId,
+                type: 'FOLLOW',
+            }
+        });
+        return follow;
     }
     async unfollowUser(followerId, followingUsername) {
         const followingUser = await this.findByUsername(followingUsername);

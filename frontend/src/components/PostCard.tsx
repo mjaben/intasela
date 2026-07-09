@@ -39,7 +39,7 @@ export default function PostCard({
 }: { 
   id: number;
   content: string;
-  author: { name: string, username: string, avatarUrl?: string, isFollowing?: boolean };
+  author: { name: string, username: string, avatarUrl?: string, isFollowing?: boolean, isFollower?: boolean };
   earned: number;
   stats?: { likes: number, reselas: number, replies: number, views: number };
   userInteractions?: { isLiked: boolean, isReselaed: boolean };
@@ -271,7 +271,8 @@ export default function PostCard({
               name: parentPost.author.firstName || parentPost.author.username,
               username: parentPost.author.username,
               avatarUrl: parentPost.author.avatarUrl,
-              isFollowing: parentPost.author.isFollowing
+              isFollowing: parentPost.author.isFollowing,
+              isFollower: parentPost.author.isFollower
             }}
             stats={parentPost.stats}
             userInteractions={parentPost.userInteractions}
@@ -358,9 +359,9 @@ export default function PostCard({
                       console.error(err);
                     }
                   }}
-                  className="text-primary font-bold text-[11px] px-3 py-1 rounded-full border border-primary/40 hover:bg-primary/10 transition-colors uppercase tracking-wide"
+                  className="text-primary font-bold text-[11px] px-3 py-1 rounded-full border border-primary/40 hover:bg-primary/10 transition-colors uppercase tracking-wide whitespace-nowrap"
                 >
-                  Follow
+                  {author.isFollower ? "Follow Back" : "Follow"}
                 </button>
               )}
 
@@ -436,7 +437,7 @@ export default function PostCard({
                               className="w-full px-2.5 py-2 hover:bg-accent text-left rounded-lg text-foreground font-medium flex items-center gap-2.5 transition-colors text-[13px] mt-0.5"
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                              Follow @{author.username}
+                              {author.isFollower ? `Follow @${author.username} Back` : `Follow @${author.username}`}
                             </button>
                           )}
                           

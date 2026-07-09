@@ -16,6 +16,9 @@ export class PostsService {
       ...(currentUserId && {
         followers: {
           where: { followerId: currentUserId }
+        },
+        following: {
+          where: { followingId: currentUserId }
         }
       })
     };
@@ -179,12 +182,13 @@ export class PostsService {
     const isLiked = currentUserId ? likes.some((e: any) => e.userId === currentUserId) : false;
     const isReselaed = currentUserId ? reselas.some((e: any) => e.userId === currentUserId) : false;
     const isFollowing = currentUserId && post.author?.followers && post.author.followers.length > 0;
+    const isFollower = currentUserId && post.author?.following && post.author.following.length > 0;
 
     const { engagements, parent, author, ...rest } = post;
 
     return {
       ...rest,
-      author: author ? { ...author, isFollowing } : undefined,
+      author: author ? { ...author, isFollowing, isFollower } : undefined,
       parent: parent ? this.formatPost(parent, currentUserId) : undefined,
       stats: {
         likes: likes.length,
@@ -242,9 +246,13 @@ export class PostsService {
       const reselas = p.engagements ? p.engagements.filter((e: any) => e.type === 'RESELA') : [];
       const isLiked = currentUserId ? likes.some((e: any) => e.userId === currentUserId) : false;
       const isReselaed = currentUserId ? reselas.some((e: any) => e.userId === currentUserId) : false;
-      const { engagements, parent, ...rest } = p;
+      const isFollowing = currentUserId && p.author?.followers && p.author.followers.length > 0;
+      const isFollower = currentUserId && p.author?.following && p.author.following.length > 0;
+      
+      const { engagements, parent, author, ...rest } = p;
       return {
         ...rest,
+        author: author ? { ...author, isFollowing, isFollower } : undefined,
         parent: parent ? formatPost(parent) : undefined,
         stats: { likes: likes.length, reselas: reselas.length, replies: p._count?.replies || 0, views: p.viewsCount || 0 },
         userInteractions: { isLiked, isReselaed }
@@ -260,7 +268,7 @@ export class PostsService {
   }
 
   async createPost(userId: string, content: string, parentId?: number, quotedPostId?: number) {
-    return this.prisma.post.create({
+    const post = await this.prisma.post.create({
       data: {
         content,
         authorId: userId,
@@ -268,7 +276,35 @@ export class PostsService {
         conversationId: parentId || null,
         quotedPostId: quotedPostId || null,
       },
+      include: {
+        parent: true,
+        quotedPost: true,
+      }
     });
+
+    if (post.parentId && post.parent && post.parent.authorId !== userId) {
+      await this.prisma.notification.create({
+        data: {
+          recipientId: post.parent.authorId,
+          actorId: userId,
+          type: 'REPLY',
+          postId: post.id,
+        }
+      });
+    }
+
+    if (post.quotedPostId && post.quotedPost && post.quotedPost.authorId !== userId) {
+      await this.prisma.notification.create({
+        data: {
+          recipientId: post.quotedPost.authorId,
+          actorId: userId,
+          type: 'QUOTE',
+          postId: post.id,
+        }
+      });
+    }
+
+    return post;
   }
 
   async toggleEngagement(userId: string, postId: number, type: string) {
@@ -290,6 +326,20 @@ export class PostsService {
       await this.prisma.engagement.create({
         data: { userId, postId, type }
       });
+
+      // Create Notification if actor is not the author
+      const post = await this.prisma.post.findUnique({ where: { id: postId } });
+      if (post && post.authorId !== userId) {
+        await this.prisma.notification.create({
+          data: {
+            recipientId: post.authorId,
+            actorId: userId,
+            type: type, // "LIKE" or "RESELA"
+            postId: postId,
+          }
+        });
+      }
+
       return { status: 'added' };
     }
   }

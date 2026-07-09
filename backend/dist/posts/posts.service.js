@@ -28,6 +28,9 @@ let PostsService = class PostsService {
             ...(currentUserId && {
                 followers: {
                     where: { followerId: currentUserId }
+                },
+                following: {
+                    where: { followingId: currentUserId }
                 }
             })
         };
@@ -172,10 +175,11 @@ let PostsService = class PostsService {
         const isLiked = currentUserId ? likes.some((e) => e.userId === currentUserId) : false;
         const isReselaed = currentUserId ? reselas.some((e) => e.userId === currentUserId) : false;
         const isFollowing = currentUserId && post.author?.followers && post.author.followers.length > 0;
+        const isFollower = currentUserId && post.author?.following && post.author.following.length > 0;
         const { engagements, parent, author, ...rest } = post;
         return {
             ...rest,
-            author: author ? { ...author, isFollowing } : undefined,
+            author: author ? { ...author, isFollowing, isFollower } : undefined,
             parent: parent ? this.formatPost(parent, currentUserId) : undefined,
             stats: {
                 likes: likes.length,
@@ -231,9 +235,12 @@ let PostsService = class PostsService {
             const reselas = p.engagements ? p.engagements.filter((e) => e.type === 'RESELA') : [];
             const isLiked = currentUserId ? likes.some((e) => e.userId === currentUserId) : false;
             const isReselaed = currentUserId ? reselas.some((e) => e.userId === currentUserId) : false;
-            const { engagements, parent, ...rest } = p;
+            const isFollowing = currentUserId && p.author?.followers && p.author.followers.length > 0;
+            const isFollower = currentUserId && p.author?.following && p.author.following.length > 0;
+            const { engagements, parent, author, ...rest } = p;
             return {
                 ...rest,
+                author: author ? { ...author, isFollowing, isFollower } : undefined,
                 parent: parent ? formatPost(parent) : undefined,
                 stats: { likes: likes.length, reselas: reselas.length, replies: p._count?.replies || 0, views: p.viewsCount || 0 },
                 userInteractions: { isLiked, isReselaed }
@@ -246,7 +253,7 @@ let PostsService = class PostsService {
         return formattedMainPost;
     }
     async createPost(userId, content, parentId, quotedPostId) {
-        return this.prisma.post.create({
+        const post = await this.prisma.post.create({
             data: {
                 content,
                 authorId: userId,
@@ -254,7 +261,32 @@ let PostsService = class PostsService {
                 conversationId: parentId || null,
                 quotedPostId: quotedPostId || null,
             },
+            include: {
+                parent: true,
+                quotedPost: true,
+            }
         });
+        if (post.parentId && post.parent && post.parent.authorId !== userId) {
+            await this.prisma.notification.create({
+                data: {
+                    recipientId: post.parent.authorId,
+                    actorId: userId,
+                    type: 'REPLY',
+                    postId: post.id,
+                }
+            });
+        }
+        if (post.quotedPostId && post.quotedPost && post.quotedPost.authorId !== userId) {
+            await this.prisma.notification.create({
+                data: {
+                    recipientId: post.quotedPost.authorId,
+                    actorId: userId,
+                    type: 'QUOTE',
+                    postId: post.id,
+                }
+            });
+        }
+        return post;
     }
     async toggleEngagement(userId, postId, type) {
         const existing = await this.prisma.engagement.findUnique({
@@ -272,6 +304,17 @@ let PostsService = class PostsService {
             await this.prisma.engagement.create({
                 data: { userId, postId, type }
             });
+            const post = await this.prisma.post.findUnique({ where: { id: postId } });
+            if (post && post.authorId !== userId) {
+                await this.prisma.notification.create({
+                    data: {
+                        recipientId: post.authorId,
+                        actorId: userId,
+                        type: type,
+                        postId: postId,
+                    }
+                });
+            }
             return { status: 'added' };
         }
     }

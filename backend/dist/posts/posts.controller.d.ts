@@ -14,16 +14,41 @@ export declare class PostsController {
         parentId?: number;
         quotedPostId?: number;
     }): Promise<{
+        parent: {
+            id: number;
+            content: string;
+            authorId: string;
+            earned: number;
+            viewsCount: number;
+            parentId: number | null;
+            conversationId: number | null;
+            quotedPostId: number | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+        quotedPost: {
+            id: number;
+            content: string;
+            authorId: string;
+            earned: number;
+            viewsCount: number;
+            parentId: number | null;
+            conversationId: number | null;
+            quotedPostId: number | null;
+            createdAt: Date;
+            updatedAt: Date;
+        } | null;
+    } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     toggleEngagement(req: any, id: string, body: {
         type: string;
@@ -32,26 +57,26 @@ export declare class PostsController {
     }>;
     incrementView(id: string): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     deletePost(req: any, id: string): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

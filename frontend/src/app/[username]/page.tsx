@@ -158,7 +158,7 @@ export default function ProfilePage() {
           
           <div className="flex gap-4 text-[14px] text-muted-foreground mb-8">
             <div className="hover:underline cursor-pointer" onClick={() => router.push(`/@${profile.username}/following`)}>
-              <span className="font-bold text-foreground">{profile.following}</span> Following
+              <span className="font-bold text-foreground">{profile.followingCount ?? profile.following}</span> Following
             </div>
             <div className="hover:underline cursor-pointer" onClick={() => router.push(`/@${profile.username}/followers`)}>
               <span className="font-bold text-foreground">{profile.followers}</span> Followers
@@ -200,7 +200,7 @@ export default function ProfilePage() {
                 disabled={followLoading}
                 className={`px-8 py-2 rounded-full font-bold transition-opacity text-[15px] ${isFollowing ? 'border border-border text-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500' : 'bg-[#3BC492] text-white hover:opacity-90'}`}
               >
-                {isFollowing ? 'Following' : 'Follow'}
+                {isFollowing ? 'Following' : (profile.isFollower ? 'Follow Back' : 'Follow')}
               </button>
             )}
           </div>
@@ -254,7 +254,8 @@ export default function ProfilePage() {
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,
                   avatarUrl: post.author.avatarUrl,
-                  isFollowing: post.author.isFollowing
+                  isFollowing: post.author.isFollowing,
+                  isFollower: post.author.isFollower
                 }}
                 content={post.content} 
                 earned={post.earned}
@@ -287,7 +288,8 @@ export default function ProfilePage() {
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,
                   avatarUrl: post.author.avatarUrl,
-                  isFollowing: post.author.isFollowing
+                  isFollowing: post.author.isFollowing,
+                  isFollower: post.author.isFollower
                 }}
                 content={post.content} 
                 earned={post.earned}
@@ -316,7 +318,8 @@ export default function ProfilePage() {
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,
                   avatarUrl: post.author.avatarUrl,
-                  isFollowing: post.author.isFollowing
+                  isFollowing: post.author.isFollowing,
+                  isFollower: post.author.isFollower
                 }}
                 content={post.content} 
                 earned={post.earned}
