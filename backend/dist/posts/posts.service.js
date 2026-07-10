@@ -65,6 +65,23 @@ let PostsService = class PostsService {
         });
         return posts.map(post => this.formatPost(post, currentUserId));
     }
+    async getOrbitFeed(currentUserId) {
+        const posts = await this.prisma.post.findMany({
+            where: { mediaType: 'VIDEO', parentId: null },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: this.getAuthorSelect(currentUserId)
+                },
+                _count: {
+                    select: { replies: true, engagements: true }
+                },
+                engagements: true,
+            },
+            take: 20,
+        });
+        return posts.map(post => this.formatPost(post, currentUserId));
+    }
     async getPostsByUsername(username, currentUserId) {
         const user = await this.prisma.user.findUnique({ where: { username } });
         if (!user)
@@ -252,7 +269,7 @@ let PostsService = class PostsService {
         }
         return formattedMainPost;
     }
-    async createPost(userId, content, parentId, quotedPostId) {
+    async createPost(userId, content, parentId, quotedPostId, mediaOptions) {
         const post = await this.prisma.post.create({
             data: {
                 content,
@@ -260,6 +277,7 @@ let PostsService = class PostsService {
                 parentId: parentId || null,
                 conversationId: parentId || null,
                 quotedPostId: quotedPostId || null,
+                ...(mediaOptions || {})
             },
             include: {
                 parent: true,

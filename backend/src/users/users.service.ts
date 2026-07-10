@@ -25,6 +25,76 @@ export class UsersService {
     });
   }
 
+  async getSettings(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { 
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        username: true,
+        avatarUrl: true,
+        settings: true 
+      }
+    });
+    if (!user) throw new BadRequestException('User not found');
+    return user;
+  }
+
+  async updateSettings(userId: string, data: any) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        settings: data
+      }
+    });
+  }
+
+  async requestEmailUpdate(userId: string, newEmail: string) {
+    // Check if new email is taken
+    const existingUser = await this.prisma.user.findUnique({ where: { email: newEmail } });
+    if (existingUser) {
+      throw new BadRequestException('Email is already in use');
+    }
+
+    // Generate a 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // In a real app, you would send this via email.
+    console.log(`[EMAIL VERIFICATION] OTP for ${newEmail} is: ${otp}`);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        pendingEmail: newEmail,
+        emailVerificationOtp: otp,
+      }
+    });
+
+    return { message: 'OTP generated and sent' };
+  }
+
+  async verifyEmailUpdate(userId: string, otp: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException('User not found');
+    
+    if (!user.pendingEmail || user.emailVerificationOtp !== otp) {
+      throw new BadRequestException('Invalid OTP or no pending email request');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: user.pendingEmail,
+        pendingEmail: null,
+        emailVerificationOtp: null
+      }
+    });
+
+    return { message: 'Email updated successfully', email: user.pendingEmail };
+  }
+
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({
       data,
@@ -79,7 +149,126 @@ export class UsersService {
     };
   }
 
-  async updateProfile(userId: string, data: { bio?: string, country?: string, state?: string, username?: string, avatarUrl?: string, coverUrl?: string }) {
+  async getCreatorStudioData(userId: string, period: string = 'all') {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { walletBalance: true, paymentSettings: true }
+    });
+
+    if (!user) throw new BadRequestException('User not found');
+
+    let dateFilter: any = undefined;
+    const now = new Date();
+    
+    if (period === 'today') {
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      dateFilter = { gte: startOfDay };
+    } else if (period === 'yesterday') {
+      const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+      const endOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      dateFilter = { gte: startOfYesterday, lt: endOfYesterday };
+    } else if (period === '7days') {
+      const last7Days = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+      dateFilter = { gte: last7Days };
+    } else if (period === 'month') {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = { gte: startOfMonth };
+    }
+
+    const whereClause: any = { userId };
+    const postWhereClause: any = { authorId: userId };
+    if (dateFilter) {
+      whereClause.createdAt = dateFilter;
+      postWhereClause.createdAt = dateFilter;
+    }
+
+    const prismaAny = this.prisma as any;
+
+    let transactions = [];
+    try {
+      transactions = await prismaAny.transaction.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          post: {
+            select: { id: true, content: true }
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("Transactions table might not be accessible yet", e.message);
+    }
+
+    // Analytics Calculation
+    const allUserPosts = await this.prisma.post.findMany({
+      where: postWhereClause,
+      select: { parentId: true, isEligible: true, isFlagged: true, viewsCount: true, createdAt: true }
+    });
+
+    const metrics = {
+      totalPosts: 0,
+      eligiblePosts: 0,
+      totalComments: 0,
+      eligibleComments: 0,
+      totalViews: 0,
+      eligibleViews: 0
+    };
+
+    const chartMap = new Map<string, { views: number, engagements: number }>();
+
+    for (const post of allUserPosts) {
+      const isComment = post.parentId !== null;
+      const isEligible = post.isEligible && !post.isFlagged;
+
+      if (isComment) {
+        metrics.totalComments++;
+        if (isEligible) metrics.eligibleComments++;
+      } else {
+        metrics.totalPosts++;
+        if (isEligible) metrics.eligiblePosts++;
+      }
+
+      metrics.totalViews += post.viewsCount;
+      if (isEligible) metrics.eligibleViews += post.viewsCount;
+
+      // Add to chart data
+      const dateStr = new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      const current = chartMap.get(dateStr) || { views: 0, engagements: 0 };
+      current.views += post.viewsCount;
+      chartMap.set(dateStr, current);
+    }
+
+    // Fetch Engagements for the user's posts
+    const allEngagements = await this.prisma.engagement.findMany({
+       where: { post: { authorId: userId }, ...(dateFilter ? { createdAt: dateFilter } : {}) }
+    });
+    
+    for (const eng of allEngagements) {
+       const dateStr = new Date(eng.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+       const current = chartMap.get(dateStr) || { views: 0, engagements: 0 };
+       current.engagements += 1;
+       chartMap.set(dateStr, current);
+    }
+
+    const chartData = Array.from(chartMap.entries())
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const periodEarned = transactions.reduce((acc: number, t: any) => acc + (t.amount || 0), 0);
+
+    return {
+      walletBalance: user.walletBalance,
+      payoutThreshold: 50000, // ₦50,000 threshold
+      paymentSettings: user.paymentSettings,
+      metrics,
+      periodEarned,
+      periodMonetizedPosts: transactions.length,
+      history: transactions,
+      chartData
+    };
+  }
+
+  async updateProfile(userId: string, data: { firstName?: string, lastName?: string, phone?: string, bio?: string, country?: string, state?: string, username?: string, avatarUrl?: string, coverUrl?: string }) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
 

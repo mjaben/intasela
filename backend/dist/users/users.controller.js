@@ -40,6 +40,21 @@ let UsersController = class UsersController {
         }
         return profile;
     }
+    async getSettings(req) {
+        return this.usersService.getSettings(req.user.id);
+    }
+    async updateSettings(req, data) {
+        return this.usersService.updateSettings(req.user.id, data);
+    }
+    async requestEmailUpdate(req, data) {
+        return this.usersService.requestEmailUpdate(req.user.id, data.newEmail);
+    }
+    async verifyEmailUpdate(req, data) {
+        return this.usersService.verifyEmailUpdate(req.user.id, data.otp);
+    }
+    async getCreatorStudio(req, period) {
+        return this.usersService.getCreatorStudioData(req.user.id, period);
+    }
     async updateProfile(req, updateData) {
         const userId = req.user.id;
         return this.usersService.updateProfile(userId, updateData);
@@ -68,6 +83,50 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('me/settings'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getSettings", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Patch)('me/settings'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateSettings", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('me/email/request-update'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "requestEmailUpdate", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('me/email/verify'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "verifyEmailUpdate", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('me/creator-studio'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Query)('period')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getCreatorStudio", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Patch)('profile'),

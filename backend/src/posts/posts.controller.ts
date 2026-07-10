@@ -25,6 +25,19 @@ export class PostsController {
     return this.postsService.getFeed(currentUserId);
   }
 
+  @Get('orbit')
+  async getOrbitFeed(@Headers('authorization') authHeader: string) {
+    let currentUserId: string | undefined;
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = this.jwtService.verify(token);
+        currentUserId = decoded.sub;
+      } catch (e) {}
+    }
+    return this.postsService.getOrbitFeed(currentUserId);
+  }
+
   @Get('user/:username')
   async getPostsByUsername(@Param('username') username: string, @Headers('authorization') authHeader: string) {
     let currentUserId: string | undefined;
@@ -81,8 +94,15 @@ export class PostsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async createPost(@Request() req: any, @Body() body: { content: string, parentId?: number, quotedPostId?: number }) {
-    return this.postsService.createPost(req.user.id, body.content, body.parentId, body.quotedPostId);
+  async createPost(@Request() req: any, @Body() body: any) {
+    return this.postsService.createPost(req.user.id, body.content, body.parentId, body.quotedPostId, {
+      mediaUrl: body.mediaUrl,
+      thumbnailUrl: body.thumbnailUrl,
+      mediaType: body.mediaType,
+      videoWidth: body.videoWidth,
+      videoHeight: body.videoHeight,
+      videoDuration: body.videoDuration
+    });
   }
 
   @UseGuards(JwtAuthGuard)

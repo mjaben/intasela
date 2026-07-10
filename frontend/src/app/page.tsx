@@ -80,6 +80,9 @@ export default function Home() {
                 stats={post.stats}
                 userInteractions={post.userInteractions}
                 quotedPost={post.quotedPost}
+                mediaType={post.mediaType}
+                mediaUrl={post.mediaUrl}
+                thumbnailUrl={post.thumbnailUrl}
                 onDelete={(id) => setPosts((prev) => prev.filter(p => p.id !== id))}
               />
               

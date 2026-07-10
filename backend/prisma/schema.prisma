@@ -18,6 +18,8 @@ model User {
   firstName     String
   lastName      String
   email         String       @unique
+  pendingEmail  String?
+  emailVerificationOtp String?
   phone         String?
   password      String
   username           String       @unique
@@ -34,9 +36,12 @@ model User {
   bio           String?      @db.Text
   creatorType   String?
   interests     Json?        // Storing top 3 interests as a JSON array
+  paymentSettings Json?      // User's connected wallet/bank details
+  settings      Json?        // User's app settings (notifications, privacy, etc.)
   
   posts         Post[]
   engagements   Engagement[]
+  transactions  Transaction[]
   
   followers     Follows[]    @relation("following")
   following     Follows[]    @relation("follower")
@@ -64,6 +69,17 @@ model Post {
   author         User         @relation(fields: [authorId], references: [id])
   earned         Float        @default(0.0)
   viewsCount     Int          @default(0)
+  // Media Fields
+  mediaUrl       String?
+  thumbnailUrl   String?
+  mediaType      String?      // "IMAGE", "VIDEO"
+  videoWidth     Int?
+  videoHeight    Int?
+  videoDuration  Int?
+  
+  // Monetization Flags
+  isEligible     Boolean      @default(true)
+  isFlagged      Boolean      @default(false)
   
   // Reply System (Tree structure)
   parentId       Int?
@@ -78,6 +94,7 @@ model Post {
   
   engagements    Engagement[]
   notifications  Notification[]
+  transactions   Transaction[]
   createdAt      DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -108,4 +125,18 @@ model Notification {
   post        Post?    @relation(fields: [postId], references: [id])
 
   @@index([recipientId, createdAt])
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  postId    Int?
+  post      Post?    @relation(fields: [postId], references: [id])
+  amount    Float
+  type      String   // "IMPRESSION", "LIKE", "COMMENT", "QUOTE", "POST"
+  status    String   @default("COMPLETED")
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

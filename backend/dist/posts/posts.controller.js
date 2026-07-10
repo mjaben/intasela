@@ -37,6 +37,18 @@ let PostsController = class PostsController {
         }
         return this.postsService.getFeed(currentUserId);
     }
+    async getOrbitFeed(authHeader) {
+        let currentUserId;
+        if (authHeader) {
+            try {
+                const token = authHeader.split(' ')[1];
+                const decoded = this.jwtService.verify(token);
+                currentUserId = decoded.sub;
+            }
+            catch (e) { }
+        }
+        return this.postsService.getOrbitFeed(currentUserId);
+    }
     async getPostsByUsername(username, authHeader) {
         let currentUserId;
         if (authHeader) {
@@ -87,7 +99,14 @@ let PostsController = class PostsController {
         return this.postsService.getPostById(parseInt(id), currentUserId);
     }
     async createPost(req, body) {
-        return this.postsService.createPost(req.user.id, body.content, body.parentId, body.quotedPostId);
+        return this.postsService.createPost(req.user.id, body.content, body.parentId, body.quotedPostId, {
+            mediaUrl: body.mediaUrl,
+            thumbnailUrl: body.thumbnailUrl,
+            mediaType: body.mediaType,
+            videoWidth: body.videoWidth,
+            videoHeight: body.videoHeight,
+            videoDuration: body.videoDuration
+        });
     }
     async toggleEngagement(req, id, body) {
         return this.postsService.toggleEngagement(req.user.id, parseInt(id), body.type);
@@ -107,6 +126,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getFeed", null);
+__decorate([
+    (0, common_1.Get)('orbit'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PostsController.prototype, "getOrbitFeed", null);
 __decorate([
     (0, common_1.Get)('user/:username'),
     __param(0, (0, common_1.Param)('username')),

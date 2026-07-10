@@ -85,6 +85,9 @@ export default function PostDetail() {
           stats={post.stats}
           userInteractions={post.userInteractions}
           quotedPost={post.quotedPost}
+          mediaType={post.mediaType}
+          mediaUrl={post.mediaUrl}
+          thumbnailUrl={post.thumbnailUrl}
           onDelete={() => router.push("/")}
           parentPost={post.parent}
           isReplyContext={!!post.parent}
@@ -136,6 +139,9 @@ export default function PostDetail() {
               stats={reply.stats}
               userInteractions={reply.userInteractions}
               quotedPost={reply.quotedPost}
+              mediaType={reply.mediaType}
+              mediaUrl={reply.mediaUrl}
+              thumbnailUrl={reply.thumbnailUrl}
               onDelete={() => fetchPost()}
             />
           ))}

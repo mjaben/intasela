@@ -3,7 +3,7 @@
 import AdSlot from "./AdSlot";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useUserStore } from "@/store/useUserStore";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 function RecommendedUser({ user }: { user: { name: string, username: string } }) {
@@ -59,6 +59,12 @@ function RecommendedUser({ user }: { user: { name: string, username: string } })
 }
 
 export default function RightSidebar() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/wallet") || pathname.startsWith("/creator-studio") || pathname.startsWith("/orbit") || pathname.startsWith("/settings")) {
+    return null;
+  }
+
   return (
     <aside className="w-[350px] h-screen sticky top-0 flex flex-col pt-4 pl-8 pb-6 hidden lg:flex overflow-y-auto no-scrollbar">
       

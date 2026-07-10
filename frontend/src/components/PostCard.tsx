@@ -35,7 +35,10 @@ export default function PostCard({
   parentPost,
   isReplyContext,
   isThreadContext,
-  reselaedBy
+  reselaedBy,
+  mediaType,
+  mediaUrl,
+  thumbnailUrl
 }: { 
   id: number;
   content: string;
@@ -55,6 +58,9 @@ export default function PostCard({
   isReplyContext?: boolean;
   isThreadContext?: boolean;
   reselaedBy?: string;
+  mediaType?: string;
+  mediaUrl?: string;
+  thumbnailUrl?: string;
 }) {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const user = useUserStore((state) => state.user);
@@ -279,6 +285,9 @@ export default function PostCard({
             quotedPost={parentPost.quotedPost}
             isThreadContext={true}
             earned={parentPost.earned || 0}
+            mediaType={parentPost.mediaType}
+            mediaUrl={parentPost.mediaUrl}
+            thumbnailUrl={parentPost.thumbnailUrl}
           />
           {/* Vertical Connecting Line */}
           <div className="absolute top-[48px] left-[20px] bottom-[-10px] w-[2px] bg-[#2F3336] z-0" />
@@ -297,6 +306,9 @@ export default function PostCard({
              onUnresela={onUnresela}
              isThreadContext={true}
              earned={earned}
+             mediaType={mediaType}
+             mediaUrl={mediaUrl}
+             thumbnailUrl={thumbnailUrl}
           />
         </div>
       </div>
@@ -478,6 +490,25 @@ export default function PostCard({
           {/* Body */}
           <div className="text-[14px] leading-relaxed mb-2 text-foreground/90 break-words prose prose-invert max-w-none">
             <ReactMarkdown>{content}</ReactMarkdown>
+            
+            {/* Media Content */}
+            {mediaUrl && mediaType === 'VIDEO' && (
+              <div className="mt-3 rounded-2xl overflow-hidden border border-border bg-black" onClick={(e) => e.stopPropagation()}>
+                <video 
+                  src={mediaUrl} 
+                  poster={thumbnailUrl} 
+                  controls 
+                  className="w-full max-h-[500px] object-contain"
+                  preload="metadata"
+                />
+              </div>
+            )}
+
+            {mediaUrl && mediaType === 'IMAGE' && (
+              <div className="mt-3 rounded-2xl overflow-hidden border border-border" onClick={(e) => e.stopPropagation()}>
+                <img src={mediaUrl} alt="Post media" className="w-full max-h-[500px] object-cover" />
+              </div>
+            )}
             
             {quotedPost && (
               <div 

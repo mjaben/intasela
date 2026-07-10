@@ -3,22 +3,22 @@ export declare class NotificationsService {
     private prisma;
     constructor(prisma: PrismaService);
     getNotifications(userId: string): Promise<({
+        post: {
+            content: string;
+        } | null;
         actor: {
             firstName: string;
             username: string;
             avatarUrl: string | null;
         };
-        post: {
-            content: string;
-        } | null;
     } & {
         id: number;
-        recipientId: string;
-        actorId: string;
+        createdAt: Date;
         type: string;
         postId: number | null;
         isRead: boolean;
-        createdAt: Date;
+        actorId: string;
+        recipientId: string;
     })[]>;
     markAsRead(userId: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
     getUnreadCount(userId: string): Promise<{

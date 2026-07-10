@@ -263,6 +263,9 @@ export default function ProfilePage() {
                 userInteractions={post.userInteractions}
                 quotedPost={post.quotedPost}
                 reselaedBy={post.reselaedBy}
+                mediaType={post.mediaType}
+                mediaUrl={post.mediaUrl}
+                thumbnailUrl={post.thumbnailUrl}
                 onDelete={handleDelete}
                 onUnresela={(id) => {
                   if (post.reselaedBy === profile.username) {
@@ -298,6 +301,9 @@ export default function ProfilePage() {
                 quotedPost={post.quotedPost}
                 parentPost={post.parent}
                 isReplyContext={true}
+                mediaType={post.mediaType}
+                mediaUrl={post.mediaUrl}
+                thumbnailUrl={post.thumbnailUrl}
                 onDelete={handleDelete}
               />
             ))
@@ -326,6 +332,9 @@ export default function ProfilePage() {
                 stats={post.stats}
                 userInteractions={post.userInteractions}
                 quotedPost={post.quotedPost}
+                mediaType={post.mediaType}
+                mediaUrl={post.mediaUrl}
+                thumbnailUrl={post.thumbnailUrl}
                 onDelete={handleDelete}
                 onUnlike={(id) => setLikes((prev) => prev.filter(p => p.id !== id))}
               />

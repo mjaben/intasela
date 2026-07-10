@@ -56,6 +56,25 @@ export class PostsService {
     return posts.map(post => this.formatPost(post, currentUserId));
   }
 
+  async getOrbitFeed(currentUserId?: string) {
+    const posts = await this.prisma.post.findMany({
+      where: { mediaType: 'VIDEO', parentId: null },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: {
+          select: this.getAuthorSelect(currentUserId)
+        },
+        _count: {
+          select: { replies: true, engagements: true }
+        },
+        engagements: true,
+      },
+      take: 20,
+    });
+
+    return posts.map(post => this.formatPost(post, currentUserId));
+  }
+
   async getPostsByUsername(username: string, currentUserId?: string) {
     const user = await this.prisma.user.findUnique({ where: { username } });
     if (!user) return [];
@@ -267,7 +286,13 @@ export class PostsService {
     return formattedMainPost;
   }
 
-  async createPost(userId: string, content: string, parentId?: number, quotedPostId?: number) {
+  async createPost(
+    userId: string, 
+    content: string, 
+    parentId?: number, 
+    quotedPostId?: number,
+    mediaOptions?: { mediaUrl?: string, thumbnailUrl?: string, mediaType?: string, videoWidth?: number, videoHeight?: number, videoDuration?: number }
+  ) {
     const post = await this.prisma.post.create({
       data: {
         content,
@@ -275,6 +300,7 @@ export class PostsService {
         parentId: parentId || null,
         conversationId: parentId || null,
         quotedPostId: quotedPostId || null,
+        ...(mediaOptions || {})
       },
       include: {
         parent: true,

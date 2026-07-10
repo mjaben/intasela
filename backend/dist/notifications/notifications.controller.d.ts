@@ -3,22 +3,22 @@ export declare class NotificationsController {
     private readonly notificationsService;
     constructor(notificationsService: NotificationsService);
     getNotifications(req: any): Promise<({
+        post: {
+            content: string;
+        } | null;
         actor: {
             firstName: string;
             username: string;
             avatarUrl: string | null;
         };
-        post: {
-            content: string;
-        } | null;
     } & {
         id: number;
-        recipientId: string;
-        actorId: string;
+        createdAt: Date;
         type: string;
         postId: number | null;
         isRead: boolean;
-        createdAt: Date;
+        actorId: string;
+        recipientId: string;
     })[]>;
     getUnreadCount(req: any): Promise<{
         count: number;
