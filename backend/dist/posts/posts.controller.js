@@ -24,7 +24,7 @@ let PostsController = class PostsController {
         this.postsService = postsService;
         this.jwtService = jwtService;
     }
-    async getFeed(authHeader) {
+    async getFeed(authHeader, type) {
         let currentUserId;
         if (authHeader) {
             try {
@@ -35,7 +35,7 @@ let PostsController = class PostsController {
             catch (e) {
             }
         }
-        return this.postsService.getFeed(currentUserId);
+        return this.postsService.getFeed(currentUserId, type);
     }
     async getOrbitFeed(authHeader) {
         let currentUserId;
@@ -48,6 +48,9 @@ let PostsController = class PostsController {
             catch (e) { }
         }
         return this.postsService.getOrbitFeed(currentUserId);
+    }
+    async getBookmarks(req) {
+        return this.postsService.getBookmarks(req.user.id);
     }
     async getPostsByUsername(username, authHeader) {
         let currentUserId;
@@ -122,8 +125,9 @@ exports.PostsController = PostsController;
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Headers)('authorization')),
+    __param(1, (0, common_1.Query)('type')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getFeed", null);
 __decorate([
@@ -133,6 +137,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getOrbitFeed", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('bookmarks'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], PostsController.prototype, "getBookmarks", null);
 __decorate([
     (0, common_1.Get)('user/:username'),
     __param(0, (0, common_1.Param)('username')),

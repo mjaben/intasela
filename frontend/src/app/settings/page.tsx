@@ -3,10 +3,13 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function SettingsPage() {
   const router = useRouter();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const setGlobalSettings = useSettingsStore((state) => state.setSettings);
   const [userData, setUserData] = useState<any>(null);
   const [settings, setSettings] = useState<any>({
     filterExplicit: false,
@@ -59,11 +62,15 @@ export default function SettingsPage() {
   });
 
   // Edit Modal State
-  const [editModal, setEditModal] = useState<'email' | 'phone' | 'handle' | null>(null);
+  const [editModal, setEditModal] = useState<'email' | 'phone' | 'handle' | 'blocked' | 'muted' | 'interests' | 'cookies' | 'recovery' | 'deletePosts' | 'deleteAccount' | null>(null);
   const [formData, setFormData] = useState<any>({});
+  const addToast = useToastStore((state) => state.addToast);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Interest expand state
+  const [expandedInterests, setExpandedInterests] = useState<Record<string, boolean>>({});
 
   // For email verification step
   const [emailStep, setEmailStep] = useState<1 | 2>(1); // 1 = request, 2 = verify OTP
@@ -84,7 +91,9 @@ export default function SettingsPage() {
           const data = await res.json();
           setUserData(data);
           if (data.settings) {
-            setSettings({ ...settings, ...data.settings });
+            const mergedSettings = { ...settings, ...data.settings };
+            setSettings(mergedSettings);
+            setGlobalSettings(mergedSettings);
           }
         }
       } catch (err) {
@@ -99,9 +108,19 @@ export default function SettingsPage() {
   const updateSetting = async (key: string, value: any) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
+    setGlobalSettings(newSettings);
+
+    // If cookies were rejected, clean up localStorage for safety
+    if (key === 'cookies') {
+      const rejectedCookies = Object.keys(value).filter(k => value[k] === false);
+      rejectedCookies.forEach(cookieId => {
+        localStorage.removeItem(cookieId);
+      });
+    }
+
     try {
       const token = localStorage.getItem("access_token");
-      await fetch("http://localhost:3001/users/me/settings", {
+      const res = await fetch("http://localhost:3001/users/me/settings", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -109,6 +128,9 @@ export default function SettingsPage() {
         },
         body: JSON.stringify(newSettings)
       });
+      if (res.ok) {
+        addToast("Settings updated successfully");
+      }
     } catch (err) {
       console.error("Failed to update setting:", err);
     }
@@ -143,7 +165,51 @@ export default function SettingsPage() {
     setExpanded(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const openModal = (type: 'email' | 'phone' | 'handle') => {
+  const handleDeletePosts = async () => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("http://localhost:3001/users/me/posts", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        closeModal();
+        addToast("All posts deleted successfully");
+      } else {
+        alert("Failed to delete posts.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("http://localhost:3001/users/me", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        useUserStore.getState().logout();
+        router.push("/login");
+      } else {
+        alert("Failed to delete account.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openModal = (type: 'email' | 'phone' | 'handle' | 'blocked' | 'muted' | 'interests' | 'cookies' | 'recovery' | 'deletePosts' | 'deleteAccount') => {
     setErrorMsg("");
     setEmailStep(1);
     setEditModal(type);
@@ -331,6 +397,40 @@ export default function SettingsPage() {
     </button>
   );
 
+  const updateInterest = async (id: string, value: 'up'|'down'|null) => {
+    const newSettings = { ...settings };
+    if (!newSettings.interests) newSettings.interests = {};
+    if (value === null) {
+      delete newSettings.interests[id];
+    } else {
+      newSettings.interests[id] = value;
+    }
+    await updateSetting('interests', newSettings.interests);
+  };
+
+  const INTERESTS_DATA = [
+    { id: 'arts', label: 'Arts & Entertainment', sub: ['Movies & TV', 'Music', 'Books & Literature', 'Theater & Performing Arts', 'Visual Arts & Design'] },
+    { id: 'business', label: 'Business & Finance', sub: ['Entrepreneurship', 'Investing & Stocks', 'Marketing & Advertising', 'Small Business', 'Economics', 'Cryptocurrency & Blockchain'] },
+    { id: 'careers', label: 'Careers & Education', sub: ['Job Searching & Careers', 'Higher Education', 'Online Learning', 'Professional Development'] },
+    { id: 'family', label: 'Family & Parenting', sub: ['Parenting', 'Motherhood', 'Fatherhood', 'Family Activities', 'Pregnancy & Newborns'] },
+    { id: 'food', label: 'Food & Drink', sub: ['Cooking & Recipes', 'Restaurants', 'Healthy Eating & Nutrition', 'Coffee & Tea', 'Wine & Beer'] },
+    { id: 'health', label: 'Health & Fitness', sub: ['Fitness & Exercise', 'Mental Health', 'Nutrition & Diet', 'Yoga & Meditation', 'Weight Loss'] },
+    { id: 'hobbies', label: 'Hobbies & Interests', sub: ['Gaming', 'Photography', 'Gardening', 'DIY & Crafts', 'Travel', 'Pets & Animals'] },
+    { id: 'news', label: 'News & Politics', sub: ['World News', 'U.S. Politics', 'Technology News', 'Science News', 'Business News'] },
+    { id: 'science', label: 'Science & Technology', sub: ['Gadgets & Consumer Tech', 'Artificial Intelligence', 'Space & Astronomy', 'Environment & Climate', 'Programming & Software'] },
+    { id: 'sports', label: 'Sports', sub: ['Football (Soccer)', 'American Football', 'Basketball', 'Baseball', 'Tennis', 'Motorsports', 'Combat Sports'] },
+    { id: 'style', label: 'Style & Fashion', sub: ['Men\'s Fashion', 'Women\'s Fashion', 'Beauty & Makeup', 'Streetwear', 'Luxury Fashion'] },
+    { id: 'travel', label: 'Travel & Events', sub: ['Destinations', 'Adventure Travel', 'Luxury Travel', 'Festivals & Events'] }
+  ];
+
+  const COOKIE_DATA = [
+    { id: 'intro_popup', label: 'intro_popup_last_hidden_at', type: 'FUNCTIONALITY', desc: 'Prevents showing introductory information the user has already seen.' },
+    { id: 'muxData', label: 'muxData', type: 'FUNCTIONALITY', desc: 'Used for anonymous video metric collection and aggregation.' },
+    { id: 'like_upsell', label: 'like_upsell_last_shown_at', type: 'FUNCTIONALITY', desc: 'Prevents users from repeatedly being shown features.' },
+    { id: 'chatbot_terms', label: 'chatbot_terms_last_accepted_at', type: 'FUNCTIONALITY', desc: 'Prevents users from repeatedly having to accept chatbot terms.' },
+    { id: 'preferred_language', label: 'preferred_language', type: 'FUNCTIONALITY', desc: 'Stores the user\'s preferred language.' }
+  ];
+
   return (
     <div className="max-w-[700px] py-10 px-6 relative">
       
@@ -490,9 +590,9 @@ export default function SettingsPage() {
                   <div className="font-semibold text-[14px] text-foreground">Allow message requests from</div>
                   <div className="text-muted-foreground text-[13px] mt-0.5">People you follow or subscribe to can always message you.</div>
                 </div>
-                <div>
+                <div className="relative">
                   <select 
-                    className="bg-background border border-border text-foreground font-semibold text-[14px] rounded-lg px-3 py-2 outline-none cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                    className="bg-background border border-border text-foreground font-semibold text-[14px] rounded-lg pl-3 pr-10 py-2 outline-none cursor-pointer hover:border-muted-foreground/50 transition-colors appearance-none focus:border-[#FF6719]"
                     value={settings.notifications?.messaging?.allowRequestsFrom || 'Everyone'}
                     onChange={(e) => updateMessageRequest(e.target.value)}
                   >
@@ -500,6 +600,9 @@ export default function SettingsPage() {
                     <option value="Following">Following</option>
                     <option value="Nobody">Nobody</option>
                   </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
                 </div>
               </div>
 
@@ -667,28 +770,21 @@ export default function SettingsPage() {
           description="This includes video posts and video in Notes" 
           action={<Toggle checked={settings.autoplayVideos} onChange={(v) => updateSetting("autoplayVideos", v)} />} 
         />
-        <div className="p-5 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors">
+        <div className="p-5 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openModal('blocked')}>
           <div>
             <div className="font-semibold text-[15px]">Blocked accounts</div>
             <div className="text-muted-foreground text-[14px] mt-1">Blocked accounts can not interact with you or your content.</div>
           </div>
           <Chevron />
         </div>
-        <div className="p-5 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors">
+        <div className="p-5 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openModal('muted')}>
           <div>
             <div className="font-semibold text-[15px]">Muted accounts</div>
             <div className="text-muted-foreground text-[14px] mt-1">Muted accounts are automatically hidden from view.</div>
           </div>
           <Chevron />
         </div>
-        <div className="p-5 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors">
-          <div>
-            <div className="font-semibold text-[15px]">Hidden publications</div>
-            <div className="text-muted-foreground text-[14px] mt-1">Hidden publications are automatically filtered out of your feed.</div>
-          </div>
-          <Chevron />
-        </div>
-        <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors">
+        <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openModal('interests')}>
           <div>
             <div className="font-semibold text-[15px]">Manage interests</div>
             <div className="text-muted-foreground text-[14px] mt-1">Control which topics you see in your feed.</div>
@@ -716,34 +812,85 @@ export default function SettingsPage() {
         <RowItem 
           title="Manage cookie preferences" 
           description="Control which cookies are used for analytics and tracking." 
-          action={<ActionButton label="Manage" />} 
+          action={<ActionButton label="Manage" onClick={() => openModal('cookies')} />} 
         />
       </Section>
 
       <Section title="Security">
         <RowItem 
-          title="Require email verification when subscribing" 
-          description="Prevents other people from adding you to email lists" 
-          action={<Toggle checked={settings.requireEmailVerification} onChange={(v) => updateSetting("requireEmailVerification", v)} />} 
-        />
-        <RowItem 
           title="Recovery questions" 
           description="Recovery questions help us verify your identity and log you back in if you ever lose access to your email or authenticator app." 
-          action={<Toggle checked={settings.recoveryQuestions} onChange={(v) => updateSetting("recoveryQuestions", v)} />} 
+          action={<Toggle checked={settings.recoveryQuestions} onChange={(v) => v ? openModal('recovery') : updateSetting("recoveryQuestions", false)} />} 
         />
+        <div className={`p-5 flex items-center justify-between relative group ${!settings.recoveryQuestions ? 'cursor-not-allowed' : ''}`}>
+          <div className={!settings.recoveryQuestions ? 'opacity-50' : ''}>
+            <div className="font-semibold text-[15px]">Two-factor authentication</div>
+            <div className="text-muted-foreground text-[14px] mt-1">Two-factor authentication adds an extra layer of security by requiring a special code each time you log in. <a href="#" className="underline">Learn more</a></div>
+          </div>
+          <div className={!settings.recoveryQuestions ? 'opacity-50 pointer-events-none' : ''}>
+            <Toggle checked={settings.twoFactorAuth} onChange={(v) => settings.recoveryQuestions && updateSetting("twoFactorAuth", v)} />
+          </div>
+          {!settings.recoveryQuestions && (
+            <div className="absolute right-5 bottom-[80%] mb-1 hidden group-hover:block bg-foreground text-background text-xs px-3 py-2 rounded-lg whitespace-nowrap z-50 shadow-xl pointer-events-none font-medium">
+              First turn on Recovery to use 2FA
+              <div className="absolute top-full right-5 border-[5px] border-transparent border-t-foreground"></div>
+            </div>
+          )}
+        </div>
       </Section>
+
+      <div className="mt-10 mb-20">
+        <h2 className="text-xl font-bold mb-4 px-2">Danger zone</h2>
+        <div className="border border-border rounded-2xl overflow-hidden bg-card">
+          <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="font-semibold text-[15px]">Delete all posts</div>
+              <div className="text-muted-foreground text-[14px] mt-1">Permanently delete all your posts, reselas, and reselas with notes.</div>
+            </div>
+            <button 
+              className="shrink-0 bg-[#ED5F62] hover:bg-[#ED5F62]/90 text-white font-semibold py-2 px-5 rounded-lg transition-colors text-sm disabled:opacity-50"
+              onClick={() => openModal('deletePosts')}
+              disabled={isSubmitting}
+            >
+              Delete posts
+            </button>
+          </div>
+          <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="font-semibold text-[15px]">Delete your account</div>
+              <div className="text-muted-foreground text-[14px] mt-1">Permanently delete your account and information</div>
+            </div>
+            <button 
+              className="shrink-0 bg-[#ED5F62] hover:bg-[#ED5F62]/90 text-white font-semibold py-2 px-5 rounded-lg transition-colors text-sm disabled:opacity-50"
+              onClick={() => openModal('deleteAccount')}
+              disabled={isSubmitting}
+            >
+              Delete account
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Edit Modal Overlay */}
       {editModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-5 border-b border-border">
-              <h3 className="font-bold text-lg capitalize">Edit {editModal}</h3>
-              <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            </div>
-            <div className="p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-card w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {editModal !== 'recovery' && (
+              <div className="flex items-center justify-between p-5 border-b border-border">
+                <h3 className="font-bold text-lg capitalize">{editModal === 'cookies' ? 'Cookie Preferences' : `Edit ${editModal}`}</h3>
+                <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            )}
+            {editModal === 'recovery' && (
+              <div className="flex justify-end p-4 pb-0">
+                <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+            )}
+            <div className={`p-6 ${editModal === 'recovery' ? 'pt-0' : ''}`}>
               {errorMsg && <div className="mb-4 text-sm text-red-500 bg-red-500/10 p-3 rounded-lg">{errorMsg}</div>}
 
               {editModal === 'phone' && (
@@ -792,6 +939,228 @@ export default function SettingsPage() {
                       <button onClick={handleSaveEmailVerify} disabled={isSubmitting || !formData.otp || formData.otp.length !== 6} className="w-full mt-4 bg-[#FF6719] text-white font-semibold py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50">Verify & Update Email</button>
                     </>
                   )}
+                </div>
+              )}
+
+              {editModal === 'blocked' && (
+                <div className="p-10 text-center text-muted-foreground">
+                  <div className="font-bold text-foreground text-base mb-2">Nobody is blocked</div>
+                  <div className="text-sm">You can block people by clicking the three dots on their profile, comments, or notes.</div>
+                </div>
+              )}
+
+              {editModal === 'muted' && (
+                <div className="p-10 text-center text-muted-foreground">
+                  <div className="font-bold text-foreground text-base mb-2">Nobody is muted</div>
+                  <div className="text-sm">You can mute people by clicking the three dots on their profile, comments, or notes.</div>
+                </div>
+              )}
+
+              {editModal === 'interests' && (
+                <div className="max-h-[60vh] overflow-y-auto px-1">
+                  <div className="text-muted-foreground text-sm mb-6">Control which topics you see more or less of in your feed.</div>
+                  {INTERESTS_DATA.map((cat) => {
+                    const currentStatus = settings.interests?.[cat.id] || null;
+                    return (
+                      <div key={cat.id} className="mb-2">
+                        <div className="flex items-center justify-between py-3 px-2 hover:bg-muted/30 rounded-xl transition-colors">
+                          <div 
+                            className="flex items-center gap-3 cursor-pointer select-none flex-1"
+                            onClick={() => setExpandedInterests(p => ({...p, [cat.id]: !p[cat.id]}))}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-muted-foreground transition-transform duration-200 ${expandedInterests[cat.id] ? 'rotate-90' : ''}`}>
+                              <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                            <span className="font-bold text-[15px]">{cat.label}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => updateInterest(cat.id, currentStatus === 'down' ? null : 'down')}
+                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${currentStatus === 'down' ? 'bg-red-500/20 text-red-500' : 'text-muted-foreground hover:bg-muted'}`}
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
+                            </button>
+                            <button 
+                              onClick={() => updateInterest(cat.id, currentStatus === 'up' ? null : 'up')}
+                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${currentStatus === 'up' ? 'bg-green-500/20 text-green-500 border border-green-500' : 'text-muted-foreground hover:bg-muted'}`}
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                            </button>
+                          </div>
+                        </div>
+                        {expandedInterests[cat.id] && (
+                          <div className="pl-11 pr-2 pb-2">
+                            {cat.sub.map((subItem) => {
+                              const subId = `${cat.id}_${subItem.replace(/\s+/g, '_').toLowerCase()}`;
+                              const subStatus = settings.interests?.[subId] || null;
+                              return (
+                                <div key={subItem} className="flex items-center justify-between py-2 border-l-2 border-border pl-4 ml-1">
+                                  <span className="text-[14px] text-muted-foreground">{subItem}</span>
+                                  <div className="flex items-center gap-1">
+                                    <button 
+                                      onClick={() => updateInterest(subId, subStatus === 'down' ? null : 'down')}
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${subStatus === 'down' ? 'text-red-500' : 'text-muted-foreground/60 hover:text-foreground'}`}
+                                    >
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
+                                    </button>
+                                    <button 
+                                      onClick={() => updateInterest(subId, subStatus === 'up' ? null : 'up')}
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${subStatus === 'up' ? 'text-green-500' : 'text-muted-foreground/60 hover:text-foreground'}`}
+                                    >
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {editModal === 'cookies' && (
+                <div className="flex flex-col max-h-[70vh]">
+                  <div className="overflow-y-auto px-1 flex-1">
+                    {COOKIE_DATA.map((cookie) => {
+                      const isChecked = settings.cookies?.[cookie.id] ?? true;
+                      return (
+                        <div key={cookie.id} className="py-4 border-b border-border last:border-b-0 flex items-start justify-between">
+                          <div className="pr-6">
+                            <div className="font-semibold text-[15px] text-foreground mb-1">{cookie.label}</div>
+                            <div className="flex items-center gap-1.5 text-muted-foreground text-[12px] font-bold tracking-wider mb-2">
+                              {cookie.type}
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </div>
+                            <div className="text-muted-foreground text-[13px]">{cookie.desc}</div>
+                          </div>
+                          <div className="pt-2 shrink-0">
+                            <Checkbox 
+                              checked={isChecked} 
+                              onChange={(v) => {
+                                const newCookies = { ...(settings.cookies || {}) };
+                                newCookies[cookie.id] = v;
+                                updateSetting('cookies', newCookies);
+                              }} 
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="p-5 border-t border-border flex justify-end gap-3 mt-auto">
+                    <button 
+                      onClick={() => {
+                        const newCookies: any = {};
+                        COOKIE_DATA.forEach(c => newCookies[c.id] = true);
+                        updateSetting('cookies', newCookies);
+                        closeModal();
+                      }}
+                      className="px-6 py-2.5 bg-[#FF6719] text-white font-semibold rounded-lg hover:opacity-90 transition-colors"
+                    >
+                      Accept all
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const newCookies: any = {};
+                        COOKIE_DATA.forEach(c => newCookies[c.id] = false);
+                        updateSetting('cookies', newCookies);
+                        closeModal();
+                      }}
+                      className="px-6 py-2.5 bg-[#FF6719] text-white font-semibold rounded-lg hover:opacity-90 transition-colors"
+                    >
+                      Reject All
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {editModal === 'recovery' && (
+                <div className="flex flex-col">
+                  <div className="mb-6">
+                    <div className="w-12 h-12 rounded-xl border border-border flex items-center justify-center mb-4">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                    </div>
+                    <h3 className="font-bold text-2xl mb-2">Turn on recovery questions</h3>
+                    <p className="text-muted-foreground text-[15px]">Recovery questions help us verify your identity and log you back in if you ever lose access to your email or authenticator app. Please select three questions and type your answers below.</p>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-[40vh] overflow-y-auto px-1">
+                    {[1, 2, 3].map((num) => (
+                      <div key={num} className="space-y-2">
+                        <label className="text-sm font-semibold">Question {num}</label>
+                        <div className="relative">
+                          <select className="w-full p-3 pr-10 bg-background border border-border rounded-lg outline-none focus:border-[#FF6719] appearance-none cursor-pointer transition-colors hover:border-muted-foreground/50" defaultValue="" onChange={(e) => setFormData({...formData, [`q${num}`]: e.target.value})}>
+                            <option value="" disabled>Select a question...</option>
+                            <option value="city">In what city or town did your parents meet?</option>
+                            <option value="teacher">What was your first teacher's last name?</option>
+                            <option value="pet">What was the name of your first pet?</option>
+                            <option value="childhood">What was your childhood nickname?</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-muted-foreground">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                          </div>
+                        </div>
+                        <input 
+                          type="text" 
+                          placeholder="Type your answer here..." 
+                          className="w-full p-3 bg-background border border-border rounded-lg outline-none focus:border-[#FF6719]"
+                          value={formData[`a${num}`] || ''}
+                          onChange={(e) => setFormData({...formData, [`a${num}`]: e.target.value})}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 space-y-3">
+                    <button 
+                      className="w-full bg-[#333333] hover:bg-[#444444] text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-colors"
+                      disabled={!formData.q1 || !formData.a1 || !formData.q2 || !formData.a2 || !formData.q3 || !formData.a3}
+                      onClick={() => {
+                        updateSetting('recoveryQuestions', true);
+                        closeModal();
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button 
+                      className="w-full bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-border text-white font-semibold py-3 rounded-xl transition-colors"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {(editModal === 'deletePosts' || editModal === 'deleteAccount') && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                    <p className="text-red-500 text-[15px] font-medium leading-relaxed">
+                      {editModal === 'deletePosts' 
+                        ? "WARNING: You are about to permanently delete all your posts and reselas. This action cannot be undone."
+                        : "WARNING: You are about to permanently delete your account. All your data, posts, and balances will be lost forever. This action CANNOT be undone."}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold mb-1.5 block">Type DELETE to confirm</label>
+                    <input 
+                      type="text" 
+                      className="w-full p-2.5 bg-background border border-border rounded-lg outline-none focus:border-red-500" 
+                      placeholder="DELETE" 
+                      value={formData.deleteConfirmation || ''} 
+                      onChange={(e) => setFormData({...formData, deleteConfirmation: e.target.value})} 
+                    />
+                  </div>
+                  <button 
+                    onClick={editModal === 'deletePosts' ? handleDeletePosts : handleDeleteAccount} 
+                    disabled={isSubmitting || formData.deleteConfirmation !== 'DELETE'} 
+                    className="w-full mt-4 bg-red-500 text-white font-semibold py-2.5 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Deleting..." : "Confirm Deletion"}
+                  </button>
                 </div>
               )}
 

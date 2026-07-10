@@ -6,6 +6,8 @@ import PostCard from "@/components/PostCard";
 import { useUserStore } from "@/store/useUserStore";
 import { useFollowStore } from "@/store/useFollowStore";
 import { motion } from "framer-motion";
+import PostSkeleton from "@/components/PostSkeleton";
+import ErrorState from "@/components/ErrorState";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -96,17 +98,38 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex-1 min-h-screen p-8 flex justify-center mt-10">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="w-24 h-24 bg-muted rounded-full mb-4"></div>
-          <div className="h-6 w-32 bg-muted rounded mb-2"></div>
-          <div className="h-4 w-48 bg-muted rounded"></div>
+      <div className="w-full max-w-[650px] mx-auto min-h-screen pt-4">
+        <div className="flex flex-col gap-4 px-4 pb-8 border-b border-border">
+          <div className="flex items-center gap-4 animate-pulse pt-8">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-muted/60 shrink-0 border-4 border-background" />
+            <div className="space-y-3 flex-1">
+              <div className="h-8 bg-muted/60 rounded-md w-1/3" />
+              <div className="h-5 bg-muted/60 rounded-md w-1/4" />
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <PostSkeleton key={i} />
+          ))}
         </div>
       </div>
     );
   }
 
-  if (error || !profile) {
+  if (error) {
+    return (
+      <div className="w-full max-w-[650px] mx-auto min-h-screen pt-4">
+        <ErrorState 
+          message={`Failed to load profile for @${username}.`}
+          onRetry={() => window.location.reload()}
+          fullHeight={true}
+        />
+      </div>
+    );
+  }
+
+  if (!profile) {
     return (
       <div className="flex-1 min-h-screen p-8 flex flex-col items-center justify-center text-muted-foreground">
         <h2 className="text-2xl font-bold mb-2">Profile not found</h2>

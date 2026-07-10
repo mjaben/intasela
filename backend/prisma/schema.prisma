@@ -56,8 +56,8 @@ model User {
 model Follows {
   followerId  String
   followingId String
-  follower    User @relation("follower", fields: [followerId], references: [id])
-  following   User @relation("following", fields: [followingId], references: [id])
+  follower    User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
 }
@@ -66,7 +66,7 @@ model Post {
   id             Int          @id @default(autoincrement())
   content        String       @db.Text
   authorId       String
-  author         User         @relation(fields: [authorId], references: [id])
+  author         User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   earned         Float        @default(0.0)
   viewsCount     Int          @default(0)
   // Media Fields
@@ -84,12 +84,12 @@ model Post {
   // Reply System (Tree structure)
   parentId       Int?
   conversationId Int?
-  parent         Post?        @relation("PostReplies", fields: [parentId], references: [id])
+  parent         Post?        @relation("PostReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies        Post[]       @relation("PostReplies")
   
   // Quote System
   quotedPostId   Int?
-  quotedPost     Post?        @relation("PostQuotes", fields: [quotedPostId], references: [id])
+  quotedPost     Post?        @relation("PostQuotes", fields: [quotedPostId], references: [id], onDelete: Cascade)
   quotes         Post[]       @relation("PostQuotes")
   
   engagements    Engagement[]
@@ -104,8 +104,8 @@ model Engagement {
   type      String   // "LIKE", "RESELA", "BOOKMARK"
   userId    String
   postId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@unique([userId, postId, type])
@@ -120,9 +120,9 @@ model Notification {
   isRead      Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  recipient   User     @relation("ReceivedNotifications", fields: [recipientId], references: [id])
-  actor       User     @relation("SentNotifications", fields: [actorId], references: [id])
-  post        Post?    @relation(fields: [postId], references: [id])
+  recipient   User     @relation("ReceivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User     @relation("SentNotifications", fields: [actorId], references: [id], onDelete: Cascade)
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt])
 }
@@ -130,9 +130,9 @@ model Notification {
 model Transaction {
   id        Int      @id @default(autoincrement())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   postId    Int?
-  post      Post?    @relation(fields: [postId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   amount    Float
   type      String   // "IMPRESSION", "LIKE", "COMMENT", "QUOTE", "POST"
   status    String   @default("COMPLETED")

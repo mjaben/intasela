@@ -6,24 +6,24 @@ export declare class UsersController {
     constructor(usersService: UsersService, jwtService: JwtService);
     getProfile(username: string, authHeader?: string): Promise<any>;
     getSettings(req: any): Promise<{
-        email: string;
-        username: string;
         firstName: string;
         lastName: string;
+        email: string;
         phone: string | null;
+        username: string;
         avatarUrl: string | null;
         settings: import("@prisma/client/runtime/library").JsonValue;
     }>;
     updateSettings(req: any, data: any): Promise<{
         id: string;
-        email: string;
-        username: string;
         firstName: string;
         lastName: string;
+        email: string;
         pendingEmail: string | null;
         emailVerificationOtp: string | null;
         phone: string | null;
         password: string;
+        username: string;
         lastUsernameChange: Date | null;
         avatarUrl: string | null;
         coverUrl: string | null;
@@ -84,14 +84,14 @@ export declare class UsersController {
         coverUrl?: string;
     }): Promise<{
         id: string;
-        email: string;
-        username: string;
         firstName: string;
         lastName: string;
+        email: string;
         pendingEmail: string | null;
         emailVerificationOtp: string | null;
         phone: string | null;
         password: string;
+        username: string;
         lastUsernameChange: Date | null;
         avatarUrl: string | null;
         coverUrl: string | null;
@@ -119,19 +119,27 @@ export declare class UsersController {
     getFollowers(username: string): Promise<{
         name: string;
         id: string;
-        username: string;
         firstName: string;
         lastName: string;
+        username: string;
         avatarUrl: string | null;
         bio: string | null;
     }[]>;
     getFollowing(username: string): Promise<{
         name: string;
         id: string;
-        username: string;
         firstName: string;
         lastName: string;
+        username: string;
         avatarUrl: string | null;
         bio: string | null;
     }[]>;
+    deleteAllPosts(req: any): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    deleteAccount(req: any): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

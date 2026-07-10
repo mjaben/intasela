@@ -4,8 +4,9 @@ export declare class PostsController {
     private readonly postsService;
     private jwtService;
     constructor(postsService: PostsService, jwtService: JwtService);
-    getFeed(authHeader: string): Promise<any[]>;
+    getFeed(authHeader: string, type?: string): Promise<any[]>;
     getOrbitFeed(authHeader: string): Promise<any[]>;
+    getBookmarks(req: any): Promise<any[]>;
     getPostsByUsername(username: string, authHeader: string): Promise<any[]>;
     getRepliesByUsername(username: string, authHeader: string): Promise<any[]>;
     getLikesByUsername(username: string, authHeader: string): Promise<any[]>;
@@ -13,9 +14,8 @@ export declare class PostsController {
     createPost(req: any, body: any): Promise<{
         parent: {
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             content: string;
+            authorId: string;
             earned: number;
             viewsCount: number;
             mediaUrl: string | null;
@@ -26,16 +26,16 @@ export declare class PostsController {
             videoDuration: number | null;
             isEligible: boolean;
             isFlagged: boolean;
-            conversationId: number | null;
             parentId: number | null;
+            conversationId: number | null;
             quotedPostId: number | null;
-            authorId: string;
+            createdAt: Date;
+            updatedAt: Date;
         } | null;
         quotedPost: {
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             content: string;
+            authorId: string;
             earned: number;
             viewsCount: number;
             mediaUrl: string | null;
@@ -46,16 +46,16 @@ export declare class PostsController {
             videoDuration: number | null;
             isEligible: boolean;
             isFlagged: boolean;
-            conversationId: number | null;
             parentId: number | null;
+            conversationId: number | null;
             quotedPostId: number | null;
-            authorId: string;
+            createdAt: Date;
+            updatedAt: Date;
         } | null;
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
         mediaUrl: string | null;
@@ -66,10 +66,11 @@ export declare class PostsController {
         videoDuration: number | null;
         isEligible: boolean;
         isFlagged: boolean;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     toggleEngagement(req: any, id: string, body: {
         type: string;
@@ -78,9 +79,8 @@ export declare class PostsController {
     }>;
     incrementView(id: string): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
         mediaUrl: string | null;
@@ -91,16 +91,16 @@ export declare class PostsController {
         videoDuration: number | null;
         isEligible: boolean;
         isFlagged: boolean;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     deletePost(req: any, id: string): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
         mediaUrl: string | null;
@@ -111,9 +111,10 @@ export declare class PostsController {
         videoDuration: number | null;
         isEligible: boolean;
         isFlagged: boolean;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

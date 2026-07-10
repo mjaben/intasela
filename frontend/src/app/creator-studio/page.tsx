@@ -379,11 +379,16 @@ export default function CreatorStudioPage() {
                <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); alert("Settings saved!"); }}>
                  <div>
                    <label className="block text-sm font-medium mb-2">Preferred Payout Method</label>
-                   <select className="w-full bg-background border border-border rounded-lg p-3 outline-none focus:border-primary">
-                     <option value="bank">Local Bank Transfer (NGN)</option>
-                     <option value="crypto">Crypto Wallet (USDT/USDC)</option>
-                     <option value="paystack">Paystack</option>
-                   </select>
+                   <div className="relative">
+                     <select className="w-full bg-background border border-border rounded-lg p-3 pr-10 outline-none focus:border-primary appearance-none cursor-pointer hover:border-muted-foreground/50 transition-colors">
+                       <option value="bank">Local Bank Transfer (NGN)</option>
+                       <option value="crypto">Crypto Wallet (USDT/USDC)</option>
+                       <option value="paystack">Paystack</option>
+                     </select>
+                     <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-muted-foreground">
+                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                     </div>
+                   </div>
                  </div>
 
                  <div>

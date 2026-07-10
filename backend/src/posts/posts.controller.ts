@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, Delete, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
@@ -11,7 +11,7 @@ export class PostsController {
   ) {}
 
   @Get()
-  async getFeed(@Headers('authorization') authHeader: string) {
+  async getFeed(@Headers('authorization') authHeader: string, @Query('type') type?: string) {
     let currentUserId: string | undefined;
     if (authHeader) {
       try {
@@ -22,7 +22,7 @@ export class PostsController {
         // invalid token, treat as anonymous
       }
     }
-    return this.postsService.getFeed(currentUserId);
+    return this.postsService.getFeed(currentUserId, type);
   }
 
   @Get('orbit')
@@ -36,6 +36,12 @@ export class PostsController {
       } catch (e) {}
     }
     return this.postsService.getOrbitFeed(currentUserId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('bookmarks')
+  async getBookmarks(@Request() req: any) {
+    return this.postsService.getBookmarks(req.user.id);
   }
 
   @Get('user/:username')

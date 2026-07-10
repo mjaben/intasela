@@ -169,51 +169,66 @@ export default function RegisterPage() {
             <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Country (Optional)</label>
-                <select 
-                  name="country" 
-                  value={formData.country} 
-                  onChange={handleChange} 
-                  className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#3BC492]"
-                >
-                  <option value="">Select a country...</option>
-                  <option value="Nigeria">Nigeria</option>
-                </select>
+                <div className="relative">
+                  <select 
+                    name="country" 
+                    value={formData.country} 
+                    onChange={handleChange} 
+                    className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-3 text-white focus:outline-none focus:border-[#3BC492] appearance-none cursor-pointer"
+                  >
+                    <option value="">Select a country...</option>
+                    <option value="Nigeria">Nigeria</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
               </div>
 
               {formData.country === "Nigeria" && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">State</label>
-                    <select 
-                      name="state" 
-                      value={formData.state} 
-                      onChange={(e) => {
-                        handleChange(e);
-                        // Reset LGA when state changes
-                        setFormData(prev => ({ ...prev, lga: "" }));
-                      }}
-                      className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]"
-                    >
-                      <option value="">Select State</option>
-                      {states.map(s => (
-                        <option key={s.id} value={s.name}>{s.name}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select 
+                        name="state" 
+                        value={formData.state} 
+                        onChange={(e) => {
+                          handleChange(e);
+                          // Reset LGA when state changes
+                          setFormData(prev => ({ ...prev, lga: "" }));
+                        }}
+                        className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-2 text-white focus:outline-none focus:border-[#3BC492] appearance-none cursor-pointer"
+                      >
+                        <option value="">Select State</option>
+                        {states.map(s => (
+                          <option key={s.id} value={s.name}>{s.name}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">LGA</label>
-                    <select 
-                      name="lga" 
-                      value={formData.lga} 
-                      onChange={handleChange} 
-                      disabled={!formData.state}
-                      className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] disabled:opacity-50"
-                    >
-                      <option value="">Select LGA</option>
-                      {lgas.map(l => (
-                        <option key={l.id} value={l.name}>{l.name}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select 
+                        name="lga" 
+                        value={formData.lga} 
+                        onChange={handleChange} 
+                        disabled={!formData.state}
+                        className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-2 text-white focus:outline-none focus:border-[#3BC492] disabled:opacity-50 appearance-none cursor-pointer"
+                      >
+                        <option value="">Select LGA</option>
+                        {lgas.map(l => (
+                          <option key={l.id} value={l.name}>{l.name}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -229,17 +244,22 @@ export default function RegisterPage() {
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">What is your current educational or professional status?</label>
-              <select name="creatorType" value={formData.creatorType} onChange={handleChange} className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#3BC492]">
-                <option value="">Select an option...</option>
-                <option value="Secondary School">Secondary School</option>
-                <option value="Pre-Uni">Pre-Uni</option>
-                <option value="Under-graduate">Under-graduate</option>
-                <option value="Graduate">Graduate</option>
-                <option value="Post Graduate">Post Graduate</option>
-                <option value="Entrepreneur">Entrepreneur</option>
-                <option value="Out of School">Out of School</option>
-                <option value="Other">Other</option>
-              </select>
+              <div className="relative">
+                <select name="creatorType" value={formData.creatorType} onChange={handleChange} className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-3 text-white focus:outline-none focus:border-[#3BC492] appearance-none cursor-pointer">
+                  <option value="">Select an option...</option>
+                  <option value="Secondary School">Secondary School</option>
+                  <option value="Pre-Uni">Pre-Uni</option>
+                  <option value="Under-graduate">Under-graduate</option>
+                  <option value="Graduate">Graduate</option>
+                  <option value="Post Graduate">Post Graduate</option>
+                  <option value="Entrepreneur">Entrepreneur</option>
+                  <option value="Out of School">Out of School</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </div>
             </div>
             
             <div>

@@ -3,11 +3,12 @@ export declare class PostsService {
     private prisma;
     constructor(prisma: PrismaService);
     private getAuthorSelect;
-    getFeed(currentUserId?: string): Promise<any[]>;
+    getFeed(currentUserId?: string, type?: string): Promise<any[]>;
     getOrbitFeed(currentUserId?: string): Promise<any[]>;
     getPostsByUsername(username: string, currentUserId?: string): Promise<any[]>;
     getRepliesByUsername(username: string, currentUserId?: string): Promise<any[]>;
     getLikesByUsername(username: string, currentUserId?: string): Promise<any[]>;
+    getBookmarks(currentUserId: string): Promise<any[]>;
     private formatPost;
     getPostById(postId: number, currentUserId?: string): Promise<any>;
     createPost(userId: string, content: string, parentId?: number, quotedPostId?: number, mediaOptions?: {
@@ -20,9 +21,8 @@ export declare class PostsService {
     }): Promise<{
         parent: {
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             content: string;
+            authorId: string;
             earned: number;
             viewsCount: number;
             mediaUrl: string | null;
@@ -33,16 +33,16 @@ export declare class PostsService {
             videoDuration: number | null;
             isEligible: boolean;
             isFlagged: boolean;
-            conversationId: number | null;
             parentId: number | null;
+            conversationId: number | null;
             quotedPostId: number | null;
-            authorId: string;
+            createdAt: Date;
+            updatedAt: Date;
         } | null;
         quotedPost: {
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             content: string;
+            authorId: string;
             earned: number;
             viewsCount: number;
             mediaUrl: string | null;
@@ -53,16 +53,16 @@ export declare class PostsService {
             videoDuration: number | null;
             isEligible: boolean;
             isFlagged: boolean;
-            conversationId: number | null;
             parentId: number | null;
+            conversationId: number | null;
             quotedPostId: number | null;
-            authorId: string;
+            createdAt: Date;
+            updatedAt: Date;
         } | null;
     } & {
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
         mediaUrl: string | null;
@@ -73,19 +73,19 @@ export declare class PostsService {
         videoDuration: number | null;
         isEligible: boolean;
         isFlagged: boolean;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     toggleEngagement(userId: string, postId: number, type: string): Promise<{
         status: string;
     }>;
     incrementView(postId: number): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
         mediaUrl: string | null;
@@ -96,16 +96,16 @@ export declare class PostsService {
         videoDuration: number | null;
         isEligible: boolean;
         isFlagged: boolean;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     deletePost(postId: number, userId: string): Promise<{
         id: number;
-        createdAt: Date;
-        updatedAt: Date;
         content: string;
+        authorId: string;
         earned: number;
         viewsCount: number;
         mediaUrl: string | null;
@@ -116,9 +116,10 @@ export declare class PostsService {
         videoDuration: number | null;
         isEligible: boolean;
         isFlagged: boolean;
-        conversationId: number | null;
         parentId: number | null;
+        conversationId: number | null;
         quotedPostId: number | null;
-        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

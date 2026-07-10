@@ -88,4 +88,20 @@ export class UsersController {
   async getFollowing(@Param('username') username: string) {
     return this.usersService.getFollowing(username);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('me/posts')
+  async deleteAllPosts(@Request() req: any) {
+    const userId = req.user.id;
+    await this.usersService.deleteAllPosts(userId);
+    return { success: true, message: 'All posts deleted successfully' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('me')
+  async deleteAccount(@Request() req: any) {
+    const userId = req.user.id;
+    await this.usersService.deleteAccount(userId);
+    return { success: true, message: 'Account deleted successfully' };
+  }
 }

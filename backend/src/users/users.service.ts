@@ -378,4 +378,24 @@ export class UsersService {
     });
     return follows.map(f => ({ ...f.following, name: `${f.following.firstName} ${f.following.lastName}` }));
   }
+
+  async deleteAllPosts(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException('User not found');
+
+    // Due to onDelete: Cascade on the schema, deleting the posts will cascade to Engagements, Notifications, etc.
+    return this.prisma.post.deleteMany({
+      where: { authorId: userId }
+    });
+  }
+
+  async deleteAccount(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException('User not found');
+
+    // Due to onDelete: Cascade, this removes all posts, follows, engagements, notifications, and transactions
+    return this.prisma.user.delete({
+      where: { id: userId }
+    });
+  }
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SidebarNav from "@/components/SidebarNav";
 import RightSidebar from "@/components/RightSidebar";
+import ToastProvider from "@/components/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Intasela",
@@ -27,6 +28,7 @@ export default function RootLayout({
 
           <RightSidebar />
         </div>
+        <ToastProvider />
       </body>
     </html>
   );

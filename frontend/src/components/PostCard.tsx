@@ -3,6 +3,7 @@
 import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useFollowStore } from "@/store/useFollowStore";
+import { useToastStore } from "@/store/useToastStore";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from 'react-markdown';
 import { useState, useEffect, useRef } from 'react';
@@ -32,6 +33,7 @@ export default function PostCard({
   onDelete,
   onUnlike,
   onUnresela,
+  onUnbookmark,
   parentPost,
   isReplyContext,
   isThreadContext,
@@ -45,7 +47,7 @@ export default function PostCard({
   author: { name: string, username: string, avatarUrl?: string, isFollowing?: boolean, isFollower?: boolean };
   earned: number;
   stats?: { likes: number, reselas: number, replies: number, views: number };
-  userInteractions?: { isLiked: boolean, isReselaed: boolean };
+  userInteractions?: { isLiked: boolean, isReselaed: boolean, isBookmarked?: boolean };
   quotedPost?: {
     id: number;
     author: { firstName: string, username: string, avatarUrl: string };
@@ -54,6 +56,7 @@ export default function PostCard({
   onDelete?: (id: number) => void;
   onUnlike?: (id: number) => void;
   onUnresela?: (id: number) => void;
+  onUnbookmark?: (id: number) => void;
   parentPost?: any;
   isReplyContext?: boolean;
   isThreadContext?: boolean;
@@ -73,11 +76,15 @@ export default function PostCard({
   
   const [isReselaed, setIsReselaed] = useState(userInteractions.isReselaed);
   const [reselaCount, setReselaCount] = useState(stats.reselas);
+  
+  const [isBookmarked, setIsBookmarked] = useState(userInteractions.isBookmarked || false);
   const [likeAnim, setLikeAnim] = useState(false);
   const globalFollowState = useFollowStore(s => s.followMap[author.username]);
   const setFollow = useFollowStore(s => s.setFollow);
   const isFollowing = globalFollowState ?? (author.isFollowing || false);
   const [copySuccess, setCopySuccess] = useState(false);
+  
+  const addToast = useToastStore((state) => state.addToast);
   
   const [showReselaMenu, setShowReselaMenu] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -93,6 +100,7 @@ export default function PostCard({
     setIsLiked(userInteractions.isLiked);
     setLikeCount(stats.likes);
     setIsReselaed(userInteractions.isReselaed);
+    setIsBookmarked(userInteractions.isBookmarked || false);
     setReselaCount(stats.reselas);
     setViews(stats.views);
   }, [stats, userInteractions]);
@@ -139,13 +147,26 @@ export default function PostCard({
       } else {
         if (onUnlike) onUnlike(id);
       }
-    } else {
+    } else if (type === "RESELA") {
       const newValue = !isReselaed;
       setIsReselaed(newValue);
       setReselaCount(newValue ? reselaCount + 1 : reselaCount - 1);
       
       if (!newValue && onUnresela) {
         onUnresela(id);
+      }
+    } else if (type === "BOOKMARK") {
+      const newValue = !isBookmarked;
+      setIsBookmarked(newValue);
+      
+      if (newValue) {
+        addToast("Sela Saved");
+      } else {
+        addToast("Sela Unsaved");
+      }
+      
+      if (!newValue && onUnbookmark) {
+        onUnbookmark(id);
       }
     }
 
@@ -164,9 +185,11 @@ export default function PostCard({
       if (type === "LIKE") {
         setIsLiked(isLiked);
         setLikeCount(likeCount);
-      } else {
+      } else if (type === "RESELA") {
         setIsReselaed(isReselaed);
         setReselaCount(reselaCount);
+      } else if (type === "BOOKMARK") {
+        setIsBookmarked(isBookmarked);
       }
     }
   };
@@ -299,11 +322,12 @@ export default function PostCard({
              content={content}
              author={author}
              stats={{ likes: likeCount, reselas: reselaCount, replies: stats.replies, views: stats.views }}
-             userInteractions={{ isLiked, isReselaed }}
+             userInteractions={{ isLiked, isReselaed, isBookmarked }}
              quotedPost={quotedPost}
              onDelete={onDelete}
              onUnlike={onUnlike}
              onUnresela={onUnresela}
+             onUnbookmark={onUnbookmark}
              isThreadContext={true}
              earned={earned}
              mediaType={mediaType}
@@ -590,7 +614,7 @@ export default function PostCard({
                       className="p-3 hover:bg-gray-800 text-left rounded-lg text-white font-medium flex items-center gap-3 transition-colors"
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                      Quote with note
+                      Resela with note
                     </button>
                   </div>
                 </>
@@ -607,13 +631,27 @@ export default function PostCard({
               <span className="">{views}</span>
             </button>
 
-            {/* 5. Share */}
-            <div className="relative">
-              <button onClick={handleShareMenuClick} className="flex items-center transition-colors group" title="Share">
-                <div className="p-1.5 rounded-full group-hover:bg-accent -ml-1.5 transition-colors">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-transform group-active:scale-90"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+            <div className="flex gap-0 ml-auto">
+              {/* 5. Bookmark */}
+              <button 
+                onClick={(e) => handleToggle("BOOKMARK", e)} 
+                className={`flex items-center transition-colors group mr-2 ${isBookmarked ? 'text-primary' : 'hover:text-primary'}`} 
+                title="Bookmark"
+              >
+                <div className="p-1.5 rounded-full group-hover:bg-primary/10 transition-colors">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-transform group-active:scale-90">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
                 </div>
               </button>
+
+              {/* 6. Share */}
+              <div className="relative">
+                <button onClick={handleShareMenuClick} className="flex items-center transition-colors group" title="Share">
+                  <div className="p-1.5 rounded-full group-hover:bg-accent transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-transform group-active:scale-90"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                  </div>
+                </button>
               
               {/* Share Dropdown Menu */}
               {showShareMenu && (
@@ -682,6 +720,7 @@ export default function PostCard({
                   </div>
                 </>
               )}
+            </div>
             </div>
 
           </div>

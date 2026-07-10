@@ -151,10 +151,10 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
       {!hideInline && (
         <div 
           onClick={() => openComposer('CREATE')}
-          className="flex items-center gap-3 p-4 bg-[#18181b] border border-white/20 rounded-xl cursor-text hover:border-white/30 transition-colors shadow-sm"
+          className="flex items-center gap-3 p-4 bg-transparent border border-white/20 rounded-xl cursor-text hover:border-white/30 transition-colors shadow-sm"
         >
           <UserAvatar src={user?.avatarUrl} fallback={user?.username} />
-          <span className="text-gray-400 font-medium">Drop your thought...</span>
+          <span className="text-gray-400 font-medium text-[15px]">Drop your thought...</span>
         </div>
       )}
 

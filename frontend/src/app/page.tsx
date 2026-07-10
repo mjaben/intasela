@@ -2,26 +2,54 @@
 
 import { useEffect, useState } from "react";
 import PostCard from "@/components/PostCard";
+import PostSkeleton from "@/components/PostSkeleton";
+import ErrorState from "@/components/ErrorState";
 import AdSlot from "@/components/AdSlot";
 import CreatePost from "@/components/CreatePost";
 import { useUserStore } from "@/store/useUserStore";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(true);
+  const [activeTab, setActiveTab] = useState<"For you" | "Following">("For you");
   
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
 
   const fetchPosts = async () => {
     try {
+      const cacheKey = `feed_${activeTab}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        setPosts(JSON.parse(cached));
+        // Only show skeleton if we have no cache
+        if (posts.length === 0) setLoading(true);
+      } else {
+        setLoading(true);
+      }
+      
+      setError(false);
       const token = localStorage.getItem("access_token");
       const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
-      const res = await fetch("http://localhost:3001/posts", { headers });
+      
+      let url = "http://localhost:3001/posts";
+      if (activeTab === "Following") {
+        url += "?type=following";
+      }
+
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
+      
       setPosts(data);
-    } catch (error) {
-      console.error("Failed to fetch posts:", error);
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+    } catch (err) {
+      console.error("Failed to fetch posts:", err);
+      if (posts.length === 0) {
+        setError(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -29,14 +57,36 @@ export default function Home() {
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [activeTab]);
 
   return (
     <div className="w-full max-w-[650px] mx-auto min-h-screen">
       {/* Top Header */}
       <header className="sticky top-0 bg-background/90 backdrop-blur-md border-b border-border z-10 flex">
-        <button className="flex-1 text-center py-4 text-white font-bold border-b-2 border-[#3BC492]">For you</button>
-        <button className="flex-1 text-center py-4 text-gray-500 font-medium hover:text-gray-300 transition-colors">Following</button>
+        <button 
+          onClick={() => setActiveTab("For you")}
+          className={`px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-muted/50 relative ${activeTab === "For you" ? "text-foreground" : "text-muted-foreground"}`}
+        >
+          For you
+          {activeTab === "For you" && (
+            <motion.div
+              layoutId="homeTabIndicator"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+            />
+          )}
+        </button>
+        <button 
+          onClick={() => setActiveTab("Following")}
+          className={`px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-muted/50 relative ${activeTab === "Following" ? "text-foreground" : "text-muted-foreground"}`}
+        >
+          Following
+          {activeTab === "Following" && (
+            <motion.div
+              layoutId="homeTabIndicator"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+            />
+          )}
+        </button>
       </header>
 
       {/* Composer (What's on your mind?) */}
@@ -59,8 +109,17 @@ export default function Home() {
 
       {/* Feed */}
       <div className="flex flex-col">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading posts...</div>
+        {loading && posts.length === 0 ? (
+          <>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <PostSkeleton key={i} />
+            ))}
+          </>
+        ) : error && posts.length === 0 ? (
+          <ErrorState 
+            message={`Failed to load the ${activeTab} feed. Please check your connection.`} 
+            onRetry={fetchPosts} 
+          />
         ) : posts.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No posts yet. Be the first to post!</div>
         ) : (

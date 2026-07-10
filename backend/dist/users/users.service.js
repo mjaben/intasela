@@ -346,6 +346,22 @@ let UsersService = class UsersService {
         });
         return follows.map(f => ({ ...f.following, name: `${f.following.firstName} ${f.following.lastName}` }));
     }
+    async deleteAllPosts(userId) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user)
+            throw new common_1.BadRequestException('User not found');
+        return this.prisma.post.deleteMany({
+            where: { authorId: userId }
+        });
+    }
+    async deleteAccount(userId) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user)
+            throw new common_1.BadRequestException('User not found');
+        return this.prisma.user.delete({
+            where: { id: userId }
+        });
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

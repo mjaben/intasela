@@ -133,4 +133,31 @@ export declare class UsersService {
         avatarUrl: string | null;
         bio: string | null;
     }[]>;
+    deleteAllPosts(userId: string): Promise<Prisma.BatchPayload>;
+    deleteAccount(userId: string): Promise<{
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        pendingEmail: string | null;
+        emailVerificationOtp: string | null;
+        phone: string | null;
+        password: string;
+        username: string;
+        lastUsernameChange: Date | null;
+        avatarUrl: string | null;
+        coverUrl: string | null;
+        walletBalance: number;
+        country: string | null;
+        state: string | null;
+        lga: string | null;
+        occupation: string | null;
+        bio: string | null;
+        creatorType: string | null;
+        interests: Prisma.JsonValue | null;
+        paymentSettings: Prisma.JsonValue | null;
+        settings: Prisma.JsonValue | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
 }

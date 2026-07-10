@@ -35,9 +35,22 @@ let PostsService = class PostsService {
             })
         };
     }
-    async getFeed(currentUserId) {
+    async getFeed(currentUserId, type) {
+        let whereClause = { parentId: null };
+        if (type === 'following' && currentUserId) {
+            whereClause = {
+                ...whereClause,
+                author: {
+                    followers: {
+                        some: {
+                            followerId: currentUserId
+                        }
+                    }
+                }
+            };
+        }
         const posts = await this.prisma.post.findMany({
-            where: { parentId: null },
+            where: whereClause,
             orderBy: { createdAt: 'desc' },
             include: {
                 author: {
@@ -184,13 +197,37 @@ let PostsService = class PostsService {
         });
         return posts.map(post => this.formatPost(post, currentUserId));
     }
+    async getBookmarks(currentUserId) {
+        const posts = await this.prisma.post.findMany({
+            where: {
+                engagements: {
+                    some: {
+                        userId: currentUserId,
+                        type: 'BOOKMARK'
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: this.getAuthorSelect(currentUserId)
+                },
+                _count: { select: { replies: true, engagements: true } },
+                engagements: true,
+                quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
+            },
+        });
+        return posts.map(post => this.formatPost(post, currentUserId));
+    }
     formatPost(post, currentUserId) {
         if (!post)
             return null;
         const likes = post.engagements ? post.engagements.filter((e) => e.type === 'LIKE') : [];
         const reselas = post.engagements ? post.engagements.filter((e) => e.type === 'RESELA') : [];
+        const bookmarks = post.engagements ? post.engagements.filter((e) => e.type === 'BOOKMARK') : [];
         const isLiked = currentUserId ? likes.some((e) => e.userId === currentUserId) : false;
         const isReselaed = currentUserId ? reselas.some((e) => e.userId === currentUserId) : false;
+        const isBookmarked = currentUserId ? bookmarks.some((e) => e.userId === currentUserId) : false;
         const isFollowing = currentUserId && post.author?.followers && post.author.followers.length > 0;
         const isFollower = currentUserId && post.author?.following && post.author.following.length > 0;
         const { engagements, parent, author, ...rest } = post;
@@ -202,11 +239,13 @@ let PostsService = class PostsService {
                 likes: likes.length,
                 reselas: reselas.length,
                 replies: post._count?.replies || 0,
-                views: post.viewsCount || 0
+                views: post.viewsCount || 0,
+                bookmarks: bookmarks.length
             },
             userInteractions: {
                 isLiked,
-                isReselaed
+                isReselaed,
+                isBookmarked
             }
         };
     }
@@ -250,8 +289,10 @@ let PostsService = class PostsService {
                 return null;
             const likes = p.engagements ? p.engagements.filter((e) => e.type === 'LIKE') : [];
             const reselas = p.engagements ? p.engagements.filter((e) => e.type === 'RESELA') : [];
+            const bookmarks = p.engagements ? p.engagements.filter((e) => e.type === 'BOOKMARK') : [];
             const isLiked = currentUserId ? likes.some((e) => e.userId === currentUserId) : false;
             const isReselaed = currentUserId ? reselas.some((e) => e.userId === currentUserId) : false;
+            const isBookmarked = currentUserId ? bookmarks.some((e) => e.userId === currentUserId) : false;
             const isFollowing = currentUserId && p.author?.followers && p.author.followers.length > 0;
             const isFollower = currentUserId && p.author?.following && p.author.following.length > 0;
             const { engagements, parent, author, ...rest } = p;
@@ -260,7 +301,7 @@ let PostsService = class PostsService {
                 author: author ? { ...author, isFollowing, isFollower } : undefined,
                 parent: parent ? formatPost(parent) : undefined,
                 stats: { likes: likes.length, reselas: reselas.length, replies: p._count?.replies || 0, views: p.viewsCount || 0 },
-                userInteractions: { isLiked, isReselaed }
+                userInteractions: { isLiked, isReselaed, isBookmarked }
             };
         };
         const formattedMainPost = formatPost(post);
@@ -323,7 +364,7 @@ let PostsService = class PostsService {
                 data: { userId, postId, type }
             });
             const post = await this.prisma.post.findUnique({ where: { id: postId } });
-            if (post && post.authorId !== userId) {
+            if (post && post.authorId !== userId && type !== 'BOOKMARK') {
                 await this.prisma.notification.create({
                     data: {
                         recipientId: post.authorId,

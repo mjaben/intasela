@@ -73,6 +73,16 @@ let UsersController = class UsersController {
     async getFollowing(username) {
         return this.usersService.getFollowing(username);
     }
+    async deleteAllPosts(req) {
+        const userId = req.user.id;
+        await this.usersService.deleteAllPosts(userId);
+        return { success: true, message: 'All posts deleted successfully' };
+    }
+    async deleteAccount(req) {
+        const userId = req.user.id;
+        await this.usersService.deleteAccount(userId);
+        return { success: true, message: 'Account deleted successfully' };
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -168,6 +178,22 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getFollowing", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)('me/posts'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "deleteAllPosts", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)('me'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "deleteAccount", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService, jwt_1.JwtService])
