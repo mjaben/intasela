@@ -2,15 +2,13 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService,
-    @InjectQueue('user-tasks') private userQueue: Queue
+    private jwtService: JwtService
   ) {}
 
   async validateUser(identifier: string, pass: string): Promise<any> {
@@ -48,14 +46,7 @@ export class AuthService {
 
     const { password, ...result } = newUser;
 
-    // Dispatch background job (fire-and-forget to avoid blocking if Redis is down)
-    this.userQueue.add('send-welcome-email', {
-      email: result.email,
-      username: result.username,
-    }).catch(err => {
-      console.warn('Failed to enqueue welcome email (Redis might be down):', err.message);
-    });
-
+    // Removed Redis/BullMQ queueing for welcome email
     return this.login(result);
   }
 }

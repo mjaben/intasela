@@ -37,7 +37,7 @@ let PostsController = class PostsController {
         }
         return this.postsService.getFeed(currentUserId, type);
     }
-    async getOrbitFeed(authHeader) {
+    async getOrbitFeed(type, authHeader) {
         let currentUserId;
         if (authHeader) {
             try {
@@ -47,7 +47,7 @@ let PostsController = class PostsController {
             }
             catch (e) { }
         }
-        return this.postsService.getOrbitFeed(currentUserId);
+        return this.postsService.getOrbitFeed(currentUserId, type);
     }
     async getBookmarks(req) {
         return this.postsService.getBookmarks(req.user.id);
@@ -114,8 +114,17 @@ let PostsController = class PostsController {
     async toggleEngagement(req, id, body) {
         return this.postsService.toggleEngagement(req.user.id, parseInt(id), body.type);
     }
-    async incrementView(id) {
-        return this.postsService.incrementView(parseInt(id));
+    async incrementView(id, authHeader) {
+        let currentUserId;
+        if (authHeader) {
+            try {
+                const token = authHeader.split(' ')[1];
+                const decoded = this.jwtService.verify(token);
+                currentUserId = decoded.sub;
+            }
+            catch (e) { }
+        }
+        return this.postsService.incrementView(parseInt(id), currentUserId);
     }
     async deletePost(req, id) {
         return this.postsService.deletePost(parseInt(id), req.user.id);
@@ -132,9 +141,10 @@ __decorate([
 ], PostsController.prototype, "getFeed", null);
 __decorate([
     (0, common_1.Get)('orbit'),
-    __param(0, (0, common_1.Headers)('authorization')),
+    __param(0, (0, common_1.Query)('type')),
+    __param(1, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "getOrbitFeed", null);
 __decorate([
@@ -199,8 +209,9 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/view'),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], PostsController.prototype, "incrementView", null);
 __decorate([

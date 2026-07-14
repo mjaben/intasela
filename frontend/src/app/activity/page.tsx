@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
+import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import NotificationItem from "@/components/NotificationItem";
 import { motion } from "framer-motion";
 
 export default function ActivityPage() {
   const router = useRouter();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const { blockedUsers, mutedUsers, mutedPosts } = useBlockMuteStore();
   
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +56,15 @@ export default function ActivityPage() {
   if (!isAuthenticated) return null;
 
   const filteredNotifications = notifications.filter(notification => {
+    // Check global mute/block state
+    const isFromBlockedUser = notification.user?.username && blockedUsers.some(u => u.username === notification.user.username);
+    const isFromMutedUser = notification.user?.username && mutedUsers.some(u => u.username === notification.user.username);
+    const isMutedPost = notification.post?.id && mutedPosts.includes(notification.post.id);
+    
+    if (isFromBlockedUser || isFromMutedUser || isMutedPost) {
+      return false;
+    }
+
     if (activeTab === 'all') return true;
     if (activeTab === 'replies') return notification.type === 'REPLY';
     if (activeTab === 'reselas') return notification.type === 'RESELA' || notification.type === 'QUOTE';

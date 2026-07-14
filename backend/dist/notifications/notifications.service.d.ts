@@ -17,8 +17,8 @@ export declare class NotificationsService {
         type: string;
         postId: number | null;
         isRead: boolean;
-        actorId: string;
         recipientId: string;
+        actorId: string;
     })[]>;
     markAsRead(userId: string): Promise<import(".prisma/client").Prisma.BatchPayload>;
     getUnreadCount(userId: string): Promise<{

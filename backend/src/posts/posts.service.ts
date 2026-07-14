@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MonetizationService } from '../monetization/monetization.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private monetizationService: MonetizationService
+  ) {}
 
   private getAuthorSelect(currentUserId?: string) {
     return {
@@ -71,9 +75,19 @@ export class PostsService {
     return posts.map(post => this.formatPost(post, currentUserId));
   }
 
-  async getOrbitFeed(currentUserId?: string) {
+  async getOrbitFeed(currentUserId?: string, type?: string) {
+    let whereClause: any = { mediaType: 'VIDEO', parentId: null };
+
+    if (type === 'following' && currentUserId) {
+      whereClause.author = {
+        followers: {
+          some: { followerId: currentUserId }
+        }
+      };
+    }
+
     const posts = await this.prisma.post.findMany({
-      where: { mediaType: 'VIDEO', parentId: null },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
         author: {
@@ -375,6 +389,15 @@ export class PostsService {
       });
     }
 
+    // Process Monetization Rewards
+    if (!post.parentId && !post.quotedPostId) {
+      // Top-level original post (Sela)
+      await this.monetizationService.processSelaReward(post);
+    } else if (post.parentId && post.parent) {
+      // Reply to a post
+      await this.monetizationService.processReplyReward(post, post.parent);
+    }
+
     return post;
   }
 
@@ -411,15 +434,30 @@ export class PostsService {
         });
       }
 
+      // Process Resela Monetization
+      if (type === 'RESELA') {
+        await this.monetizationService.processReselaReward(postId, userId);
+      }
+
       return { status: 'added' };
     }
   }
 
-  async incrementView(postId: number) {
-    return this.prisma.post.update({
+  async incrementView(postId: number, currentUserId?: string) {
+    if (currentUserId) {
+      const post = await this.prisma.post.findUnique({ where: { id: postId } });
+      if (post && post.authorId === currentUserId) {
+        return post; // Author viewing their own post, ignore increment
+      }
+    }
+
+    const updatedPost = await this.prisma.post.update({
       where: { id: postId },
       data: { viewsCount: { increment: 1 } }
     });
+
+    await this.monetizationService.processViewMilestone(updatedPost);
+    return updatedPost;
   }
 
   async deletePost(postId: number, userId: string) {
@@ -439,6 +477,10 @@ export class PostsService {
     // we need to manually clean up engagements first. 
     // For replies/quotes, if Prisma restricts delete, we might need a soft-delete approach.
     // For now, let's try to delete engagements and then the post.
+    
+    // Step 1: Clawback earnings derived from this post or its child engagements
+    await this.monetizationService.processClawback(postId);
+
     await this.prisma.engagement.deleteMany({
       where: { postId }
     });

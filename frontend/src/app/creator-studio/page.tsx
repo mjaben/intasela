@@ -126,7 +126,7 @@ export default function CreatorStudioPage() {
               {/* Liquid Orbs Background */}
               <div className="absolute inset-0 z-0 overflow-hidden rounded-2xl">
                 <div className="absolute -top-12 -right-12 w-48 h-48 bg-purple-500/20 rounded-full mix-blend-screen filter blur-[48px] group-hover:scale-110 transition-transform duration-1000"></div>
-                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-blue-500/20 rounded-full mix-blend-screen filter blur-[48px] group-hover:scale-110 transition-transform duration-1000"></div>
+                <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-brand/20 rounded-full mix-blend-screen filter blur-[48px] group-hover:scale-110 transition-transform duration-1000"></div>
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#151B24]/40"></div>
               </div>
 
@@ -145,7 +145,7 @@ export default function CreatorStudioPage() {
                 <h2 className="text-white/60 font-medium mb-1 uppercase tracking-wider text-[10px]">Available Balance</h2>
                 <div className="flex items-baseline gap-2 mb-6">
                   <span className="text-4xl font-bold text-white tracking-tight">
-                    ₦{balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(balance)}
                   </span>
                   <span className="text-white/40 text-sm font-medium tracking-wide">NGN</span>
                 </div>
@@ -153,7 +153,7 @@ export default function CreatorStudioPage() {
                 <div className="mb-6 max-w-sm">
                   <div className="flex justify-between text-[10px] text-white/50 mb-2 font-medium tracking-wide">
                     <span>Progress to payout</span>
-                    <span>₦{balance.toLocaleString()} / ₦{threshold.toLocaleString()}</span>
+                    <span>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(balance)} / {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(threshold)}</span>
                   </div>
                   <div className="h-1 w-full bg-[#0F141C] rounded-full overflow-hidden shadow-inner">
                     <div 
@@ -183,7 +183,7 @@ export default function CreatorStudioPage() {
               <div className="bg-muted/30 border border-border rounded-2xl p-5">
                 <h3 className="text-muted-foreground text-sm font-medium mb-1">Period Earnings</h3>
                 <p className="text-2xl font-bold text-[#3BC492]">
-                  ₦{(data?.periodEarned || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(data?.periodEarned || 0)}
                 </p>
               </div>
               <div className="bg-muted/30 border border-border rounded-2xl p-5">
@@ -226,7 +226,7 @@ export default function CreatorStudioPage() {
                         </div>
                         <div className="flex items-center gap-1 bg-[#3BC492]/10 px-3 py-1.5 rounded-full border border-[#3BC492]/20 shrink-0">
                           <span className="text-[#3BC492] font-bold text-sm">
-                            +₦{(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            +{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(item.amount || 0)}
                           </span>
                         </div>
                       </div>
@@ -303,8 +303,20 @@ export default function CreatorStudioPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Views Metric */}
                     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-4 text-blue-500">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-4 text-brand">
+                        <div 
+                          className="w-[20px] h-[20px] bg-current"
+                          style={{
+                            WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAENklEQVR4nO2ZaWxVRRTHf/BK371zW0PQ4G4iBkQwBhKg9bG5oCIkAiEBl4h+0KARNMbdELdPVbSiokKNRhOWD4LKJ1AoiLSlBY2IH9xQNEpcsAJCqyHgM6c9bcbJvffxAd97g/6SF2buTCdnlnPOfwb4n/8WV3ACcBLwFzAQzxkP5IFaPGeeTuR6PKcB+B5YgOdsA14FXsNjMkAHMAvYhMecB/wIDAa+w2OuBDYD/YDDQBZPuU2dHd2RIXjKQuA+LYuPTMZT3gKmaVki1+14yg7gQi1LHnmKMuVa4JGU9t+BKi1fB6wuEKpFl5WERuCjhDYRiXutumitj1PGugF4mxJwGtAO7AdMTPvFwHZnYgdSxnsc+IkSicE3gGZgQky7HKU3nW8HgVMSxlum4vIciswWYCrwEnBXTPtDGn5tdgKjE8bbqjsykyJylp7/Sk16ElpdlgJ3ON/eAWYnjPkL8ALwJEXkHuAVyxc+jOnzru6YTT3wQEzfaj12VwEbj4eBgTHm+TAM9gVBcMAY86yuepw0n6TlCOgEKpw+XwDDnW/zgSUx443QnDNAA0LfAnZWGmMWZbPZg/KLokhkUNjbGkXRi+PH5TpbmtfnW5rey9fWju6oquqajM25wM+O4bsco/vo5GSSNlN1p1xmqgoQvgKGpc2iujpqGJur6RQbt7VuzF926YROnUw3YRjuk0l8s+uTrp+UgyAr94kpwEjgDM3Q4uA2q52r7OlODunhAuDLmO/3W4FhBXCT1fYgUKdHUn5zM5nMke1tm3rtbNvaKHZK8u1GjlNrS2NvB+lcUVFxBFirW78H+APIOYY86kSo2gS/CfXv+8YEBgkawt3AYi2PAb7VCFingWBpEASH3QWXTegdLYqiJZdMHNd1tJo+WJfP5Wo6oihyVz+O6cB6J4esSui7R6OezQbr7Wus+qCwCHjMHcAY80z9mFEdYuOWzevycszEt/+xYmJ4GAb7ZXeCIKhPcHZi/OZXqy4r+HRK/pEnIpvdwKAeO+m+Hsu/PwDnx4zRL4rChbILxph2Y0z98bq09dFoc7bWXwbuTOgramCOVa/U42YHjx3Aw47EKRqy0tdoea1VjtNU4lM9DNaoZ9Ogyln8peg8Z0n6z4CLEvrdArxu1SfHhORbgaPAmZSAOSrDe3JI/5QHifetusgYN6AMUhVQEoar04q8/y2l31Dga6ter5KnbMgAh4CrgbaUfhKN/tSdE9Zo+C4rmlVLLS/QT7L+qVr+NMWfSkadGimRKQ25Ho/SXTlk3evLhsv1lndjgX4SFGaodpMn1bKjUldY7iiFQvV8zfBNlCnTj0Eu3KtvXDdrpveW2cBK4Akny3vHRD1SK/Q9y1uGafJsPQZ/KmsGqozZ6/t/W2dUFMrLife0F3gL9obPU67DXtFU7FfFfwt5Pp3LCcBI4ORSG0G58jfEiSNbtKMSxAAAAABJRU5ErkJggg==)',
+                            WebkitMaskSize: 'contain',
+                            WebkitMaskRepeat: 'no-repeat',
+                            WebkitMaskPosition: 'center',
+                            maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAENklEQVR4nO2ZaWxVRRTHf/BK371zW0PQ4G4iBkQwBhKg9bG5oCIkAiEBl4h+0KARNMbdELdPVbSiokKNRhOWD4LKJ1AoiLSlBY2IH9xQNEpcsAJCqyHgM6c9bcbJvffxAd97g/6SF2buTCdnlnPOfwb4n/8WV3ACcBLwFzAQzxkP5IFaPGeeTuR6PKcB+B5YgOdsA14FXsNjMkAHMAvYhMecB/wIDAa+w2OuBDYD/YDDQBZPuU2dHd2RIXjKQuA+LYuPTMZT3gKmaVki1+14yg7gQi1LHnmKMuVa4JGU9t+BKi1fB6wuEKpFl5WERuCjhDYRiXutumitj1PGugF4mxJwGtAO7AdMTPvFwHZnYgdSxnsc+IkSicE3gGZgQky7HKU3nW8HgVMSxlum4vIciswWYCrwEnBXTPtDGn5tdgKjE8bbqjsykyJylp7/Sk16ElpdlgJ3ON/eAWYnjPkL8ALwJEXkHuAVyxc+jOnzru6YTT3wQEzfaj12VwEbj4eBgTHm+TAM9gVBcMAY86yuepw0n6TlCOgEKpw+XwDDnW/zgSUx443QnDNAA0LfAnZWGmMWZbPZg/KLokhkUNjbGkXRi+PH5TpbmtfnW5rey9fWju6oquqajM25wM+O4bsco/vo5GSSNlN1p1xmqgoQvgKGpc2iujpqGJur6RQbt7VuzF926YROnUw3YRjuk0l8s+uTrp+UgyAr94kpwEjgDM3Q4uA2q52r7OlODunhAuDLmO/3W4FhBXCT1fYgUKdHUn5zM5nMke1tm3rtbNvaKHZK8u1GjlNrS2NvB+lcUVFxBFirW78H+APIOYY86kSo2gS/CfXv+8YEBgkawt3AYi2PAb7VCFingWBpEASH3QWXTegdLYqiJZdMHNd1tJo+WJfP5Wo6oihyVz+O6cB6J4esSui7R6OezQbr7Wus+qCwCHjMHcAY80z9mFEdYuOWzevycszEt/+xYmJ4GAb7ZXeCIKhPcHZi/OZXqy4r+HRK/pEnIpvdwKAeO+m+Hsu/PwDnx4zRL4rChbILxph2Y0z98bq09dFoc7bWXwbuTOgramCOVa/U42YHjx3Aw47EKRqy0tdoea1VjtNU4lM9DNaoZ9Ogyln8peg8Z0n6z4CLEvrdArxu1SfHhORbgaPAmZSAOSrDe3JI/5QHifetusgYN6AMUhVQEoar04q8/y2l31Dga6ter5KnbMgAh4CrgbaUfhKN/tSdE9Zo+C4rmlVLLS/QT7L+qVr+NMWfSkadGimRKQ25Ho/SXTlk3evLhsv1lndjgX4SFGaodpMn1bKjUldY7iiFQvV8zfBNlCnTj0Eu3KtvXDdrpveW2cBK4Akny3vHRD1SK/Q9y1uGafJsPQZ/KmsGqozZ6/t/W2dUFMrLife0F3gL9obPU67DXtFU7FfFfwt5Pp3LCcBI4ORSG0G58jfEiSNbtKMSxAAAAABJRU5ErkJggg==)',
+                            maskSize: 'contain',
+                            maskRepeat: 'no-repeat',
+                            maskPosition: 'center',
+                          }}
+                        />
                       </div>
                       <h3 className="text-muted-foreground font-medium mb-1">Total Views</h3>
                       <p className="text-3xl font-bold mb-4">{data.metrics.totalViews.toLocaleString()}</p>
@@ -323,7 +335,19 @@ export default function CreatorStudioPage() {
                     {/* Comments Metric */}
                     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
                       <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 text-purple-500">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <div 
+                          className="w-[20px] h-[20px] bg-currentColor"
+                          style={{
+                            WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADh0lEQVR4nO3Ze4inUxzH8dfuGLus2qzrbmMtxcS65bpbbsuuW2E3/CGS61JbaFxWJKuEtca6RRapdSv+4A/l9geNP+S2YluXGCyLRSktalPo1Ef9mmKfZ+Y383vUvOvUNHOec84z5zyf7/f7OYwzzv+WbvTgIOyJ3bGNhjMBc3EdXsD32Ixv8B4G8RV+w+d4HldjlobQgxuz0A/Qj4WYkZcbSvndTJyB+/Oib+McTOzA+u2IlfgJ9+b4DIcunIwX8REWGUMuwY+4Gzu1cdzjsAarMdUosj2ezZnfexQFoh9foHc0Jihnfl2O09ZGn4URh4PbOWiRzc9wjbHlJPyA2e0YbLvsxBU6wyJ8gmkjHehJPKKz3IyX/0XOK3Eu3sdknaUb7+LC4Ty8Lb7GHM1gX2xI/KrF9Xhas7gT99V5oKQK63FAxf6TE2NmRfsPwbE4EWcl/Vic1oelycluTytxo0rM2AEb6wThBQl6VV+66P3P+BIf5zy/hpfwTATjobS7Wl5gadqVmF5xvnuwrOqLlNzpWs1kv2TPlXgHR2omXfi9ipJ2p+MUzWVdlWi/czLbJvNclXS/t84Z7BAP4rIqH1PZujpMivzOSG2+fyT4cMxvaQsix63t4tQ3u9SY77ao3X8yPVptGPL7bUreDyPBpYR9taW9EjlubQ9HlmfXmLPEoFu31KnUGn90qn6uSDEtVlTpODha1VmbWIabqnR8ChdoLitwVZWOl+NRzeUJnFel426xecaiNh8Oa3Bo1c5v4NQag09NWTwWKcqvdeZaHFtzS0yM7Bb53YQ/8/P6xKO3hkjwSHO4o1K11gpypSI7sOZEExIcexIci51zREtQHKnx1l9VsVrpiyHXFLqz0yVzqMUpcdWH7V60mfNzPGuxB77DMZrBJHyaEroyRRHWYonmcEfdYz4x+X5J5prC/AhPMR8qsxwDDQqGc+L/1pLtJblsGbHP2sad2IgT6tr4Gxpyp7dVrvPKeo6u8+Dc1Omlqus08yI0xRPbte7Da3OReSn2MvYUgSlmwuu5hzl9uAMVC/JsPJbtLOb144ns85JytJspqeEfSNAdwJlJCttGb/zalZlgU+70ynavwg25cihKsk9yqmlDMtJ/cq6ZybVOS4m6KvX8L7FV+8byu+zKYo/HRbglfu5AFjWY/2pZ3F9pm5MFl7+9mdi0PK7JYfmgxxlnHKPP3/f5ueKem89DAAAAAElFTkSuQmCC)',
+                            WebkitMaskSize: 'contain',
+                            WebkitMaskRepeat: 'no-repeat',
+                            WebkitMaskPosition: 'center',
+                            maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADh0lEQVR4nO3Ze4inUxzH8dfuGLus2qzrbmMtxcS65bpbbsuuW2E3/CGS61JbaFxWJKuEtca6RRapdSv+4A/l9geNP+S2YluXGCyLRSktalPo1Ef9mmKfZ+Y383vUvOvUNHOec84z5zyf7/f7OYwzzv+WbvTgIOyJ3bGNhjMBc3EdXsD32Ixv8B4G8RV+w+d4HldjlobQgxuz0A/Qj4WYkZcbSvndTJyB+/Oib+McTOzA+u2IlfgJ9+b4DIcunIwX8REWGUMuwY+4Gzu1cdzjsAarMdUosj2ezZnfexQFoh9foHc0Jihnfl2O09ZGn4URh4PbOWiRzc9wjbHlJPyA2e0YbLvsxBU6wyJ8gmkjHehJPKKz3IyX/0XOK3Eu3sdknaUb7+LC4Ty8Lb7GHM1gX2xI/KrF9Xhas7gT99V5oKQK63FAxf6TE2NmRfsPwbE4EWcl/Vic1oelycluTytxo0rM2AEb6wThBQl6VV+66P3P+BIf5zy/hpfwTATjobS7Wl5gadqVmF5xvnuwrOqLlNzpWs1kv2TPlXgHR2omXfi9ipJ2p+MUzWVdlWi/czLbJvNclXS/t84Z7BAP4rIqH1PZujpMivzOSG2+fyT4cMxvaQsix63t4tQ3u9SY77ao3X8yPVptGPL7bUreDyPBpYR9taW9EjlubQ9HlmfXmLPEoFu31KnUGn90qn6uSDEtVlTpODha1VmbWIabqnR8ChdoLitwVZWOl+NRzeUJnFel426xecaiNh8Oa3Bo1c5v4NQag09NWTwWKcqvdeZaHFtzS0yM7Bb53YQ/8/P6xKO3hkjwSHO4o1K11gpypSI7sOZEExIcexIci51zREtQHKnx1l9VsVrpiyHXFLqz0yVzqMUpcdWH7V60mfNzPGuxB77DMZrBJHyaEroyRRHWYonmcEfdYz4x+X5J5prC/AhPMR8qsxwDDQqGc+L/1pLtJblsGbHP2sad2IgT6tr4Gxpyp7dVrvPKeo6u8+Dc1Omlqus08yI0xRPbte7Da3OReSn2MvYUgSlmwuu5hzl9uAMVC/JsPJbtLOb144ns85JytJspqeEfSNAdwJlJCttGb/zalZlgU+70ynavwg25cihKsk9yqmlDMtJ/cq6ZybVOS4m6KvX8L7FV+8byu+zKYo/HRbglfu5AFjWY/2pZ3F9pm5MFl7+9mdi0PK7JYfmgxxlnHKPP3/f5ueKem89DAAAAAElFTkSuQmCC)',
+                            maskSize: 'contain',
+                            maskRepeat: 'no-repeat',
+                            maskPosition: 'center',
+                          }}
+                        />
                       </div>
                       <h3 className="text-muted-foreground font-medium mb-1">Total Comments</h3>
                       <p className="text-3xl font-bold mb-4">{data.metrics.totalComments.toLocaleString()}</p>
@@ -341,7 +365,7 @@ export default function CreatorStudioPage() {
 
                     {/* Posts Metric */}
                     <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center mb-4 text-orange-500">
+                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-4 text-brand">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                       </div>
                       <h3 className="text-muted-foreground font-medium mb-1">Total Posts</h3>

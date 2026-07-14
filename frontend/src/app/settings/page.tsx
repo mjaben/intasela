@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useToastStore } from "@/store/useToastStore";
+import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 
 export default function SettingsPage() {
   const router = useRouter();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const setGlobalSettings = useSettingsStore((state) => state.setSettings);
+  const { blockedUsers, mutedUsers, toggleBlockUser, toggleMuteUser } = useBlockMuteStore();
   const [userData, setUserData] = useState<any>(null);
   const [settings, setSettings] = useState<any>({
     filterExplicit: false,
@@ -469,7 +471,19 @@ export default function SettingsPage() {
         <div className="border-b border-border transition-colors relative">
           <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30" onClick={() => toggleExpand('engagement')}>
             <div className="flex items-center gap-3">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+              <div 
+                className="w-[18px] h-[18px] bg-muted-foreground"
+                style={{
+                  WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADZUlEQVR4nO3ae4hVVRTH8c+de+/MbZz3ODNRgfmYUuk1YZFWY6WRgTVSQdCDgbAgih5/RNEfGhmJPSYpEgzKMiiC6g+tiMyUnpY1jCViPgqkbJwps/qjMYIbB7ZQ5uSM93HuHfrC5cJm77XPOmeftX9r7cP/SGAGbsP9uAVnhfaRcBIuxVxMFgMJ3IAd+Bor8DBWYXdouwkVRxibRDc+x35swLv4DnvxFKYXw4lGvIHNmDNMn4uwCe+g5W/tZ4Rx7+PyIzg6CYuDU89gXKGcqEMfliN9lL7RnX8I32ICbsdPuHGE86zEV2hVgOX0NnpGOe5OHMAWtI9y7GJ8hCp55NqwrqM7PVq6UH+M876Fu+TxaezCTMXnVOzL11OJQuw28bEhhOiceRBLxMciPJIPQy/hOvFxJV7Nh6GNmC0+ZoW9J2d60SE+ZoSImTORhLhEfMwPaiJnXo75HVkSVELO3IsnxMeXOD8fhi4M70kczA572EhTg/8kEoj9mKr4vIeF+TT4GB5XXK4KyyqVT6Mn42ccrzicGDRWQfavJ/GcwpMM+urRQk3QFNLRKM8uJA/gY1QWcpIr8ANOKJD97pDqFsr+P1iKT1FbgB28H6cpElHR4DV8gJo82ewML/e5ikxlSEM35qHacVkoTMSm5zLhyWzKYU1fjYFQQoqVZNBhe0PeMBpuxfc4WwlxDQZx9zAVxsOd7wkFjdGWiIpCdFFfhCAwZZg+DVgbNFSzEiaFe/BjyLOjquEhOkJteMUIKpUlQXUikehtbGwYrKqq+iWVqrgjqtQnk8nfm5ub3lQuJBKJ1Z2ds/bs3tmXXbvmlezM8875beLECb+++MLKbE3NuINFFJ45Ma+xsWFg29bPst/s2vKv380Lu7Ntba15Ke0UlHQ6/cmCrvl/dHScOTjn4s7+wx3p6/0wW1dbOxSOGEqWikQiMVRZmYoi16rp06ZuP+TA8p6l2fHNTQdbW1sO1NfXDWUymShqlTQt4b/rlPYpO9avW5Ntb5/8Z3197f5MJhPpqWlYELK/sqAtnU4PVFdX70smk5tDSC575mLrMZ6tlBzRadfzY8GZBqzHMmVOBVbjaWXOs1iH45QxF2BnuTsRcTr2lIvGOhr3YXv4/qTsWRS+XxlvDLAMrxsDpHB93BehlPkLRtzTRcJTeY0AAAAASUVORK5CYII=)',
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADZUlEQVR4nO3ae4hVVRTH8c+de+/MbZz3ODNRgfmYUuk1YZFWY6WRgTVSQdCDgbAgih5/RNEfGhmJPSYpEgzKMiiC6g+tiMyUnpY1jCViPgqkbJwps/qjMYIbB7ZQ5uSM93HuHfrC5cJm77XPOmeftX9r7cP/SGAGbsP9uAVnhfaRcBIuxVxMFgMJ3IAd+Bor8DBWYXdouwkVRxibRDc+x35swLv4DnvxFKYXw4lGvIHNmDNMn4uwCe+g5W/tZ4Rx7+PyIzg6CYuDU89gXKGcqEMfliN9lL7RnX8I32ICbsdPuHGE86zEV2hVgOX0NnpGOe5OHMAWtI9y7GJ8hCp55NqwrqM7PVq6UH+M876Fu+TxaezCTMXnVOzL11OJQuw28bEhhOiceRBLxMciPJIPQy/hOvFxJV7Nh6GNmC0+ZoW9J2d60SE+ZoSImTORhLhEfMwPaiJnXo75HVkSVELO3IsnxMeXOD8fhi4M70kczA572EhTg/8kEoj9mKr4vIeF+TT4GB5XXK4KyyqVT6Mn42ccrzicGDRWQfavJ/GcwpMM+urRQk3QFNLRKM8uJA/gY1QWcpIr8ANOKJD97pDqFsr+P1iKT1FbgB28H6cpElHR4DV8gJo82ewML/e5ikxlSEM35qHacVkoTMSm5zLhyWzKYU1fjYFQQoqVZNBhe0PeMBpuxfc4WwlxDQZx9zAVxsOd7wkFjdGWiIpCdFFfhCAwZZg+DVgbNFSzEiaFe/BjyLOjquEhOkJteMUIKpUlQXUikehtbGwYrKqq+iWVqrgjqtQnk8nfm5ub3lQuJBKJ1Z2ds/bs3tmXXbvmlezM8875beLECb+++MLKbE3NuINFFJ45Ma+xsWFg29bPst/s2vKv380Lu7Ntba15Ke0UlHQ6/cmCrvl/dHScOTjn4s7+wx3p6/0wW1dbOxSOGEqWikQiMVRZmYoi16rp06ZuP+TA8p6l2fHNTQdbW1sO1NfXDWUymShqlTQt4b/rlPYpO9avW5Ntb5/8Z3197f5MJhPpqWlYELK/sqAtnU4PVFdX70smk5tDSC575mLrMZ6tlBzRadfzY8GZBqzHMmVOBVbjaWXOs1iH45QxF2BnuTsRcTr2lIvGOhr3YXv4/qTsWRS+XxlvDLAMrxsDpHB93BehlPkLRtzTRcJTeY0AAAAASUVORK5CYII=)',
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                }}
+              />
               <span className="font-semibold text-[15px]">Engagement</span>
             </div>
             {expanded.engagement ? <UpChevron /> : <DownChevron />}
@@ -536,7 +550,19 @@ export default function SettingsPage() {
         <div className="border-b border-border transition-colors relative">
           <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30" onClick={() => toggleExpand('messaging')}>
             <div className="flex items-center gap-3">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <div 
+                className="w-[18px] h-[18px] bg-muted-foreground"
+                style={{
+                  WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADh0lEQVR4nO3Ze4inUxzH8dfuGLus2qzrbmMtxcS65bpbbsuuW2E3/CGS61JbaFxWJKuEtca6RRapdSv+4A/l9geNP+S2YluXGCyLRSktalPo1Ef9mmKfZ+Y383vUvOvUNHOec84z5zyf7/f7OYwzzv+WbvTgIOyJ3bGNhjMBc3EdXsD32Ixv8B4G8RV+w+d4HldjlobQgxuz0A/Qj4WYkZcbSvndTJyB+/Oib+McTOzA+u2IlfgJ9+b4DIcunIwX8REWGUMuwY+4Gzu1cdzjsAarMdUosj2ezZnfexQFoh9foHc0Jihnfl2O09ZGn4URh4PbOWiRzc9wjbHlJPyA2e0YbLvsxBU6wyJ8gmkjHehJPKKz3IyX/0XOK3Eu3sdknaUb7+LC4Ty8Lb7GHM1gX2xI/KrF9Xhas7gT99V5oKQK63FAxf6TE2NmRfsPwbE4EWcl/Vic1oelycluTytxo0rM2AEb6wThBQl6VV+66P3P+BIf5zy/hpfwTATjobS7Wl5gadqVmF5xvnuwrOqLlNzpWs1kv2TPlXgHR2omXfi9ipJ2p+MUzWVdlWi/czLbJvNclXS/t84Z7BAP4rIqH1PZujpMivzOSG2+fyT4cMxvaQsix63t4tQ3u9SY77ao3X8yPVptGPL7bUreDyPBpYR9taW9EjlubQ9HlmfXmLPEoFu31KnUGn90qn6uSDEtVlTpODha1VmbWIabqnR8ChdoLitwVZWOl+NRzeUJnFel426xecaiNh8Oa3Bo1c5v4NQag09NWTwWKcqvdeZaHFtzS0yM7Bb53YQ/8/P6xKO3hkjwSHO4o1K11gpypSI7sOZEExIcexIci51zREtQHKnx1l9VsVrpiyHXFLqz0yVzqMUpcdWH7V60mfNzPGuxB77DMZrBJHyaEroyRRHWYonmcEfdYz4x+X5J5prC/AhPMR8qsxwDDQqGc+L/1pLtJblsGbHP2sad2IgT6tr4Gxpyp7dVrvPKeo6u8+Dc1Omlqus08yI0xRPbte7Da3OReSn2MvYUgSlmwuu5hzl9uAMVC/JsPJbtLOb144ns85JytJspqeEfSNAdwJlJCttGb/zalZlgU+70ynavwg25cihKsk9yqmlDMtJ/cq6ZybVOS4m6KvX8L7FV+8byu+zKYo/HRbglfu5AFjWY/2pZ3F9pm5MFl7+9mdi0PK7JYfmgxxlnHKPP3/f5ueKem89DAAAAAElFTkSuQmCC)',
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADh0lEQVR4nO3Ze4inUxzH8dfuGLus2qzrbmMtxcS65bpbbsuuW2E3/CGS61JbaFxWJKuEtca6RRapdSv+4A/l9geNP+S2YluXGCyLRSktalPo1Ef9mmKfZ+Y383vUvOvUNHOec84z5zyf7/f7OYwzzv+WbvTgIOyJ3bGNhjMBc3EdXsD32Ixv8B4G8RV+w+d4HldjlobQgxuz0A/Qj4WYkZcbSvndTJyB+/Oib+McTOzA+u2IlfgJ9+b4DIcunIwX8REWGUMuwY+4Gzu1cdzjsAarMdUosj2ezZnfexQFoh9foHc0Jihnfl2O09ZGn4URh4PbOWiRzc9wjbHlJPyA2e0YbLvsxBU6wyJ8gmkjHehJPKKz3IyX/0XOK3Eu3sdknaUb7+LC4Ty8Lb7GHM1gX2xI/KrF9Xhas7gT99V5oKQK63FAxf6TE2NmRfsPwbE4EWcl/Vic1oelycluTytxo0rM2AEb6wThBQl6VV+66P3P+BIf5zy/hpfwTATjobS7Wl5gadqVmF5xvnuwrOqLlNzpWs1kv2TPlXgHR2omXfi9ipJ2p+MUzWVdlWi/czLbJvNclXS/t84Z7BAP4rIqH1PZujpMivzOSG2+fyT4cMxvaQsix63t4tQ3u9SY77ao3X8yPVptGPL7bUreDyPBpYR9taW9EjlubQ9HlmfXmLPEoFu31KnUGn90qn6uSDEtVlTpODha1VmbWIabqnR8ChdoLitwVZWOl+NRzeUJnFel426xecaiNh8Oa3Bo1c5v4NQag09NWTwWKcqvdeZaHFtzS0yM7Bb53YQ/8/P6xKO3hkjwSHO4o1K11gpypSI7sOZEExIcexIci51zREtQHKnx1l9VsVrpiyHXFLqz0yVzqMUpcdWH7V60mfNzPGuxB77DMZrBJHyaEroyRRHWYonmcEfdYz4x+X5J5prC/AhPMR8qsxwDDQqGc+L/1pLtJblsGbHP2sad2IgT6tr4Gxpyp7dVrvPKeo6u8+Dc1Omlqus08yI0xRPbte7Da3OReSn2MvYUgSlmwuu5hzl9uAMVC/JsPJbtLOb144ns85JytJspqeEfSNAdwJlJCttGb/zalZlgU+70ynavwg25cihKsk9yqmlDMtJ/cq6ZybVOS4m6KvX8L7FV+8byu+zKYo/HRbglfu5AFjWY/2pZ3F9pm5MFl7+9mdi0PK7JYfmgxxlnHKPP3/f5ueKem89DAAAAAElFTkSuQmCC)',
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                }}
+              />
               <span className="font-semibold text-[15px]">Messaging</span>
             </div>
             {expanded.messaging ? <UpChevron /> : <DownChevron />}
@@ -943,16 +969,86 @@ export default function SettingsPage() {
               )}
 
               {editModal === 'blocked' && (
-                <div className="p-10 text-center text-muted-foreground">
-                  <div className="font-bold text-foreground text-base mb-2">Nobody is blocked</div>
-                  <div className="text-sm">You can block people by clicking the three dots on their profile, comments, or notes.</div>
+                <div className="p-4 sm:p-6 text-foreground max-h-[60vh] overflow-y-auto nice-scrollbar">
+                  {blockedUsers.length === 0 ? (
+                    <div className="py-10 text-center text-muted-foreground">
+                      <div className="font-bold text-foreground text-base mb-2">Nobody is blocked</div>
+                      <div className="text-sm">You can block people by clicking the three dots on their profile, comments, or notes.</div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {blockedUsers.map(user => (
+                        <div key={user.username} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                              {user.avatarUrl ? (
+                                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-brand/20 text-brand flex items-center justify-center font-bold text-sm">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-[15px] leading-tight">{user.name}</span>
+                              <span className="text-muted-foreground text-[14px]">@{user.username}</span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              toggleBlockUser(user);
+                              addToast(`Unblocked @${user.username}`, "success");
+                            }}
+                            className="px-4 py-1.5 rounded-full border border-border hover:bg-muted/50 transition-colors text-sm font-semibold"
+                          >
+                            Unblock
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {editModal === 'muted' && (
-                <div className="p-10 text-center text-muted-foreground">
-                  <div className="font-bold text-foreground text-base mb-2">Nobody is muted</div>
-                  <div className="text-sm">You can mute people by clicking the three dots on their profile, comments, or notes.</div>
+                <div className="p-4 sm:p-6 text-foreground max-h-[60vh] overflow-y-auto nice-scrollbar">
+                  {mutedUsers.length === 0 ? (
+                    <div className="py-10 text-center text-muted-foreground">
+                      <div className="font-bold text-foreground text-base mb-2">Nobody is muted</div>
+                      <div className="text-sm">You can mute people by clicking the three dots on their profile, comments, or notes.</div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {mutedUsers.map(user => (
+                        <div key={user.username} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                              {user.avatarUrl ? (
+                                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-brand/20 text-brand flex items-center justify-center font-bold text-sm">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-[15px] leading-tight">{user.name}</span>
+                              <span className="text-muted-foreground text-[14px]">@{user.username}</span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              toggleMuteUser(user);
+                              addToast(`Unmuted @${user.username}`, "success");
+                            }}
+                            className="px-4 py-1.5 rounded-full border border-border hover:bg-muted/50 transition-colors text-sm font-semibold"
+                          >
+                            Unmute
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

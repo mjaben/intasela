@@ -7,6 +7,7 @@ import ErrorState from "@/components/ErrorState";
 import AdSlot from "@/components/AdSlot";
 import CreatePost from "@/components/CreatePost";
 import { useUserStore } from "@/store/useUserStore";
+import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -17,6 +18,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"For you" | "Following">("For you");
   
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const blockedUsers = useBlockMuteStore(s => s.blockedUsers);
+  
+  const filteredPosts = posts.filter(post => !blockedUsers.some(u => u.username === post.author.username));
 
   const fetchPosts = async () => {
     try {
@@ -109,21 +113,21 @@ export default function Home() {
 
       {/* Feed */}
       <div className="flex flex-col">
-        {loading && posts.length === 0 ? (
+        {loading && filteredPosts.length === 0 ? (
           <>
             {[1, 2, 3, 4, 5].map((i) => (
               <PostSkeleton key={i} />
             ))}
           </>
-        ) : error && posts.length === 0 ? (
+        ) : error && filteredPosts.length === 0 ? (
           <ErrorState 
             message={`Failed to load the ${activeTab} feed. Please check your connection.`} 
             onRetry={fetchPosts} 
           />
-        ) : posts.length === 0 ? (
+        ) : filteredPosts.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No posts yet. Be the first to post!</div>
         ) : (
-          posts.map((post, index) => (
+          filteredPosts.map((post, index) => (
             <div key={post.id}>
               <PostCard 
                 id={post.id}

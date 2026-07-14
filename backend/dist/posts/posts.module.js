@@ -11,12 +11,13 @@ const common_1 = require("@nestjs/common");
 const posts_service_1 = require("./posts.service");
 const posts_controller_1 = require("./posts.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
+const monetization_module_1 = require("../monetization/monetization.module");
 let PostsModule = class PostsModule {
 };
 exports.PostsModule = PostsModule;
 exports.PostsModule = PostsModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [prisma_module_1.PrismaModule, monetization_module_1.MonetizationModule],
         providers: [posts_service_1.PostsService],
         controllers: [posts_controller_1.PostsController]
     })

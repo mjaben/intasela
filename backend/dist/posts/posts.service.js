@@ -12,10 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const monetization_service_1 = require("../monetization/monetization.service");
 let PostsService = class PostsService {
     prisma;
-    constructor(prisma) {
+    monetizationService;
+    constructor(prisma, monetizationService) {
         this.prisma = prisma;
+        this.monetizationService = monetizationService;
     }
     getAuthorSelect(currentUserId) {
         return {
@@ -78,9 +81,17 @@ let PostsService = class PostsService {
         });
         return posts.map(post => this.formatPost(post, currentUserId));
     }
-    async getOrbitFeed(currentUserId) {
+    async getOrbitFeed(currentUserId, type) {
+        let whereClause = { mediaType: 'VIDEO', parentId: null };
+        if (type === 'following' && currentUserId) {
+            whereClause.author = {
+                followers: {
+                    some: { followerId: currentUserId }
+                }
+            };
+        }
         const posts = await this.prisma.post.findMany({
-            where: { mediaType: 'VIDEO', parentId: null },
+            where: whereClause,
             orderBy: { createdAt: 'desc' },
             include: {
                 author: {
@@ -345,6 +356,12 @@ let PostsService = class PostsService {
                 }
             });
         }
+        if (!post.parentId && !post.quotedPostId) {
+            await this.monetizationService.processSelaReward(post);
+        }
+        else if (post.parentId && post.parent) {
+            await this.monetizationService.processReplyReward(post, post.parent);
+        }
         return post;
     }
     async toggleEngagement(userId, postId, type) {
@@ -374,14 +391,25 @@ let PostsService = class PostsService {
                     }
                 });
             }
+            if (type === 'RESELA') {
+                await this.monetizationService.processReselaReward(postId, userId);
+            }
             return { status: 'added' };
         }
     }
-    async incrementView(postId) {
-        return this.prisma.post.update({
+    async incrementView(postId, currentUserId) {
+        if (currentUserId) {
+            const post = await this.prisma.post.findUnique({ where: { id: postId } });
+            if (post && post.authorId === currentUserId) {
+                return post;
+            }
+        }
+        const updatedPost = await this.prisma.post.update({
             where: { id: postId },
             data: { viewsCount: { increment: 1 } }
         });
+        await this.monetizationService.processViewMilestone(updatedPost);
+        return updatedPost;
     }
     async deletePost(postId, userId) {
         const post = await this.prisma.post.findUnique({
@@ -393,6 +421,7 @@ let PostsService = class PostsService {
         if (post.authorId !== userId) {
             throw new Error("Not authorized to delete this post");
         }
+        await this.monetizationService.processClawback(postId);
         await this.prisma.engagement.deleteMany({
             where: { postId }
         });
@@ -404,6 +433,7 @@ let PostsService = class PostsService {
 exports.PostsService = PostsService;
 exports.PostsService = PostsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        monetization_service_1.MonetizationService])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

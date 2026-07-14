@@ -1,10 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { MonetizationService } from '../monetization/monetization.service';
 export declare class PostsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private monetizationService;
+    constructor(prisma: PrismaService, monetizationService: MonetizationService);
     private getAuthorSelect;
     getFeed(currentUserId?: string, type?: string): Promise<any[]>;
-    getOrbitFeed(currentUserId?: string): Promise<any[]>;
+    getOrbitFeed(currentUserId?: string, type?: string): Promise<any[]>;
     getPostsByUsername(username: string, currentUserId?: string): Promise<any[]>;
     getRepliesByUsername(username: string, currentUserId?: string): Promise<any[]>;
     getLikesByUsername(username: string, currentUserId?: string): Promise<any[]>;
@@ -21,6 +23,8 @@ export declare class PostsService {
     }): Promise<{
         parent: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             content: string;
             authorId: string;
             earned: number;
@@ -36,11 +40,11 @@ export declare class PostsService {
             parentId: number | null;
             conversationId: number | null;
             quotedPostId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         } | null;
         quotedPost: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             content: string;
             authorId: string;
             earned: number;
@@ -56,11 +60,11 @@ export declare class PostsService {
             parentId: number | null;
             conversationId: number | null;
             quotedPostId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         } | null;
     } & {
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         authorId: string;
         earned: number;
@@ -76,14 +80,14 @@ export declare class PostsService {
         parentId: number | null;
         conversationId: number | null;
         quotedPostId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     toggleEngagement(userId: string, postId: number, type: string): Promise<{
         status: string;
     }>;
-    incrementView(postId: number): Promise<{
+    incrementView(postId: number, currentUserId?: string): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         authorId: string;
         earned: number;
@@ -99,11 +103,11 @@ export declare class PostsService {
         parentId: number | null;
         conversationId: number | null;
         quotedPostId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     deletePost(postId: number, userId: string): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         authorId: string;
         earned: number;
@@ -119,7 +123,5 @@ export declare class PostsService {
         parentId: number | null;
         conversationId: number | null;
         quotedPostId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

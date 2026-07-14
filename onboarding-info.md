@@ -1,5 +1,6 @@
 First name
 Last name
+Gender
 Username
 Email address
 Password

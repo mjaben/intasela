@@ -26,7 +26,7 @@ export class PostsController {
   }
 
   @Get('orbit')
-  async getOrbitFeed(@Headers('authorization') authHeader: string) {
+  async getOrbitFeed(@Query('type') type?: string, @Headers('authorization') authHeader?: string) {
     let currentUserId: string | undefined;
     if (authHeader) {
       try {
@@ -35,7 +35,7 @@ export class PostsController {
         currentUserId = decoded.sub;
       } catch (e) {}
     }
-    return this.postsService.getOrbitFeed(currentUserId);
+    return this.postsService.getOrbitFeed(currentUserId, type);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -122,8 +122,16 @@ export class PostsController {
   }
 
   @Post(':id/view')
-  async incrementView(@Param('id') id: string) {
-    return this.postsService.incrementView(parseInt(id));
+  async incrementView(@Param('id') id: string, @Headers('authorization') authHeader?: string) {
+    let currentUserId: string | undefined;
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = this.jwtService.verify(token);
+        currentUserId = decoded.sub;
+      } catch (e) {}
+    }
+    return this.postsService.incrementView(parseInt(id), currentUserId);
   }
 
   @UseGuards(JwtAuthGuard)

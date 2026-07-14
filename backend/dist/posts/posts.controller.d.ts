@@ -5,7 +5,7 @@ export declare class PostsController {
     private jwtService;
     constructor(postsService: PostsService, jwtService: JwtService);
     getFeed(authHeader: string, type?: string): Promise<any[]>;
-    getOrbitFeed(authHeader: string): Promise<any[]>;
+    getOrbitFeed(type?: string, authHeader?: string): Promise<any[]>;
     getBookmarks(req: any): Promise<any[]>;
     getPostsByUsername(username: string, authHeader: string): Promise<any[]>;
     getRepliesByUsername(username: string, authHeader: string): Promise<any[]>;
@@ -14,6 +14,8 @@ export declare class PostsController {
     createPost(req: any, body: any): Promise<{
         parent: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             content: string;
             authorId: string;
             earned: number;
@@ -29,11 +31,11 @@ export declare class PostsController {
             parentId: number | null;
             conversationId: number | null;
             quotedPostId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         } | null;
         quotedPost: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             content: string;
             authorId: string;
             earned: number;
@@ -49,11 +51,11 @@ export declare class PostsController {
             parentId: number | null;
             conversationId: number | null;
             quotedPostId: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         } | null;
     } & {
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         authorId: string;
         earned: number;
@@ -69,16 +71,16 @@ export declare class PostsController {
         parentId: number | null;
         conversationId: number | null;
         quotedPostId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     toggleEngagement(req: any, id: string, body: {
         type: string;
     }): Promise<{
         status: string;
     }>;
-    incrementView(id: string): Promise<{
+    incrementView(id: string, authHeader?: string): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         authorId: string;
         earned: number;
@@ -94,11 +96,11 @@ export declare class PostsController {
         parentId: number | null;
         conversationId: number | null;
         quotedPostId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     deletePost(req: any, id: string): Promise<{
         id: number;
+        createdAt: Date;
+        updatedAt: Date;
         content: string;
         authorId: string;
         earned: number;
@@ -114,7 +116,5 @@ export declare class PostsController {
         parentId: number | null;
         conversationId: number | null;
         quotedPostId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

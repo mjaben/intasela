@@ -17,8 +17,8 @@ export declare class NotificationsController {
         type: string;
         postId: number | null;
         isRead: boolean;
-        actorId: string;
         recipientId: string;
+        actorId: string;
     })[]>;
     getUnreadCount(req: any): Promise<{
         count: number;

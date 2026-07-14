@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useToastStore } from "@/store/useToastStore";
+import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from 'react-markdown';
 import { useState, useEffect, useRef } from 'react';
@@ -46,7 +47,7 @@ export default function PostCard({
   content: string;
   author: { name: string, username: string, avatarUrl?: string, isFollowing?: boolean, isFollower?: boolean };
   earned: number;
-  stats?: { likes: number, reselas: number, replies: number, views: number };
+  stats?: { likes: number, reselas: number, replies: number, views: number, bookmarks?: number };
   userInteractions?: { isLiked: boolean, isReselaed: boolean, isBookmarked?: boolean };
   quotedPost?: {
     id: number;
@@ -78,18 +79,29 @@ export default function PostCard({
   const [reselaCount, setReselaCount] = useState(stats.reselas);
   
   const [isBookmarked, setIsBookmarked] = useState(userInteractions.isBookmarked || false);
+  const [bookmarkCount, setBookmarkCount] = useState(stats.bookmarks || 0);
   const [likeAnim, setLikeAnim] = useState(false);
   const globalFollowState = useFollowStore(s => s.followMap[author.username]);
   const setFollow = useFollowStore(s => s.setFollow);
   const isFollowing = globalFollowState ?? (author.isFollowing || false);
   const [copySuccess, setCopySuccess] = useState(false);
   
+  const isUserBlocked = useBlockMuteStore(s => s.isUserBlocked(author.username));
+  const isUserMuted = useBlockMuteStore(s => s.isUserMuted(author.username));
+  const isPostMuted = useBlockMuteStore(s => s.isPostMuted(id));
+  const toggleBlockUser = useBlockMuteStore(s => s.toggleBlockUser);
+  const toggleMuteUser = useBlockMuteStore(s => s.toggleMuteUser);
+  const toggleMutePost = useBlockMuteStore(s => s.toggleMutePost);
+
   const addToast = useToastStore((state) => state.addToast);
   
   const [showReselaMenu, setShowReselaMenu] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReportReason, setSelectedReportReason] = useState("");
   
   const [views, setViews] = useState(stats.views);
   const cardRef = useRef<HTMLElement>(null);
@@ -101,6 +113,7 @@ export default function PostCard({
     setLikeCount(stats.likes);
     setIsReselaed(userInteractions.isReselaed);
     setIsBookmarked(userInteractions.isBookmarked || false);
+    setBookmarkCount(stats.bookmarks || 0);
     setReselaCount(stats.reselas);
     setViews(stats.views);
   }, [stats, userInteractions]);
@@ -109,6 +122,12 @@ export default function PostCard({
   useEffect(() => {
     if (!cardRef.current || hasViewedRef.current) return;
 
+    // Prevent author from viewing their own post and inflating metrics
+    if (user?.username === author.username) {
+      hasViewedRef.current = true;
+      return;
+    }
+
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       if (entry.isIntersecting && !hasViewedRef.current) {
@@ -116,7 +135,11 @@ export default function PostCard({
         setViews(prev => prev + 1); // Optimistically increment view
         
         // Notify backend quietly
-        fetch(`http://localhost:3001/posts/${id}/view`, { method: "POST" })
+        const token = localStorage.getItem("access_token");
+        const headers: any = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        fetch(`http://localhost:3001/posts/${id}/view`, { method: "POST", headers })
           .catch(err => console.error("Failed to track view", err));
           
         observer.disconnect();
@@ -126,7 +149,7 @@ export default function PostCard({
     observer.observe(cardRef.current);
     
     return () => observer.disconnect();
-  }, [id]);
+  }, [id, user?.username, author.username]);
 
   const handleToggle = async (type: "LIKE" | "RESELA", e: React.MouseEvent) => {
     e.stopPropagation();
@@ -158,6 +181,7 @@ export default function PostCard({
     } else if (type === "BOOKMARK") {
       const newValue = !isBookmarked;
       setIsBookmarked(newValue);
+      setBookmarkCount(newValue ? bookmarkCount + 1 : bookmarkCount - 1);
       
       if (newValue) {
         addToast("Sela Saved");
@@ -190,6 +214,7 @@ export default function PostCard({
         setReselaCount(reselaCount);
       } else if (type === "BOOKMARK") {
         setIsBookmarked(isBookmarked);
+        setBookmarkCount(bookmarkCount);
       }
     }
   };
@@ -247,6 +272,47 @@ export default function PostCard({
       setCopySuccess(false);
       setShowOptionsMenu(false);
     }, 2000);
+  };
+
+  const handleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) return router.push("/login");
+    toggleMuteUser({ username: author.username, name: author.name, avatarUrl: author.avatarUrl });
+    addToast(isUserMuted ? `Unmuted @${author.username}` : `Muted @${author.username}`, "success");
+    setShowOptionsMenu(false);
+  };
+
+  const handleBlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) return router.push("/login");
+    toggleBlockUser({ username: author.username, name: author.name, avatarUrl: author.avatarUrl });
+    addToast(isUserBlocked ? `Unblocked @${author.username}` : `Blocked @${author.username}`, "success");
+    setShowOptionsMenu(false);
+  };
+
+  const handleMutePost = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) return router.push("/login");
+    toggleMutePost(id);
+    addToast(isPostMuted ? `Unmuted post notifications` : `Muted post notifications`, "success");
+    setShowOptionsMenu(false);
+  };
+
+  const handleReportClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) return router.push("/login");
+    setShowOptionsMenu(false);
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedReportReason) return;
+    
+    // In a real app, send report to backend
+    addToast("Report submitted successfully", "success");
+    setShowReportModal(false);
+    setSelectedReportReason("");
   };
 
   const handleUnfollow = async (e: React.MouseEvent) => {
@@ -480,23 +546,31 @@ export default function PostCard({
                           <div className="h-px bg-white/10 my-1 mx-1"></div>
                           
                           <button 
-                            onClick={(e) => { e.stopPropagation(); setShowOptionsMenu(false); }} 
+                            onClick={handleMute} 
                             className="w-full px-2.5 py-2 hover:bg-red-500/10 text-left rounded-lg text-red-500/90 hover:text-red-500 font-medium flex items-center gap-2.5 transition-colors text-[13px]"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-                            Mute
+                            {isUserMuted ? `Unmute @${author.username}` : `Mute @${author.username}`}
                           </button>
                           
                           <button 
-                            onClick={(e) => { e.stopPropagation(); setShowOptionsMenu(false); }} 
+                            onClick={handleBlock} 
                             className="w-full px-2.5 py-2 hover:bg-red-500/10 text-left rounded-lg text-red-500/90 hover:text-red-500 font-medium flex items-center gap-2.5 transition-colors text-[13px] mt-0.5"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
-                            Block
+                            {isUserBlocked ? `Unblock @${author.username}` : `Block @${author.username}`}
+                          </button>
+
+                          <button 
+                            onClick={handleMutePost} 
+                            className="w-full px-2.5 py-2 hover:bg-red-500/10 text-left rounded-lg text-red-500/90 hover:text-red-500 font-medium flex items-center gap-2.5 transition-colors text-[13px] mt-0.5"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5L6 9H2v6h4l5 4zM22 9l-6 6M16 9l6 6"/></svg>
+                            {isPostMuted ? `Unmute this post` : `Mute this post`}
                           </button>
                           
                           <button 
-                            onClick={(e) => { e.stopPropagation(); setShowOptionsMenu(false); }} 
+                            onClick={handleReportClick} 
                             className="w-full px-2.5 py-2 hover:bg-red-500/10 text-left rounded-lg text-red-500/90 hover:text-red-500 font-medium flex items-center gap-2.5 transition-colors text-[13px] mt-0.5"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -517,7 +591,7 @@ export default function PostCard({
             
             {/* Media Content */}
             {mediaUrl && mediaType === 'VIDEO' && (
-              <div className="mt-3 rounded-2xl overflow-hidden border border-border bg-black" onClick={(e) => e.stopPropagation()}>
+              <div className="mt-3 rounded-2xl overflow-hidden border border-border" onClick={(e) => e.stopPropagation()}>
                 <video 
                   src={mediaUrl} 
                   poster={thumbnailUrl} 
@@ -562,19 +636,39 @@ export default function PostCard({
               className={`flex items-center gap-2 transition-colors group ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}
             >
               <div className="p-1.5 rounded-full group-hover:bg-red-500/10 -ml-1.5 transition-colors">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-all ${likeAnim ? 'animate-scream text-red-500' : 'scale-100'} group-active:scale-90`}>
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
+                <div 
+                  className={`w-[18px] h-[18px] transition-all group-active:scale-90 ${likeAnim ? 'animate-scream' : 'scale-100'} ${isLiked ? 'bg-red-500' : 'bg-current'}`}
+                  style={{
+                    WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADZUlEQVR4nO3ae4hVVRTH8c+de+/MbZz3ODNRgfmYUuk1YZFWY6WRgTVSQdCDgbAgih5/RNEfGhmJPSYpEgzKMiiC6g+tiMyUnpY1jCViPgqkbJwps/qjMYIbB7ZQ5uSM93HuHfrC5cJm77XPOmeftX9r7cP/SGAGbsP9uAVnhfaRcBIuxVxMFgMJ3IAd+Bor8DBWYXdouwkVRxibRDc+x35swLv4DnvxFKYXw4lGvIHNmDNMn4uwCe+g5W/tZ4Rx7+PyIzg6CYuDU89gXKGcqEMfliN9lL7RnX8I32ICbsdPuHGE86zEV2hVgOX0NnpGOe5OHMAWtI9y7GJ8hCp55NqwrqM7PVq6UH+M876Fu+TxaezCTMXnVOzL11OJQuw28bEhhOiceRBLxMciPJIPQy/hOvFxJV7Nh6GNmC0+ZoW9J2d60SE+ZoSImTORhLhEfMwPaiJnXo75HVkSVELO3IsnxMeXOD8fhi4M70kczA572EhTg/8kEoj9mKr4vIeF+TT4GB5XXK4KyyqVT6Mn42ccrzicGDRWQfavJ/GcwpMM+urRQk3QFNLRKM8uJA/gY1QWcpIr8ANOKJD97pDqFsr+P1iKT1FbgB28H6cpElHR4DV8gJo82ewML/e5ikxlSEM35qHacVkoTMSm5zLhyWzKYU1fjYFQQoqVZNBhe0PeMBpuxfc4WwlxDQZx9zAVxsOd7wkFjdGWiIpCdFFfhCAwZZg+DVgbNFSzEiaFe/BjyLOjquEhOkJteMUIKpUlQXUikehtbGwYrKqq+iWVqrgjqtQnk8nfm5ub3lQuJBKJ1Z2ds/bs3tmXXbvmlezM8875beLECb+++MLKbE3NuINFFJ45Ma+xsWFg29bPst/s2vKv380Lu7Ntba15Ke0UlHQ6/cmCrvl/dHScOTjn4s7+wx3p6/0wW1dbOxSOGEqWikQiMVRZmYoi16rp06ZuP+TA8p6l2fHNTQdbW1sO1NfXDWUymShqlTQt4b/rlPYpO9avW5Ntb5/8Z3197f5MJhPpqWlYELK/sqAtnU4PVFdX70smk5tDSC575mLrMZ6tlBzRadfzY8GZBqzHMmVOBVbjaWXOs1iH45QxF2BnuTsRcTr2lIvGOhr3YXv4/qTsWRS+XxlvDLAMrxsDpHB93BehlPkLRtzTRcJTeY0AAAAASUVORK5CYII=)',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADZUlEQVR4nO3ae4hVVRTH8c+de+/MbZz3ODNRgfmYUuk1YZFWY6WRgTVSQdCDgbAgih5/RNEfGhmJPSYpEgzKMiiC6g+tiMyUnpY1jCViPgqkbJwps/qjMYIbB7ZQ5uSM93HuHfrC5cJm77XPOmeftX9r7cP/SGAGbsP9uAVnhfaRcBIuxVxMFgMJ3IAd+Bor8DBWYXdouwkVRxibRDc+x35swLv4DnvxFKYXw4lGvIHNmDNMn4uwCe+g5W/tZ4Rx7+PyIzg6CYuDU89gXKGcqEMfliN9lL7RnX8I32ICbsdPuHGE86zEV2hVgOX0NnpGOe5OHMAWtI9y7GJ8hCp55NqwrqM7PVq6UH+M876Fu+TxaezCTMXnVOzL11OJQuw28bEhhOiceRBLxMciPJIPQy/hOvFxJV7Nh6GNmC0+ZoW9J2d60SE+ZoSImTORhLhEfMwPaiJnXo75HVkSVELO3IsnxMeXOD8fhi4M70kczA572EhTg/8kEoj9mKr4vIeF+TT4GB5XXK4KyyqVT6Mn42ccrzicGDRWQfavJ/GcwpMM+urRQk3QFNLRKM8uJA/gY1QWcpIr8ANOKJD97pDqFsr+P1iKT1FbgB28H6cpElHR4DV8gJo82ewML/e5ikxlSEM35qHacVkoTMSm5zLhyWzKYU1fjYFQQoqVZNBhe0PeMBpuxfc4WwlxDQZx9zAVxsOd7wkFjdGWiIpCdFFfhCAwZZg+DVgbNFSzEiaFe/BjyLOjquEhOkJteMUIKpUlQXUikehtbGwYrKqq+iWVqrgjqtQnk8nfm5ub3lQuJBKJ1Z2ds/bs3tmXXbvmlezM8875beLECb+++MLKbE3NuINFFJ45Ma+xsWFg29bPst/s2vKv380Lu7Ntba15Ke0UlHQ6/cmCrvl/dHScOTjn4s7+wx3p6/0wW1dbOxSOGEqWikQiMVRZmYoi16rp06ZuP+TA8p6l2fHNTQdbW1sO1NfXDWUymShqlTQt4b/rlPYpO9avW5Ntb5/8Z3197f5MJhPpqWlYELK/sqAtnU4PVFdX70smk5tDSC575mLrMZ6tlBzRadfzY8GZBqzHMmVOBVbjaWXOs1iH45QxF2BnuTsRcTr2lIvGOhr3YXv4/qTsWRS+XxlvDLAMrxsDpHB93BehlPkLRtzTRcJTeY0AAAAASUVORK5CYII=)',
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                  }}
+                />
               </div>
               <span className="">{likeCount}</span>
             </button>
 
             {/* 2. Comment / Reply */}
-            <button onClick={handleReplyClick} className="flex items-center gap-2 hover:text-blue-500 transition-colors group">
-              <div className="p-1.5 rounded-full group-hover:bg-blue-500/10 -ml-1.5 transition-colors">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-opacity">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
+            <button onClick={handleReplyClick} className="flex items-center gap-2 hover:text-brand transition-colors group">
+              <div className="p-1.5 rounded-full group-hover:bg-brand/10 -ml-1.5 transition-colors">
+                <div 
+                  className="w-[18px] h-[18px] opacity-70 group-hover:opacity-100 transition-opacity bg-current"
+                  style={{
+                    WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADh0lEQVR4nO3Ze4inUxzH8dfuGLus2qzrbmMtxcS65bpbbsuuW2E3/CGS61JbaFxWJKuEtca6RRapdSv+4A/l9geNP+S2YluXGCyLRSktalPo1Ef9mmKfZ+Y383vUvOvUNHOec84z5zyf7/f7OYwzzv+WbvTgIOyJ3bGNhjMBc3EdXsD32Ixv8B4G8RV+w+d4HldjlobQgxuz0A/Qj4WYkZcbSvndTJyB+/Oib+McTOzA+u2IlfgJ9+b4DIcunIwX8REWGUMuwY+4Gzu1cdzjsAarMdUosj2ezZnfexQFoh9foHc0Jihnfl2O09ZGn4URh4PbOWiRzc9wjbHlJPyA2e0YbLvsxBU6wyJ8gmkjHehJPKKz3IyX/0XOK3Eu3sdknaUb7+LC4Ty8Lb7GHM1gX2xI/KrF9Xhas7gT99V5oKQK63FAxf6TE2NmRfsPwbE4EWcl/Vic1oelycluTytxo0rM2AEb6wThBQl6VV+66P3P+BIf5zy/hpfwTATjobS7Wl5gadqVmF5xvnuwrOqLlNzpWs1kv2TPlXgHR2omXfi9ipJ2p+MUzWVdlWi/czLbJvNclXS/t84Z7BAP4rIqH1PZujpMivzOSG2+fyT4cMxvaQsix63t4tQ3u9SY77ao3X8yPVptGPL7bUreDyPBpYR9taW9EjlubQ9HlmfXmLPEoFu31KnUGn90qn6uSDEtVlTpODha1VmbWIabqnR8ChdoLitwVZWOl+NRzeUJnFel426xecaiNh8Oa3Bo1c5v4NQag09NWTwWKcqvdeZaHFtzS0yM7Bb53YQ/8/P6xKO3hkjwSHO4o1K11gpypSI7sOZEExIcexIci51zREtQHKnx1l9VsVrpiyHXFLqz0yVzqMUpcdWH7V60mfNzPGuxB77DMZrBJHyaEroyRRHWYonmcEfdYz4x+X5J5prC/AhPMR8qsxwDDQqGc+L/1pLtJblsGbHP2sad2IgT6tr4Gxpyp7dVrvPKeo6u8+Dc1Omlqus08yI0xRPbte7Da3OReSn2MvYUgSlmwuu5hzl9uAMVC/JsPJbtLOb144ns85JytJspqeEfSNAdwJlJCttGb/zalZlgU+70ynavwg25cihKsk9yqmlDMtJ/cq6ZybVOS4m6KvX8L7FV+8byu+zKYo/HRbglfu5AFjWY/2pZ3F9pm5MFl7+9mdi0PK7JYfmgxxlnHKPP3/f5ueKem89DAAAAAElFTkSuQmCC)',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADh0lEQVR4nO3Ze4inUxzH8dfuGLus2qzrbmMtxcS65bpbbsuuW2E3/CGS61JbaFxWJKuEtca6RRapdSv+4A/l9geNP+S2YluXGCyLRSktalPo1Ef9mmKfZ+Y383vUvOvUNHOec84z5zyf7/f7OYwzzv+WbvTgIOyJ3bGNhjMBc3EdXsD32Ixv8B4G8RV+w+d4HldjlobQgxuz0A/Qj4WYkZcbSvndTJyB+/Oib+McTOzA+u2IlfgJ9+b4DIcunIwX8REWGUMuwY+4Gzu1cdzjsAarMdUosj2ezZnfexQFoh9foHc0Jihnfl2O09ZGn4URh4PbOWiRzc9wjbHlJPyA2e0YbLvsxBU6wyJ8gmkjHehJPKKz3IyX/0XOK3Eu3sdknaUb7+LC4Ty8Lb7GHM1gX2xI/KrF9Xhas7gT99V5oKQK63FAxf6TE2NmRfsPwbE4EWcl/Vic1oelycluTytxo0rM2AEb6wThBQl6VV+66P3P+BIf5zy/hpfwTATjobS7Wl5gadqVmF5xvnuwrOqLlNzpWs1kv2TPlXgHR2omXfi9ipJ2p+MUzWVdlWi/czLbJvNclXS/t84Z7BAP4rIqH1PZujpMivzOSG2+fyT4cMxvaQsix63t4tQ3u9SY77ao3X8yPVptGPL7bUreDyPBpYR9taW9EjlubQ9HlmfXmLPEoFu31KnUGn90qn6uSDEtVlTpODha1VmbWIabqnR8ChdoLitwVZWOl+NRzeUJnFel426xecaiNh8Oa3Bo1c5v4NQag09NWTwWKcqvdeZaHFtzS0yM7Bb53YQ/8/P6xKO3hkjwSHO4o1K11gpypSI7sOZEExIcexIci51zREtQHKnx1l9VsVrpiyHXFLqz0yVzqMUpcdWH7V60mfNzPGuxB77DMZrBJHyaEroyRRHWYonmcEfdYz4x+X5J5prC/AhPMR8qsxwDDQqGc+L/1pLtJblsGbHP2sad2IgT6tr4Gxpyp7dVrvPKeo6u8+Dc1Omlqus08yI0xRPbte7Da3OReSn2MvYUgSlmwuu5hzl9uAMVC/JsPJbtLOb144ns85JytJspqeEfSNAdwJlJCttGb/zalZlgU+70ynavwg25cihKsk9yqmlDMtJ/cq6ZybVOS4m6KvX8L7FV+8byu+zKYo/HRbglfu5AFjWY/2pZ3F9pm5MFl7+9mdi0PK7JYfmgxxlnHKPP3/f5ueKem89DAAAAAElFTkSuQmCC)',
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                  }}
+                />
               </div>
               <span className="">{stats.replies}</span>
             </button>
@@ -587,12 +681,19 @@ export default function PostCard({
                 title="Resela (Repost)"
               >
                 <div className="p-1.5 rounded-full group-hover:bg-green-500/10 -ml-1.5 transition-colors">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-active:scale-90 opacity-70 group-hover:opacity-100">
-                    <path d="M17 2.1l4 4-4 4"/>
-                    <path d="M3 12.2v-2a4 4 0 0 1 4-4h13.8"/>
-                    <path d="M7 21.9l-4-4 4-4"/>
-                    <path d="M21 11.8v2a4 4 0 0 1-4 4H3.2"/>
-                  </svg>
+                  <div 
+                    className={`w-[18px] h-[18px] transition-transform group-active:scale-90 opacity-70 group-hover:opacity-100 ${isReselaed ? 'bg-green-500' : 'bg-current'}`}
+                    style={{
+                      WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEdElEQVR4nO2Ze0yVZRzHP57De3/PAcSUBVRbzVIGkSy62JYt/mBs2rq5gQayjC6glViaKy3LpVZSaQY5hVjLUbZUxiovNdTSNCFrVIqpzZVmtbjLTd720kOjQsfhnBcP7Hy2Z+fs7Hl+z/s9z+V9nu8PQoQIEWKQXAakAQ8DC0R5DLgbuAHQCWImAauBY8BpYBtQDCwX5VXgA+AA0ATsAZ4Frhxg/JsURbHrO8YtwGfAcWAJED+ANhpwG7BKiLbb336B+m7D0OtkWW6xvxNgPMB64CcgGwgbZBwJyACOiFG85r8VwsJcc69LSmyKi4tpAFIIIFcA3wDrhKBAYAvKB86ItTVK/B6laWrjR5WbrJycmR2SJD0XoP56FusvQB7OMF6so1J7MHRdfyc7K7Pt2NFD1tulRVZ4uNf+A/3mWjGn03EWHagAqjweT+uhms8tW8j3tfstWZbbgXB/go8DTgJ3MTRcr+tay8oVS7ttEb0leVJSgz/P4AJ2iO3SaUYbhrbBNM3mlcuXnusrwi5PLZzXbRhGyWCDPwTsFoKcwuVyuXIVRanPzLi39evqPf8S0FsqtpZbpmnaM8NnooBfgYk4R5Ku67Xx8RMaKyve61dAb6k7XGOpqtIGjPW1k2XAGziI/Z4wTeOUqqptyclJ9fl5uV3r162xDh6o6ldMSkpyI3CPL32YwG9AHEODPfrpkiS9EBkZsVdRlJYxY6KaUlOnND75xKPdJRvWWvu+2GkVzMs/J0nSS74Eng1s4uIyHpipqmpxZGREta7rf0pSWIeu6+W+BNkJTCX40AF1oJUNoEF8DmumALsYATwCrGUEsAxYxAigEJhL8JEkrtEDxr7gRBN8PC5ulsOeRWLaD3tWB+mU95nKIH1J+8QocRIfqrOfY0wQtpPPxAXZEeVp4HWfW2madlySpA6v13tYluXFQAIXd1p9B0z2uaXHY57Y8uG7VllpkTUjc3pnVNToVkPXz6iqatufyQwtU4GvBtUyMjJi31vFr/3vzvxgbk6nfeExDOOUokgrgEScxQ3UDNo9MU2zbMnihee9P2/dvNGafX+WLarF6/X8rGnK84AScBn0OJCf+hNgQc6sGe0XMgNst2N+wZwuRZY7PR7DPvZ7CSwJwka92p8g0yfffGN9fwJ2V31sZWdltGuaetbj8bzv0EYwDqizr7r+BkqMjh7b2FdA7bdfWmlpqWcVRWlWVdU+IcfgDJeIdfFMIIKpbre768gPB/8Rcse09HbhKxXgHBOBo0DAnHdMUz+9/ZPNPSIKV73YrevqSWFmV4sM1OUB6+xvJ3OOWBNZAYxrb8Hhu4reLLR2bNtiaZrWLEQgXAzbC/4dsLfgWD8FTBM5lyphAQUWRVEK8/Me6I6NjWmWJFdOP1UuBdYAf4hUwH0iGTqQh08W6bofgf3AnThIjtvt7jZNc+MAvCY7BVcucigngO1ASZ+E6MtAmTDEG8WR45VAp9POR4Isy3sHkVK+CkgFZvVJUc8XYm8V9miIECFC4DN/AetW2sTrKgqoAAAAAElFTkSuQmCC)',
+                      WebkitMaskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEdElEQVR4nO2Ze0yVZRzHP57De3/PAcSUBVRbzVIGkSy62JYt/mBs2rq5gQayjC6glViaKy3LpVZSaQY5hVjLUbZUxiovNdTSNCFrVIqpzZVmtbjLTd720kOjQsfhnBcP7Hy2Z+fs7Hl+z/s9z+V9nu8PQoQIEWKQXAakAQ8DC0R5DLgbuAHQCWImAauBY8BpYBtQDCwX5VXgA+AA0ATsAZ4Frhxg/JsURbHrO8YtwGfAcWAJED+ANhpwG7BKiLbb336B+m7D0OtkWW6xvxNgPMB64CcgGwgbZBwJyACOiFG85r8VwsJcc69LSmyKi4tpAFIIIFcA3wDrhKBAYAvKB86ItTVK/B6laWrjR5WbrJycmR2SJD0XoP56FusvQB7OMF6so1J7MHRdfyc7K7Pt2NFD1tulRVZ4uNf+A/3mWjGn03EWHagAqjweT+uhms8tW8j3tfstWZbbgXB/go8DTgJ3MTRcr+tay8oVS7ttEb0leVJSgz/P4AJ2iO3SaUYbhrbBNM3mlcuXnusrwi5PLZzXbRhGyWCDPwTsFoKcwuVyuXIVRanPzLi39evqPf8S0FsqtpZbpmnaM8NnooBfgYk4R5Ku67Xx8RMaKyve61dAb6k7XGOpqtIGjPW1k2XAGziI/Z4wTeOUqqptyclJ9fl5uV3r162xDh6o6ldMSkpyI3CPL32YwG9AHEODPfrpkiS9EBkZsVdRlJYxY6KaUlOnND75xKPdJRvWWvu+2GkVzMs/J0nSS74Eng1s4uIyHpipqmpxZGREta7rf0pSWIeu6+W+BNkJTCX40AF1oJUNoEF8DmumALsYATwCrGUEsAxYxAigEJhL8JEkrtEDxr7gRBN8PC5ulsOeRWLaD3tWB+mU95nKIH1J+8QocRIfqrOfY0wQtpPPxAXZEeVp4HWfW2madlySpA6v13tYluXFQAIXd1p9B0z2uaXHY57Y8uG7VllpkTUjc3pnVNToVkPXz6iqatufyQwtU4GvBtUyMjJi31vFr/3vzvxgbk6nfeExDOOUokgrgEScxQ3UDNo9MU2zbMnihee9P2/dvNGafX+WLarF6/X8rGnK84AScBn0OJCf+hNgQc6sGe0XMgNst2N+wZwuRZY7PR7DPvZ7CSwJwka92p8g0yfffGN9fwJ2V31sZWdltGuaetbj8bzv0EYwDqizr7r+BkqMjh7b2FdA7bdfWmlpqWcVRWlWVdU+IcfgDJeIdfFMIIKpbre768gPB/8Rcse09HbhKxXgHBOBo0DAnHdMUz+9/ZPNPSIKV73YrevqSWFmV4sM1OUB6+xvJ3OOWBNZAYxrb8Hhu4reLLR2bNtiaZrWLEQgXAzbC/4dsLfgWD8FTBM5lyphAQUWRVEK8/Me6I6NjWmWJFdOP1UuBdYAf4hUwH0iGTqQh08W6bofgf3AnThIjtvt7jZNc+MAvCY7BVcucigngO1ASZ+E6MtAmTDEG8WR45VAp9POR4Isy3sHkVK+CkgFZvVJUc8XYm8V9miIECFC4DN/AetW2sTrKgqoAAAAAElFTkSuQmCC)',
+                      maskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                    }}
+                  />
                 </div>
                 <span className="">{reselaCount}</span>
               </button>
@@ -606,7 +707,7 @@ export default function PostCard({
                       onClick={(e) => { setShowReselaMenu(false); handleToggle("RESELA", e); }} 
                       className="p-3 hover:bg-gray-800 text-left rounded-lg text-white font-medium flex items-center gap-3 transition-colors"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h13.8"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H3.2"/></svg>
+                      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEdElEQVR4nO2Ze0yVZRzHP57De3/PAcSUBVRbzVIGkSy62JYt/mBs2rq5gQayjC6glViaKy3LpVZSaQY5hVjLUbZUxiovNdTSNCFrVIqpzZVmtbjLTd720kOjQsfhnBcP7Hy2Z+fs7Hl+z/s9z+V9nu8PQoQIEWKQXAakAQ8DC0R5DLgbuAHQCWImAauBY8BpYBtQDCwX5VXgA+AA0ATsAZ4Frhxg/JsURbHrO8YtwGfAcWAJED+ANhpwG7BKiLbb336B+m7D0OtkWW6xvxNgPMB64CcgGwgbZBwJyACOiFG85r8VwsJcc69LSmyKi4tpAFIIIFcA3wDrhKBAYAvKB86ItTVK/B6laWrjR5WbrJycmR2SJD0XoP56FusvQB7OMF6so1J7MHRdfyc7K7Pt2NFD1tulRVZ4uNf+A/3mWjGn03EWHagAqjweT+uhms8tW8j3tfstWZbbgXB/go8DTgJ3MTRcr+tay8oVS7ttEb0leVJSgz/P4AJ2iO3SaUYbhrbBNM3mlcuXnusrwi5PLZzXbRhGyWCDPwTsFoKcwuVyuXIVRanPzLi39evqPf8S0FsqtpZbpmnaM8NnooBfgYk4R5Ku67Xx8RMaKyve61dAb6k7XGOpqtIGjPW1k2XAGziI/Z4wTeOUqqptyclJ9fl5uV3r162xDh6o6ldMSkpyI3CPL32YwG9AHEODPfrpkiS9EBkZsVdRlJYxY6KaUlOnND75xKPdJRvWWvu+2GkVzMs/J0nSS74Eng1s4uIyHpipqmpxZGREta7rf0pSWIeu6+W+BNkJTCX40AF1oJUNoEF8DmumALsYATwCrGUEsAxYxAigEJhL8JEkrtEDxr7gRBN8PC5ulsOeRWLaD3tWB+mU95nKIH1J+8QocRIfqrOfY0wQtpPPxAXZEeVp4HWfW2madlySpA6v13tYluXFQAIXd1p9B0z2uaXHY57Y8uG7VllpkTUjc3pnVNToVkPXz6iqatufyQwtU4GvBtUyMjJi31vFr/3vzvxgbk6nfeExDOOUokgrgEScxQ3UDNo9MU2zbMnihee9P2/dvNGafX+WLarF6/X8rGnK84AScBn0OJCf+hNgQc6sGe0XMgNst2N+wZwuRZY7PR7DPvZ7CSwJwka92p8g0yfffGN9fwJ2V31sZWdltGuaetbj8bzv0EYwDqizr7r+BkqMjh7b2FdA7bdfWmlpqWcVRWlWVdU+IcfgDJeIdfFMIIKpbre768gPB/8Rcse09HbhKxXgHBOBo0DAnHdMUz+9/ZPNPSIKV73YrevqSWFmV4sM1OUB6+xvJ3OOWBNZAYxrb8Hhu4reLLR2bNtiaZrWLEQgXAzbC/4dsLfgWD8FTBM5lyphAQUWRVEK8/Me6I6NjWmWJFdOP1UuBdYAf4hUwH0iGTqQh08W6bofgf3AnThIjtvt7jZNc+MAvCY7BVcucigngO1ASZ+E6MtAmTDEG8WR45VAp9POR4Isy3sHkVK+CkgFZvVJUc8XYm8V9miIECFC4DN/AetW2sTrKgqoAAAAAElFTkSuQmCC" alt="synchronize--v2" className="w-[18px] h-[18px] invert" />
                       {isReselaed ? 'Undo Resela' : 'Resela'}
                     </button>
                     <button 
@@ -624,9 +725,19 @@ export default function PostCard({
             {/* 4. Impressions */}
             <button className="flex items-center gap-2 hover:text-primary transition-colors group" title="Post Impressions">
               <div className="p-1.5 rounded-full group-hover:bg-primary/10 -ml-1.5 transition-colors">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-opacity">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
+                <div 
+                  className="w-[18px] h-[18px] opacity-70 group-hover:opacity-100 transition-opacity bg-current"
+                  style={{
+                    WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAENklEQVR4nO2ZaWxVRRTHf/BK371zW0PQ4G4iBkQwBhKg9bG5oCIkAiEBl4h+0KARNMbdELdPVbSiokKNRhOWD4LKJ1AoiLSlBY2IH9xQNEpcsAJCqyHgM6c9bcbJvffxAd97g/6SF2buTCdnlnPOfwb4n/8WV3ACcBLwFzAQzxkP5IFaPGeeTuR6PKcB+B5YgOdsA14FXsNjMkAHMAvYhMecB/wIDAa+w2OuBDYD/YDDQBZPuU2dHd2RIXjKQuA+LYuPTMZT3gKmaVki1+14yg7gQi1LHnmKMuVa4JGU9t+BKi1fB6wuEKpFl5WERuCjhDYRiXutumitj1PGugF4mxJwGtAO7AdMTPvFwHZnYgdSxnsc+IkSicE3gGZgQky7HKU3nW8HgVMSxlum4vIciswWYCrwEnBXTPtDGn5tdgKjE8bbqjsykyJylp7/Sk16ElpdlgJ3ON/eAWYnjPkL8ALwJEXkHuAVyxc+jOnzru6YTT3wQEzfaj12VwEbj4eBgTHm+TAM9gVBcMAY86yuepw0n6TlCOgEKpw+XwDDnW/zgSUx443QnDNAA0LfAnZWGmMWZbPZg/KLokhkUNjbGkXRi+PH5TpbmtfnW5rey9fWju6oquqajM25wM+O4bsco/vo5GSSNlN1p1xmqgoQvgKGpc2iujpqGJur6RQbt7VuzF926YROnUw3YRjuk0l8s+uTrp+UgyAr94kpwEjgDM3Q4uA2q52r7OlODunhAuDLmO/3W4FhBXCT1fYgUKdHUn5zM5nMke1tm3rtbNvaKHZK8u1GjlNrS2NvB+lcUVFxBFirW78H+APIOYY86kSo2gS/CfXv+8YEBgkawt3AYi2PAb7VCFingWBpEASH3QWXTegdLYqiJZdMHNd1tJo+WJfP5Wo6oihyVz+O6cB6J4esSui7R6OezQbr7Wus+qCwCHjMHcAY80z9mFEdYuOWzevycszEt/+xYmJ4GAb7ZXeCIKhPcHZi/OZXqy4r+HRK/pEnIpvdwKAeO+m+Hsu/PwDnx4zRL4rChbILxph2Y0z98bq09dFoc7bWXwbuTOgramCOVa/U42YHjx3Aw47EKRqy0tdoea1VjtNU4lM9DNaoZ9Ogyln8peg8Z0n6z4CLEvrdArxu1SfHhORbgaPAmZSAOSrDe3JI/5QHifetusgYN6AMUhVQEoar04q8/y2l31Dga6ter5KnbMgAh4CrgbaUfhKN/tSdE9Zo+C4rmlVLLS/QT7L+qVr+NMWfSkadGimRKQ25Ho/SXTlk3evLhsv1lndjgX4SFGaodpMn1bKjUldY7iiFQvV8zfBNlCnTj0Eu3KtvXDdrpveW2cBK4Akny3vHRD1SK/Q9y1uGafJsPQZ/KmsGqozZ6/t/W2dUFMrLife0F3gL9obPU67DXtFU7FfFfwt5Pp3LCcBI4ORSG0G58jfEiSNbtKMSxAAAAABJRU5ErkJggg==)',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAENklEQVR4nO2ZaWxVRRTHf/BK371zW0PQ4G4iBkQwBhKg9bG5oCIkAiEBl4h+0KARNMbdELdPVbSiokKNRhOWD4LKJ1AoiLSlBY2IH9xQNEpcsAJCqyHgM6c9bcbJvffxAd97g/6SF2buTCdnlnPOfwb4n/8WV3ACcBLwFzAQzxkP5IFaPGeeTuR6PKcB+B5YgOdsA14FXsNjMkAHMAvYhMecB/wIDAa+w2OuBDYD/YDDQBZPuU2dHd2RIXjKQuA+LYuPTMZT3gKmaVki1+14yg7gQi1LHnmKMuVa4JGU9t+BKi1fB6wuEKpFl5WERuCjhDYRiXutumitj1PGugF4mxJwGtAO7AdMTPvFwHZnYgdSxnsc+IkSicE3gGZgQky7HKU3nW8HgVMSxlum4vIciswWYCrwEnBXTPtDGn5tdgKjE8bbqjsykyJylp7/Sk16ElpdlgJ3ON/eAWYnjPkL8ALwJEXkHuAVyxc+jOnzru6YTT3wQEzfaj12VwEbj4eBgTHm+TAM9gVBcMAY86yuepw0n6TlCOgEKpw+XwDDnW/zgSUx443QnDNAA0LfAnZWGmMWZbPZg/KLokhkUNjbGkXRi+PH5TpbmtfnW5rey9fWju6oquqajM25wM+O4bsco/vo5GSSNlN1p1xmqgoQvgKGpc2iujpqGJur6RQbt7VuzF926YROnUw3YRjuk0l8s+uTrp+UgyAr94kpwEjgDM3Q4uA2q52r7OlODunhAuDLmO/3W4FhBXCT1fYgUKdHUn5zM5nMke1tm3rtbNvaKHZK8u1GjlNrS2NvB+lcUVFxBFirW78H+APIOYY86kSo2gS/CfXv+8YEBgkawt3AYi2PAb7VCFingWBpEASH3QWXTegdLYqiJZdMHNd1tJo+WJfP5Wo6oihyVz+O6cB6J4esSui7R6OezQbr7Wus+qCwCHjMHcAY80z9mFEdYuOWzevycszEt/+xYmJ4GAb7ZXeCIKhPcHZi/OZXqy4r+HRK/pEnIpvdwKAeO+m+Hsu/PwDnx4zRL4rChbILxph2Y0z98bq09dFoc7bWXwbuTOgramCOVa/U42YHjx3Aw47EKRqy0tdoea1VjtNU4lM9DNaoZ9Ogyln8peg8Z0n6z4CLEvrdArxu1SfHhORbgaPAmZSAOSrDe3JI/5QHifetusgYN6AMUhVQEoar04q8/y2l31Dga6ter5KnbMgAh4CrgbaUfhKN/tSdE9Zo+C4rmlVLLS/QT7L+qVr+NMWfSkadGimRKQ25Ho/SXTlk3evLhsv1lndjgX4SFGaodpMn1bKjUldY7iiFQvV8zfBNlCnTj0Eu3KtvXDdrpveW2cBK4Akny3vHRD1SK/Q9y1uGafJsPQZ/KmsGqozZ6/t/W2dUFMrLife0F3gL9obPU67DXtFU7FfFfwt5Pp3LCcBI4ORSG0G58jfEiSNbtKMSxAAAAABJRU5ErkJggg==)',
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                  }}
+                />
               </div>
               <span className="">{views}</span>
             </button>
@@ -635,21 +746,44 @@ export default function PostCard({
               {/* 5. Bookmark */}
               <button 
                 onClick={(e) => handleToggle("BOOKMARK", e)} 
-                className={`flex items-center transition-colors group mr-2 ${isBookmarked ? 'text-primary' : 'hover:text-primary'}`} 
+                className={`flex items-center gap-1 transition-colors group mr-2 ${isBookmarked ? 'text-primary' : 'hover:text-primary'}`} 
                 title="Bookmark"
               >
                 <div className="p-1.5 rounded-full group-hover:bg-primary/10 transition-colors">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill={isBookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-transform group-active:scale-90">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                  </svg>
+                  <div 
+                    className={`w-[18px] h-[18px] transition-transform group-active:scale-90 opacity-70 group-hover:opacity-100 ${isBookmarked ? 'bg-primary' : 'bg-current'}`}
+                    style={{
+                      WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACRklEQVR4nO2ZuU9UURTGf4DgArI5yqIgUCiNMZFSY2IsrSxsLe2oaemgNjb+C7aUtiSWhFAAKpvKDI9xZpxhEQdZcpNTEMK8PPWcew15X3IyyZv3vnu/u54FUqRIoYlLQAcwCAzVsPvAiNi9mPc6algTxpgHSkBRbB1YirGFmP+iEzynrQociRUshDgRGfzi0IK0GEDIAVCnTfoduI1f/AbqtUnzwA38Yh+4oE3qNmgXflEFGrVJcwGE/LI4jrNAN36xB1zUJv0G9OAXP+USVsVXoBe/2AUua5OuBRCyA1zRJl0FbuIX20CzNukycAu/2AKuapN+BvrwiwrQqk36KYCQMtCmTfoRuI1flCRGUV9a50LIEjCAXxSBTm3SlQBCCsA1i3vExdo+kbeIgb4EmJG8RQzkfK1+/GLTQsh6gHskshCSDeCi5CyEbATwfiOLzR4FiBAjCyEhsiibFkJC5LXyFm0WLW7ZBEIyFg6cut+TYBVkLGKDds6BkIpFtBbCady2iJ9D7MsdoOUPv2kAngPP/mFGMhgky5LmmJzgUYkqp4FZ4APw9H+Ykb0E6UuX5B6Xi2wKeCjPXbHmBbAowh4nbPOHxUlZjcmMuwLoWzn33e+dGu+5WsdLyZG9Bx6EELJ/Rq3ikYx8VmYiaaNuQF7Jd++AuzFHficG9bwG6YQb1TlgRjr0txlzlw4dk03tBA35EHIoo56TWXiiyO06Oymb+/UJL7tsceQvy/ofxg49wBsRNCF7RL2q6xO9MkNu6aZIQUAcA5x4jYk8OqYWAAAAAElFTkSuQmCC)',
+                      WebkitMaskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACRklEQVR4nO2ZuU9UURTGf4DgArI5yqIgUCiNMZFSY2IsrSxsLe2oaemgNjb+C7aUtiSWhFAAKpvKDI9xZpxhEQdZcpNTEMK8PPWcew15X3IyyZv3vnu/u54FUqRIoYlLQAcwCAzVsPvAiNi9mPc6algTxpgHSkBRbB1YirGFmP+iEzynrQociRUshDgRGfzi0IK0GEDIAVCnTfoduI1f/AbqtUnzwA38Yh+4oE3qNmgXflEFGrVJcwGE/LI4jrNAN36xB1zUJv0G9OAXP+USVsVXoBe/2AUua5OuBRCyA1zRJl0FbuIX20CzNukycAu/2AKuapN+BvrwiwrQqk36KYCQMtCmTfoRuI1flCRGUV9a50LIEjCAXxSBTm3SlQBCCsA1i3vExdo+kbeIgb4EmJG8RQzkfK1+/GLTQsh6gHskshCSDeCi5CyEbATwfiOLzR4FiBAjCyEhsiibFkJC5LXyFm0WLW7ZBEIyFg6cut+TYBVkLGKDds6BkIpFtBbCady2iJ9D7MsdoOUPv2kAngPP/mFGMhgky5LmmJzgUYkqp4FZ4APw9H+Ykb0E6UuX5B6Xi2wKeCjPXbHmBbAowh4nbPOHxUlZjcmMuwLoWzn33e+dGu+5WsdLyZG9Bx6EELJ/Rq3ikYx8VmYiaaNuQF7Jd++AuzFHficG9bwG6YQb1TlgRjr0txlzlw4dk03tBA35EHIoo56TWXiiyO06Oymb+/UJL7tsceQvy/ofxg49wBsRNCF7RL2q6xO9MkNu6aZIQUAcA5x4jYk8OqYWAAAAAElFTkSuQmCC)',
+                      maskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                    }}
+                  />
                 </div>
+                {bookmarkCount > 0 && <span>{bookmarkCount}</span>}
               </button>
 
               {/* 6. Share */}
               <div className="relative">
                 <button onClick={handleShareMenuClick} className="flex items-center transition-colors group" title="Share">
                   <div className="p-1.5 rounded-full group-hover:bg-accent transition-colors">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-transform group-active:scale-90"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                    <div 
+                      className="w-[18px] h-[18px] transition-transform group-active:scale-90 opacity-70 group-hover:opacity-100 bg-current"
+                      style={{
+                        WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFeklEQVR4nO2YWWxVRRzGv57l9pw5M2dugRKogrUsoizWEoOpNKISyxJAG6MPRh5wQ1EIBoQoEhRlq1i2ihgpAtoGWVqWQheQQmmBspRSKtByH0xQY8pm771Ny9IxU69GiJR7j0QOSX/J5D7cZOZ8c87/P998QDvttHM30FHTlMler33UNI1LUVFR1wzDaODcrtI0bToAL1xOlMfjmWyahn/0qBGNWV9nivKynaL2VKWoOLBbrFm9QqQ9N7rRNI0GXVdehktRGaM5D/Tu5S8u2ix8dVU3HUWFeSIurmuAEDIDboMQsjApKTFw4vjBNkX4QuPQwRLRsWOHAIBhcBEDbMaChyv2hCXCFxrZ360UlmX9DECHG6CU5rw3ddK1SET4QiMxccDvAJ6FGyCE1O8q3hqxCF9dlZg7Z5awbTsPbkC217rTlY6EFBXmCcao/LzuPJqmXg63yH03jNpTR4WiKNfgBjhnvtyN2Xe/EMuysqZOmXjViZDt2zYISukvcAlPxcbGBp3UydsTXr9iWdZKuIA0AGc0TaufN2dWSyQi9pfvEoSQIIBeThYeZFO6xTCMS6qqXpWDMXqWUboOQCoAJcx5kgCUAPgRwHAAA4lpBnfkbwxLxPFj5aJ/vwf9pml+HKkAg1K6tkNMTOCjWe+3lO8r/rvYCrZvEh/OmNaScH98g2WRWgDJbcwjdy8bgPyuX5Me668/FEV5iVKrce3qr25ZF/Hx9/kptVZFsHGtaIyx0qFPDwm21SbP1B4TSxanC8siQV3XX71hjm4AVgCoB/CBPNBvstZQ0zTOpaQkBzKXLRRlpUVCrlm6p0Asz8wQqc88HZSWXtO08YgUSsnS5ORBQWmnw3ntO4u2CMaY/HZHSB8FYDWA8wDmAugQxpKGoijjOedlpmlc0DTtMjHN814v368oyltO7yM9CSGNRw5FbuhUVW0OfULT7vhliBAjY/wb46446fEDkxIbFUV5B26AMfrT5twcR6fusqWfCc7tfXADmqZdrqmucCRkb0mB7PPn4AIU6WOcOlPZ63Vdb4IbME3jogwAnAjZvWuboJT8BjcQE8NLv8j83JGQxRnzZY3I09sVjHtyyGC/EyH9+j3UCGCBvDv9x2fQb4cQkxCzPtLOlZOdJaKjoy8BqAZQA2ACADvMNWM9Hs9Mzu2Tuq41yTrVNK2Zc7smFNCFO8/1qKo6pnOnTv5wU459ewsF51ye7CNDUzwBYF3odF8EoPvN1pIBnWEYgRdfSGvK/nalqK7a3zqn/JUB3cgRqY1GdHSDfCZHYigh07t06RzI37r+lm/Cy7n0Q+/+yzRxANIByJYsDV+f69ag1qqEhPhAyQ/5ba6x4fs1wrZZUNeVcY7EqKr6vGmaF4elDg2u+HJxq6GTO7WnZEerWRz8+GN+0zTq//EmbkZMyDjKjrZMZr2GYUzv3btnoPr4gbBDB/LnXeRRxzdTRVEmeL3eMtM0z+u63ixriHMuu9Mr0vBFMJc0kEukI/Z49Ca5MZHU4YL5s1sYoyduQzO5PWialjVq1PCI/Vzd6UpxT1zXBgApcAOcMd+G9WsdnVVTp0y86pY7u3wjzU5zrdyN2ULGSXAD8pyQV2YnQmqqK+S95wrckv2W7N7uSEjtqUohI1e4Adum2z79ZKYjIYUFuYJS61e4hDE9eiT4ZXgRqZBJE9+UAd03cAkKY9ZJeS5EGtBRywrc6BDuNA8TQgJ5m8ILs48dLRN9+/aRAd1suA1VVUdKMUuXpLcpIm9Ttuje7V4/Y9bySAO6/5NHKLXq+vfv25A+f7Yo3JErjhze21rUizLmiZSUZOnnLui6MhZ3AXKX0zi38xljZ6OjPUGbsbOc82IAY9tIKdtppx2Exx/mJPtyEUXPCAAAAABJRU5ErkJggg==)',
+                        WebkitMaskSize: 'contain',
+                        WebkitMaskRepeat: 'no-repeat',
+                        WebkitMaskPosition: 'center',
+                        maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFeklEQVR4nO2YWWxVRRzGv57l9pw5M2dugRKogrUsoizWEoOpNKISyxJAG6MPRh5wQ1EIBoQoEhRlq1i2ihgpAtoGWVqWQheQQmmBspRSKtByH0xQY8pm771Ny9IxU69GiJR7j0QOSX/J5D7cZOZ8c87/P998QDvttHM30FHTlMler33UNI1LUVFR1wzDaODcrtI0bToAL1xOlMfjmWyahn/0qBGNWV9nivKynaL2VKWoOLBbrFm9QqQ9N7rRNI0GXVdehktRGaM5D/Tu5S8u2ix8dVU3HUWFeSIurmuAEDIDboMQsjApKTFw4vjBNkX4QuPQwRLRsWOHAIBhcBEDbMaChyv2hCXCFxrZ360UlmX9DECHG6CU5rw3ddK1SET4QiMxccDvAJ6FGyCE1O8q3hqxCF9dlZg7Z5awbTsPbkC217rTlY6EFBXmCcao/LzuPJqmXg63yH03jNpTR4WiKNfgBjhnvtyN2Xe/EMuysqZOmXjViZDt2zYISukvcAlPxcbGBp3UydsTXr9iWdZKuIA0AGc0TaufN2dWSyQi9pfvEoSQIIBeThYeZFO6xTCMS6qqXpWDMXqWUboOQCoAJcx5kgCUAPgRwHAAA4lpBnfkbwxLxPFj5aJ/vwf9pml+HKkAg1K6tkNMTOCjWe+3lO8r/rvYCrZvEh/OmNaScH98g2WRWgDJbcwjdy8bgPyuX5Me668/FEV5iVKrce3qr25ZF/Hx9/kptVZFsHGtaIyx0qFPDwm21SbP1B4TSxanC8siQV3XX71hjm4AVgCoB/CBPNBvstZQ0zTOpaQkBzKXLRRlpUVCrlm6p0Asz8wQqc88HZSWXtO08YgUSsnS5ORBQWmnw3ntO4u2CMaY/HZHSB8FYDWA8wDmAugQxpKGoijjOedlpmlc0DTtMjHN814v368oyltO7yM9CSGNRw5FbuhUVW0OfULT7vhliBAjY/wb46446fEDkxIbFUV5B26AMfrT5twcR6fusqWfCc7tfXADmqZdrqmucCRkb0mB7PPn4AIU6WOcOlPZ63Vdb4IbME3jogwAnAjZvWuboJT8BjcQE8NLv8j83JGQxRnzZY3I09sVjHtyyGC/EyH9+j3UCGCBvDv9x2fQb4cQkxCzPtLOlZOdJaKjoy8BqAZQA2ACADvMNWM9Hs9Mzu2Tuq41yTrVNK2Zc7smFNCFO8/1qKo6pnOnTv5wU459ewsF51ye7CNDUzwBYF3odF8EoPvN1pIBnWEYgRdfSGvK/nalqK7a3zqn/JUB3cgRqY1GdHSDfCZHYigh07t06RzI37r+lm/Cy7n0Q+/+yzRxANIByJYsDV+f69ag1qqEhPhAyQ/5ba6x4fs1wrZZUNeVcY7EqKr6vGmaF4elDg2u+HJxq6GTO7WnZEerWRz8+GN+0zTq//EmbkZMyDjKjrZMZr2GYUzv3btnoPr4gbBDB/LnXeRRxzdTRVEmeL3eMtM0z+u63ixriHMuu9Mr0vBFMJc0kEukI/Z49Ca5MZHU4YL5s1sYoyduQzO5PWialjVq1PCI/Vzd6UpxT1zXBgApcAOcMd+G9WsdnVVTp0y86pY7u3wjzU5zrdyN2ULGSXAD8pyQV2YnQmqqK+S95wrckv2W7N7uSEjtqUohI1e4Adum2z79ZKYjIYUFuYJS61e4hDE9eiT4ZXgRqZBJE9+UAd03cAkKY9ZJeS5EGtBRywrc6BDuNA8TQgJ5m8ILs48dLRN9+/aRAd1suA1VVUdKMUuXpLcpIm9Ttuje7V4/Y9bySAO6/5NHKLXq+vfv25A+f7Yo3JErjhze21rUizLmiZSUZOnnLui6MhZ3AXKX0zi38xljZ6OjPUGbsbOc82IAY9tIKdtppx2Exx/mJPtyEUXPCAAAAABJRU5ErkJggg==)',
+                        maskSize: 'contain',
+                        maskRepeat: 'no-repeat',
+                        maskPosition: 'center',
+                      }}
+                    />
                   </div>
                 </button>
               
@@ -726,6 +860,72 @@ export default function PostCard({
           </div>
         </div>
       </div>
+      
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => { e.stopPropagation(); setShowReportModal(false); }}>
+          <div className="bg-[#18181b] border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 sm:p-6 flex flex-col flex-1 overflow-hidden">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 flex-shrink-0">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setShowReportModal(false); }} className="text-gray-400 hover:text-white transition-colors p-2 -mr-2 -mt-2">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+              
+              <h2 className="text-xl font-bold text-white mb-2">Report to Intasela</h2>
+              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                Report content that violates Intasela's <a href="#" className="text-brand hover:underline">Content Guidelines</a> below. Your report is only viewed by our staff. Find additional reporting options and information in our <a href="#" className="text-brand hover:underline">Help Center</a>.
+              </p>
+              
+              <form onSubmit={handleReportSubmit} className="flex flex-col flex-1 overflow-hidden">
+                <div className="flex-1 overflow-y-auto pr-2 pb-4 -mr-2 space-y-1 nice-scrollbar">
+                  {[
+                    "Spam",
+                    "Impersonation",
+                    "Hate, Abuse, and Violence",
+                    "Child Safety",
+                    "Explicit Media",
+                    "Illegal & Regulated Behaviors",
+                    "Private or Non-consensual Content",
+                    "Suicide & Self Harm",
+                    "Terrorism & Violent Extremism"
+                  ].map((reason) => (
+                    <label key={reason} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors group">
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="radio" 
+                          name="reportReason" 
+                          value={reason} 
+                          checked={selectedReportReason === reason} 
+                          onChange={(e) => setSelectedReportReason(e.target.value)}
+                          className="peer appearance-none w-5 h-5 border border-gray-600 rounded-full checked:border-brand transition-colors"
+                        />
+                        <div className="absolute w-2.5 h-2.5 bg-brand rounded-full opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"></div>
+                      </div>
+                      <span className="text-[15px] text-gray-200 group-hover:text-white transition-colors">{reason}</span>
+                    </label>
+                  ))}
+                </div>
+                
+                <div className="pt-4 mt-2 border-t border-gray-800">
+                  <button 
+                    type="submit" 
+                    disabled={!selectedReportReason}
+                    className="w-full py-3.5 px-4 rounded-xl font-bold text-[15px] transition-all
+                      disabled:bg-white/5 disabled:text-white/30 disabled:cursor-not-allowed
+                      bg-white text-black hover:bg-gray-200 active:scale-[0.98]"
+                  >
+                    Submit report
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
     </>
   );
