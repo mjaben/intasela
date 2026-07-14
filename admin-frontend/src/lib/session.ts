@@ -19,9 +19,9 @@ export async function decrypt(input: string): Promise<any> {
   return payload;
 }
 
-export async function createSession(userId: string, role: string, firstName: string) {
+export async function createSession(userId: string, role: string, firstName: string, permissions: string[] | null) {
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const session = await encrypt({ userId, role, firstName, expires });
+  const session = await encrypt({ userId, role, firstName, permissions, expires });
   
   const cookieStore = await cookies();
   cookieStore.set("admin_session", session, {
@@ -53,5 +53,6 @@ export async function getCurrentUser() {
     id: session.userId as string,
     role: session.role as string,
     firstName: session.firstName as string,
+    permissions: session.permissions as string[] | null,
   };
 }

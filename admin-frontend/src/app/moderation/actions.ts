@@ -3,11 +3,16 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/session";
+import { hasPermission } from "@/lib/permissions";
 
 export async function deletePost(postId: number, reason: string) {
   try {
     const user = await getCurrentUser();
     if (!user) throw new Error("Unauthorized");
+
+    if (!hasPermission(user.permissions, "MODERATE_CONTENT", user.role)) {
+      throw new Error("Missing permission: MODERATE_CONTENT");
+    }
 
     await prisma.post.delete({
       where: { id: postId },
@@ -38,6 +43,10 @@ export async function togglePostFlag(postId: number, isFlagged: boolean, reason:
     const user = await getCurrentUser();
     if (!user) throw new Error("Unauthorized");
 
+    if (!hasPermission(user.permissions, "MODERATE_CONTENT", user.role)) {
+      throw new Error("Missing permission: MODERATE_CONTENT");
+    }
+
     await prisma.post.update({
       where: { id: postId },
       data: { isFlagged },
@@ -66,6 +75,10 @@ export async function togglePostEligibility(postId: number, isEligible: boolean,
   try {
     const user = await getCurrentUser();
     if (!user) throw new Error("Unauthorized");
+
+    if (!hasPermission(user.permissions, "MODERATE_CONTENT", user.role)) {
+      throw new Error("Missing permission: MODERATE_CONTENT");
+    }
 
     await prisma.post.update({
       where: { id: postId },

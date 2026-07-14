@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { hasPermission, Permission } from "@/lib/permissions";
 import { 
   LayoutDashboard, 
   Users, 
@@ -20,50 +21,62 @@ import {
   Megaphone 
 } from "lucide-react";
 
-const navGroups = [
+const navGroups: {
+  title: string;
+  items: { name: string; href: string; icon: any; permission?: Permission }[];
+}[] = [
   {
     title: "Main",
     items: [
       { name: "Overview", href: "/", icon: LayoutDashboard },
-      { name: "User Directory", href: "/users", icon: Users },
+      { name: "User Directory", href: "/users", icon: Users, permission: "MANAGE_USERS" },
     ]
   },
   {
     title: "Content",
     items: [
-      { name: "Sela", href: "/moderation/selas", icon: FileText },
-      { name: "Orbits", href: "/moderation/orbits", icon: Video },
-      { name: "Replies", href: "/moderation/replies", icon: MessageCircle },
+      { name: "Sela", href: "/moderation/selas", icon: FileText, permission: "MODERATE_CONTENT" },
+      { name: "Orbits", href: "/moderation/orbits", icon: Video, permission: "MODERATE_CONTENT" },
+      { name: "Replies", href: "/moderation/replies", icon: MessageCircle, permission: "MODERATE_CONTENT" },
     ]
   },
   {
     title: "Creator Studio",
     items: [
-      { name: "Sela Earnings", href: "/creator/selas", icon: BadgeDollarSign },
-      { name: "Resela Earnings", href: "/creator/reselas", icon: Repeat },
-      { name: "Replies Earnings", href: "/creator/replies", icon: MessageSquareQuote },
-      { name: "View Tracking", href: "/creator/views", icon: Eye },
-      { name: "Withdrawals", href: "/creator/withdrawals", icon: Wallet },
-      { name: "Settings", href: "/creator/settings", icon: SlidersHorizontal },
+      { name: "Sela Earnings", href: "/creator/selas", icon: BadgeDollarSign, permission: "MANAGE_FINANCE" },
+      { name: "Resela Earnings", href: "/creator/reselas", icon: Repeat, permission: "MANAGE_FINANCE" },
+      { name: "Replies Earnings", href: "/creator/replies", icon: MessageSquareQuote, permission: "MANAGE_FINANCE" },
+      { name: "View Tracking", href: "/creator/views", icon: Eye, permission: "MANAGE_FINANCE" },
+      { name: "Withdrawals", href: "/creator/withdrawals", icon: Wallet, permission: "MANAGE_FINANCE" },
+      { name: "Settings", href: "/creator/settings", icon: SlidersHorizontal, permission: "MANAGE_FINANCE" },
     ]
   },
   {
     title: "Compliance",
     items: [
-      { name: "Flagged Content", href: "/moderation/flagged", icon: Flag },
-      { name: "Audit Logs", href: "/security/logs", icon: ShieldAlert },
+      { name: "Flagged Content", href: "/moderation/flagged", icon: Flag, permission: "MODERATE_CONTENT" },
+      { name: "Audit Logs", href: "/security/logs", icon: ShieldAlert, permission: "MANAGE_SYSTEM" },
     ]
   },
   {
     title: "System",
     items: [
-      { name: "Platform Settings", href: "/settings", icon: Settings },
-      { name: "Ad Manager", href: "/settings/ads", icon: Megaphone },
+      { name: "Team Members", href: "/settings/team", icon: ShieldAlert, permission: "MANAGE_SYSTEM" },
+      { name: "Platform Settings", href: "/settings", icon: Settings, permission: "MANAGE_SYSTEM" },
+      { name: "Ad Manager", href: "/settings/ads", icon: Megaphone, permission: "MANAGE_SYSTEM" },
     ]
   }
 ];
 
-export default function AdminSidebarNav({ isCollapsed }: { isCollapsed: boolean }) {
+export default function AdminSidebarNav({ 
+  isCollapsed, 
+  permissions, 
+  role 
+}: { 
+  isCollapsed: boolean, 
+  permissions?: string[] | null, 
+  role?: string 
+}) {
   const pathname = usePathname();
 
   return (
@@ -83,14 +96,23 @@ export default function AdminSidebarNav({ isCollapsed }: { isCollapsed: boolean 
 
       {/* Navigation */}
       <nav className="flex-1 px-4 space-y-6 overflow-y-auto pb-6 scrollbar-hide">
-        {navGroups.map((group) => (
+        {navGroups.map((group) => {
+          // Filter items based on user permissions
+          const allowedItems = group.items.filter(item => {
+            if (!item.permission) return true;
+            return hasPermission(permissions || null, item.permission, role || "admin");
+          });
+
+          if (allowedItems.length === 0) return null;
+
+          return (
           <div key={group.title}>
             <div className={`mb-2 ${isCollapsed ? 'text-center px-0' : 'px-3'} text-[11px] font-bold text-brand uppercase tracking-wider transition-all`}>
               {isCollapsed ? "—" : group.title}
             </div>
             <div className="space-y-1">
-              {group.items.map((item) => {
-                const isActive = pathname === item.href;
+              {allowedItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <Link
                     key={item.name}
@@ -109,7 +131,8 @@ export default function AdminSidebarNav({ isCollapsed }: { isCollapsed: boolean 
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
     </aside>
   );

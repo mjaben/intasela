@@ -35,7 +35,6 @@ export default function LoginForm() {
           name="email" 
           required 
           className="w-full bg-brand-bg border border-brand-border/50 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
-          placeholder="admin@intasela.com"
         />
       </div>
       
@@ -46,7 +45,6 @@ export default function LoginForm() {
           name="password" 
           required 
           className="w-full bg-brand-bg border border-brand-border/50 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors"
-          placeholder="••••••••"
         />
       </div>
       

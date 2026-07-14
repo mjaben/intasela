@@ -32,13 +32,10 @@ export default async function UsersModule(props: { searchParams?: Promise<{ [key
 
   const users = await prisma.user.findMany({
     where,
-    include: { role: true },
     orderBy: { createdAt: sort },
     skip,
     take: limit
   });
-
-  const roles = await prisma.role.findMany();
 
   return (
     <div className="space-y-6">
@@ -52,7 +49,7 @@ export default async function UsersModule(props: { searchParams?: Promise<{ [key
         </button>
       </div>
       
-      <UserTable initialUsers={users} roles={roles} totalUsers={totalUsers} totalSystemUsers={totalSystemUsers} currentPage={page} pageSize={limit} />
+      <UserTable initialUsers={users} totalUsers={totalUsers} totalSystemUsers={totalSystemUsers} currentPage={page} pageSize={limit} />
     </div>
   );
 }

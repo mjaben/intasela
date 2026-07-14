@@ -10,7 +10,7 @@ export default function AdminLayout({
   user 
 }: { 
   children: React.ReactNode,
-  user: { firstName: string, role: string } | null
+  user: { firstName: string, role: string, permissions?: string[] | null } | null
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
@@ -47,7 +47,7 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-full flex w-full">
-      <AdminSidebarNav isCollapsed={isCollapsed} />
+      <AdminSidebarNav isCollapsed={isCollapsed} permissions={user?.permissions || null} role={user?.role || "admin"} />
       
       <div className="flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300">
         {/* Top Header Bar */}

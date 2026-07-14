@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { assignUserRole } from "./actions";
 
-type Role = { id: string; name: string };
 type User = {
   id: string;
   firstName: string;
@@ -11,7 +10,7 @@ type User = {
   email: string;
   username: string;
   walletBalance: number;
-  role: Role | null;
+  isSpaceMod: boolean;
   createdAt: Date;
   isActive?: boolean;
   isSuspended?: boolean;
@@ -24,18 +23,16 @@ type User = {
 import UserFilters from "./UserFilters";
 import Pagination from "./Pagination";
 
-export default function UserTable({ initialUsers, roles, totalUsers, totalSystemUsers, currentPage, pageSize }: { initialUsers: User[]; roles: Role[], totalUsers: number, totalSystemUsers: number, currentPage: number, pageSize: number }) {
+export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, currentPage, pageSize }: { initialUsers: User[]; totalUsers: number, totalSystemUsers: number, currentPage: number, pageSize: number }) {
   const [isPending, startTransition] = useTransition();
-  const [roleModalUser, setRoleModalUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
 
-  const handleRoleChange = (userId: string, roleId: string) => {
-    const reason = window.prompt("Reason for assigning this role:");
+  const handleSpaceModToggle = (userId: string, currentStatus: boolean) => {
+    const reason = window.prompt("Reason for modifying Space Mod status:");
     if (!reason) return;
     
     startTransition(async () => {
-      await assignUserRole(userId, roleId === "none" ? null : roleId, reason);
-      setRoleModalUser(null);
+      await assignUserRole(userId, !currentStatus, reason); // Will update actions.ts to handle this boolean instead of role string
     });
   };
 
@@ -51,7 +48,7 @@ export default function UserTable({ initialUsers, roles, totalUsers, totalSystem
                 <th className="px-6 py-4 font-semibold">User</th>
                 <th className="px-6 py-4 font-semibold">Contact</th>
                 <th className="px-6 py-4 font-semibold">Status & Balance</th>
-                <th className="px-6 py-4 font-semibold">System Role</th>
+                <th className="px-6 py-4 font-semibold">Moderation</th>
                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
@@ -104,17 +101,18 @@ export default function UserTable({ initialUsers, roles, totalUsers, totalSystem
                        </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${user.role ? 'bg-brand/10 text-brand' : 'bg-gray-800 text-gray-400'}`}>
-                        {user.role ? user.role.name.replace('_', ' ') : 'Standard'}
+                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${user.isSpaceMod ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-gray-800 text-gray-400'}`}>
+                        {user.isSpaceMod ? 'Space Mod' : 'Standard'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                        <div className="flex items-center justify-end gap-3">
                          <button 
-                            onClick={() => setRoleModalUser(user)}
-                            className="text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+                            disabled={isPending}
+                            onClick={() => handleSpaceModToggle(user.id, user.isSpaceMod)}
+                            className="text-xs font-semibold text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                           >
-                            Manage Role
+                            {user.isSpaceMod ? 'Remove Mod' : 'Make Mod'}
                          </button>
                          <button 
                             onClick={() => setViewingUser(user)}
@@ -201,9 +199,9 @@ export default function UserTable({ initialUsers, roles, totalUsers, totalSystem
                   <span className="text-sm text-brand font-bold">₦{new Intl.NumberFormat('en-NG').format(viewingUser.walletBalance)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">System Role</span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${viewingUser.role ? 'text-brand' : 'text-gray-400'}`}>
-                    {viewingUser.role ? viewingUser.role.name.replace('_', ' ') : 'Standard User'}
+                  <span className="text-xs text-gray-500">Space Mod</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${viewingUser.isSpaceMod ? 'text-purple-400' : 'text-gray-400'}`}>
+                    {viewingUser.isSpaceMod ? 'Yes' : 'No'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -216,63 +214,7 @@ export default function UserTable({ initialUsers, roles, totalUsers, totalSystem
         </div>
       )}
 
-      {/* Role Management Modal */}
-      {roleModalUser && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => !isPending && setRoleModalUser(null)}></div>
-          <div className="relative bg-brand-card border border-brand-border/50 rounded-xl shadow-2xl w-[400px] p-6 animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-bold text-gray-200 mb-1">Manage Role</h3>
-            <p className="text-sm text-gray-400 mb-6">Assign a system role to <span className="text-white font-medium">{roleModalUser.firstName} {roleModalUser.lastName}</span>.</p>
-            
-            <div className="space-y-3">
-              <label className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${!roleModalUser.role ? 'bg-brand/10 border-brand' : 'bg-brand-bg border-brand-border hover:border-gray-500'}`}>
-                <div>
-                  <div className="font-semibold text-sm text-gray-200">Standard User</div>
-                  <div className="text-xs text-gray-500 mt-0.5">Default access level. No admin privileges.</div>
-                </div>
-                <input 
-                  type="radio" 
-                  name="role" 
-                  className="appearance-none w-5 h-5 rounded-full border border-gray-600 bg-brand-bg checked:border-[5px] checked:border-brand transition-all cursor-pointer"
-                  checked={!roleModalUser.role} 
-                  onChange={() => handleRoleChange(roleModalUser.id, "none")}
-                  disabled={isPending}
-                />
-              </label>
 
-              {roles.map(role => {
-                const isSelected = roleModalUser.role?.id === role.id;
-                return (
-                  <label key={role.id} className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${isSelected ? 'bg-brand/10 border-brand' : 'bg-brand-bg border-brand-border hover:border-gray-500'}`}>
-                    <div>
-                      <div className="font-semibold text-sm text-gray-200">{role.name.replace('_', ' ')}</div>
-                      <div className="text-xs text-gray-500 mt-0.5">Assigned specific permissions for {role.name.toLowerCase().replace('_', ' ')}.</div>
-                    </div>
-                    <input 
-                      type="radio" 
-                      name="role" 
-                      className="appearance-none w-5 h-5 rounded-full border border-gray-600 bg-brand-bg checked:border-[5px] checked:border-brand transition-all cursor-pointer"
-                      checked={isSelected} 
-                      onChange={() => handleRoleChange(roleModalUser.id, role.id)}
-                      disabled={isPending}
-                    />
-                  </label>
-                );
-              })}
-            </div>
-
-            <div className="mt-8 flex justify-end">
-              <button 
-                onClick={() => setRoleModalUser(null)}
-                disabled={isPending}
-                className="px-4 py-2 bg-gray-800 text-gray-300 font-semibold text-sm rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -44,14 +44,13 @@ model User {
   isActive      Boolean      @default(true)
   isSuspended   Boolean      @default(false)
   isShadowBanned Boolean     @default(false)
+  isSpaceMod    Boolean      @default(false)
   
   posts         Post[]
   engagements   Engagement[]
   transactions  Transaction[]
   
-  // Admin Fields
-  roleId        String?
-  role          Role?        @relation(fields: [roleId], references: [id])
+  // Removed Admin Fields (Segregated to SystemAdmin model)
   
   followers     Follows[]    @relation("following")
   following     Follows[]    @relation("follower")
@@ -155,13 +154,26 @@ model Transaction {
 // SUPER ADMIN & RBAC MODELS
 // -----------------------------------------------------------------------------
 
+model SystemAdmin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  isActive  Boolean  @default(true)
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Role {
-  id          String   @id @default(uuid())
-  name        String   @unique // super_admin, support, moderator
-  permissions Json?
-  users       User[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String        @id @default(uuid())
+  name        String        @unique // super_admin, moderator, finance
+  permissions Json?         // Array of permission strings e.g. ["MANAGE_USERS", "MANAGE_FINANCE"]
+  admins      SystemAdmin[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model AuditLog {

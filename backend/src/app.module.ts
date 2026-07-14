@@ -23,7 +23,7 @@ import { AuditLogInterceptor } from './security/audit.interceptor';
     UploadsModule,
     NotificationsModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
   ],
