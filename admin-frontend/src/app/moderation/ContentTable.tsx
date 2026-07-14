@@ -40,22 +40,32 @@ export default function ContentTable({
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const handleToggleFlag = (id: number, currentStatus: boolean) => {
+    const reason = window.prompt("Reason for this action:");
+    if (!reason) return;
+    
     startTransition(async () => {
-      await togglePostFlag(id, !currentStatus);
+      await togglePostFlag(id, !currentStatus, reason);
     });
   };
 
   const handleToggleEligibility = (id: number, currentStatus: boolean) => {
+    const reason = window.prompt("Reason for this action:");
+    if (!reason) return;
+    
     startTransition(async () => {
-      await togglePostEligibility(id, !currentStatus);
+      await togglePostEligibility(id, !currentStatus, reason);
     });
   };
 
   const handleDelete = (id: number) => {
     if (!confirm("Are you sure you want to permanently delete this content?")) return;
+    
+    const reason = window.prompt("Reason for deletion:");
+    if (!reason) return;
+    
     setDeletingId(id);
     startTransition(async () => {
-      await deletePost(id);
+      await deletePost(id, reason);
       setDeletingId(null);
     });
   };

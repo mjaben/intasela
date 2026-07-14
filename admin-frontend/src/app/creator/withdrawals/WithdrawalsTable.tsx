@@ -35,8 +35,12 @@ export default function WithdrawalsTable({
 
   const handleApprove = async (id: number) => {
     if (!confirm("Are you sure you want to approve this withdrawal?")) return;
+    
+    const reason = window.prompt("Reason for approval (e.g., Transaction ID / Bank Ref):");
+    if (!reason) return;
+    
     setProcessingId(id);
-    const result = await approveWithdrawal(id);
+    const result = await approveWithdrawal(id, reason);
     setProcessingId(null);
     if (result.success) {
       addToast("Withdrawal approved successfully.");
@@ -47,8 +51,12 @@ export default function WithdrawalsTable({
 
   const handleReject = async (id: number) => {
     if (!confirm("Are you sure you want to reject this withdrawal? The amount will be refunded to the user's wallet.")) return;
+    
+    const reason = window.prompt("Reason for rejection:");
+    if (!reason) return;
+    
     setProcessingId(id);
-    const result = await rejectWithdrawal(id);
+    const result = await rejectWithdrawal(id, reason);
     setProcessingId(null);
     if (result.success) {
       addToast("Withdrawal rejected and amount refunded.");

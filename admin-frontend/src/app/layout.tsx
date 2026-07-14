@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/ToastProvider";
 import AdminLayout from "@/components/AdminLayout";
+import { getCurrentUser } from "@/lib/session";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,11 +20,13 @@ export const metadata: Metadata = {
   description: "Manage platform operations",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+
   return (
     <html
       lang="en"
@@ -31,7 +34,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full bg-brand-bg text-gray-200" suppressHydrationWarning>
-        <AdminLayout>
+        <AdminLayout user={user}>
           {children}
         </AdminLayout>
         <ToastProvider />

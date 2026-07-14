@@ -2,12 +2,27 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/session";
 
-export async function deletePost(postId: number) {
+export async function deletePost(postId: number, reason: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+
     await prisma.post.delete({
       where: { id: postId },
     });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "DELETE",
+        resourceType: "/moderation/post",
+        requestPayload: { postId, reason },
+        success: true
+      }
+    });
+
     revalidatePath("/moderation/selas");
     revalidatePath("/moderation/orbits");
     revalidatePath("/moderation/replies");
@@ -18,11 +33,24 @@ export async function deletePost(postId: number) {
   }
 }
 
-export async function togglePostFlag(postId: number, isFlagged: boolean) {
+export async function togglePostFlag(postId: number, isFlagged: boolean, reason: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+
     await prisma.post.update({
       where: { id: postId },
       data: { isFlagged },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "UPDATE",
+        resourceType: "/moderation/post/flag",
+        requestPayload: { postId, isFlagged, reason },
+        success: true
+      }
     });
     revalidatePath("/moderation/selas");
     revalidatePath("/moderation/orbits");
@@ -34,11 +62,24 @@ export async function togglePostFlag(postId: number, isFlagged: boolean) {
   }
 }
 
-export async function togglePostEligibility(postId: number, isEligible: boolean) {
+export async function togglePostEligibility(postId: number, isEligible: boolean, reason: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+
     await prisma.post.update({
       where: { id: postId },
       data: { isEligible },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "UPDATE",
+        resourceType: "/moderation/post/eligibility",
+        requestPayload: { postId, isEligible, reason },
+        success: true
+      }
     });
     revalidatePath("/moderation/selas");
     revalidatePath("/moderation/orbits");

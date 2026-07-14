@@ -5,7 +5,13 @@ import { usePathname } from "next/navigation";
 import AdminSidebarNav from "./AdminSidebarNav";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ 
+  children, 
+  user 
+}: { 
+  children: React.ReactNode,
+  user: { firstName: string, role: string } | null
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -32,6 +38,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return segment.charAt(0).toUpperCase() + segment.slice(1);
   };
 
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
+  const initial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : "A";
+  const displayName = user?.firstName || "System Admin";
+
   return (
     <div className="min-h-full flex w-full">
       <AdminSidebarNav isCollapsed={isCollapsed} />
@@ -54,9 +67,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Removed dark mode toggle */}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-card border border-brand-border flex items-center justify-center text-xs font-bold text-white">
-                AD
+                {initial}
               </div>
-              <span className="text-sm font-medium text-white">System Admin</span>
+              <span className="text-sm font-medium text-white">{displayName}</span>
             </div>
           </div>
         </header>

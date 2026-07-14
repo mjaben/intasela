@@ -2,9 +2,13 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/session";
 
-export async function approveWithdrawal(transactionId: number) {
+export async function approveWithdrawal(transactionId: number, reason: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+
     const tx = await prisma.transaction.findUnique({
       where: { id: transactionId }
     });
@@ -22,6 +26,16 @@ export async function approveWithdrawal(transactionId: number) {
       data: { status: "COMPLETED" }
     });
 
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "UPDATE",
+        resourceType: "/withdrawals/approve",
+        requestPayload: { transactionId, reason },
+        success: true
+      }
+    });
+
     revalidatePath("/creator/withdrawals");
     return { success: true };
   } catch (error: any) {
@@ -30,8 +44,11 @@ export async function approveWithdrawal(transactionId: number) {
   }
 }
 
-export async function rejectWithdrawal(transactionId: number) {
+export async function rejectWithdrawal(transactionId: number, reason: string) {
   try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+
     const tx = await prisma.transaction.findUnique({
       where: { id: transactionId }
     });
@@ -59,6 +76,16 @@ export async function rejectWithdrawal(transactionId: number) {
         }
       })
     ]);
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "UPDATE",
+        resourceType: "/withdrawals/reject",
+        requestPayload: { transactionId, reason },
+        success: true
+      }
+    });
 
     revalidatePath("/creator/withdrawals");
     return { success: true };

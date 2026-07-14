@@ -30,8 +30,11 @@ export default function UserTable({ initialUsers, roles, totalUsers, totalSystem
   const [viewingUser, setViewingUser] = useState<User | null>(null);
 
   const handleRoleChange = (userId: string, roleId: string) => {
+    const reason = window.prompt("Reason for assigning this role:");
+    if (!reason) return;
+    
     startTransition(async () => {
-      await assignUserRole(userId, roleId === "none" ? null : roleId);
+      await assignUserRole(userId, roleId === "none" ? null : roleId, reason);
       setRoleModalUser(null);
     });
   };
