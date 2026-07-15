@@ -23,7 +23,7 @@ export default function MobileHeader() {
           <div className="w-9 h-9 rounded-full bg-muted overflow-hidden border border-border">
             <img 
               src={user.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.username}`} 
-              alt={user.name || user.username} 
+              alt={user.username} 
               className="w-full h-full object-cover" 
             />
           </div>
