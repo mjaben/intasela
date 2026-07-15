@@ -8,7 +8,7 @@ export default function MobileHeader() {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
 
   return (
-    <header className="sm:hidden sticky top-0 left-0 right-0 h-[60px] bg-background/90 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
+    <header className="sm:hidden sticky top-0 w-full h-[60px] bg-background/90 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
       {/* Brand Logo */}
       <Link href="/" className="flex items-center gap-1.5">
         <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-bold text-primary-foreground text-sm">
