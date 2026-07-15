@@ -5,6 +5,7 @@ import EarningsFilters from "../EarningsFilters";
 import Pagination from "../../users/Pagination";
 import { approveWithdrawal, rejectWithdrawal } from "./actions";
 import { useToastStore } from "@/store/useToastStore";
+import ReasonModal from "@/components/ReasonModal";
 
 type Transaction = {
   id: number;
@@ -32,39 +33,60 @@ export default function WithdrawalsTable({
 }) {
   const [processingId, setProcessingId] = useState<number | null>(null);
   const addToast = useToastStore((state) => state.addToast);
+  
+  const [modalState, setModalState] = useState<{ isOpen: boolean; id: number | null; type: "APPROVE" | "REJECT" | null; title: string; placeholder: string }>({
+    isOpen: false,
+    id: null,
+    type: null,
+    title: "",
+    placeholder: ""
+  });
 
-  const handleApprove = async (id: number) => {
-    if (!confirm("Are you sure you want to approve this withdrawal?")) return;
-    
-    const reason = window.prompt("Reason for approval (e.g., Transaction ID / Bank Ref):");
-    if (!reason) return;
-    
-    setProcessingId(id);
-    const result = await approveWithdrawal(id, reason);
-    setProcessingId(null);
-    if (result.success) {
-      addToast("Withdrawal approved successfully.");
+  const requestAction = (id: number, type: "APPROVE" | "REJECT") => {
+    if (type === "APPROVE") {
+      setModalState({
+        isOpen: true,
+        id,
+        type,
+        title: "Approve Withdrawal",
+        placeholder: "Reason for approval (e.g., Transaction ID / Bank Ref):"
+      });
     } else {
-      addToast(result.error || "Failed to approve withdrawal.");
+      setModalState({
+        isOpen: true,
+        id,
+        type,
+        title: "Reject Withdrawal",
+        placeholder: "Reason for rejection:"
+      });
     }
   };
 
-  const handleReject = async (id: number) => {
-    if (!confirm("Are you sure you want to reject this withdrawal? The amount will be refunded to the user's wallet.")) return;
+  const handleConfirmAction = async (reason: string) => {
+    const { id, type } = modalState;
+    if (!id || !type) return;
     
-    const reason = window.prompt("Reason for rejection:");
-    if (!reason) return;
-    
+    setModalState(prev => ({ ...prev, isOpen: false }));
     setProcessingId(id);
-    const result = await rejectWithdrawal(id, reason);
-    setProcessingId(null);
-    if (result.success) {
-      addToast("Withdrawal rejected and amount refunded.");
+    
+    if (type === "APPROVE") {
+      const result = await approveWithdrawal(id, reason);
+      if (result.success) {
+        addToast("Withdrawal approved successfully.");
+      } else {
+        addToast(result.error || "Failed to approve withdrawal.");
+      }
     } else {
-      addToast(result.error || "Failed to reject withdrawal.");
+      const result = await rejectWithdrawal(id, reason);
+      if (result.success) {
+        addToast("Withdrawal rejected and amount refunded.");
+      } else {
+        addToast(result.error || "Failed to reject withdrawal.");
+      }
     }
+    
+    setProcessingId(null);
   };
-
   return (
     <div className="w-full">
       <EarningsFilters />
@@ -142,20 +164,20 @@ export default function WithdrawalsTable({
                             <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 mr-2">
                               Pending
                             </span>
-                            <button
-                              disabled={processingId !== null}
-                              onClick={() => handleApprove(tx.id)}
-                              className="px-2.5 py-1 bg-brand text-brand-bg text-xs font-bold rounded hover:opacity-90 transition-opacity disabled:opacity-50"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              disabled={processingId !== null}
-                              onClick={() => handleReject(tx.id)}
-                              className="px-2.5 py-1 bg-red-500/20 text-red-400 text-xs font-bold rounded hover:bg-red-500/30 transition-colors disabled:opacity-50"
-                            >
-                              Reject
-                            </button>
+                            <button 
+                            disabled={processingId === tx.id}
+                            onClick={() => requestAction(tx.id, "APPROVE")}
+                            className="bg-brand/10 text-brand px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-brand/20 transition-colors disabled:opacity-50"
+                          >
+                            Approve
+                          </button>
+                          <button 
+                            disabled={processingId === tx.id}
+                            onClick={() => requestAction(tx.id, "REJECT")}
+                            className="bg-red-500/10 text-red-500 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
                           </div>
                         ) : tx.status === "COMPLETED" ? (
                           <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-brand/10 text-brand border border-brand/20">
@@ -179,7 +201,14 @@ export default function WithdrawalsTable({
           </table>
         </div>
         
-        {/* Pagination Footer */}
+        <ReasonModal 
+          isOpen={modalState.isOpen}
+          title={modalState.title}
+          placeholder={modalState.placeholder}
+          onConfirm={handleConfirmAction}
+          onCancel={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        />
+
         {transactions.length > 0 && (
            <Pagination totalItems={totalTransactions} currentPage={currentPage} pageSize={pageSize} />
         )}

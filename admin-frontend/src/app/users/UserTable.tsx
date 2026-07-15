@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { assignUserRole } from "./actions";
+import ReasonModal from "@/components/ReasonModal";
 
 type User = {
   id: string;
@@ -26,13 +27,29 @@ import Pagination from "./Pagination";
 export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, currentPage, pageSize }: { initialUsers: User[]; totalUsers: number, totalSystemUsers: number, currentPage: number, pageSize: number }) {
   const [isPending, startTransition] = useTransition();
   const [viewingUser, setViewingUser] = useState<User | null>(null);
+  
+  const [modalState, setModalState] = useState<{ isOpen: boolean; userId: string; currentStatus: boolean; title: string }>({
+    isOpen: false,
+    userId: "",
+    currentStatus: false,
+    title: ""
+  });
 
-  const handleSpaceModToggle = (userId: string, currentStatus: boolean) => {
-    const reason = window.prompt("Reason for modifying Space Mod status:");
-    if (!reason) return;
+  const requestSpaceModToggle = (userId: string, currentStatus: boolean) => {
+    setModalState({
+      isOpen: true,
+      userId,
+      currentStatus,
+      title: "Reason for modifying Space Mod status"
+    });
+  };
+
+  const handleConfirmSpaceModToggle = (reason: string) => {
+    const { userId, currentStatus } = modalState;
+    setModalState(prev => ({ ...prev, isOpen: false }));
     
     startTransition(async () => {
-      await assignUserRole(userId, !currentStatus, reason); // Will update actions.ts to handle this boolean instead of role string
+      await assignUserRole(userId, !currentStatus, reason);
     });
   };
 
@@ -101,19 +118,24 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
                        </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${user.isSpaceMod ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' : 'bg-gray-800 text-gray-400'}`}>
-                        {user.isSpaceMod ? 'Space Mod' : 'Standard'}
-                      </span>
+                      <div className="flex items-center">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            className="sr-only peer" 
+                            checked={user.isSpaceMod}
+                            disabled={isPending}
+                            onChange={() => requestSpaceModToggle(user.id, user.isSpaceMod)}
+                          />
+                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
+                          <span className="ml-3 text-xs font-medium text-gray-300">
+                            {user.isSpaceMod ? "Space Mod" : "Standard"}
+                          </span>
+                        </label>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                        <div className="flex items-center justify-end gap-3">
-                         <button 
-                            disabled={isPending}
-                            onClick={() => handleSpaceModToggle(user.id, user.isSpaceMod)}
-                            className="text-xs font-semibold text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-                          >
-                            {user.isSpaceMod ? 'Remove Mod' : 'Make Mod'}
-                         </button>
                          <button 
                             onClick={() => setViewingUser(user)}
                             className="text-xs font-semibold text-brand hover:text-brand-hover transition-colors"
@@ -129,6 +151,13 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
           </table>
         </div>
         
+        <ReasonModal 
+          isOpen={modalState.isOpen}
+          title={modalState.title}
+          onConfirm={handleConfirmSpaceModToggle}
+          onCancel={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        />
+
         {/* Pagination Footer */}
         {initialUsers.length > 0 && (
            <Pagination totalItems={totalUsers} currentPage={currentPage} pageSize={pageSize} />

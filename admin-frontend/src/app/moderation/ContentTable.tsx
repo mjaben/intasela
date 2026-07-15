@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import ContentFilters from "./ContentFilters";
 import Pagination from "../users/Pagination";
 import { togglePostFlag, togglePostEligibility, deletePost } from "./actions";
+import ReasonModal from "@/components/ReasonModal";
 
 type Post = {
   id: number;
@@ -39,34 +40,50 @@ export default function ContentTable({
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const handleToggleFlag = (id: number, currentStatus: boolean) => {
-    const reason = window.prompt("Reason for this action:");
-    if (!reason) return;
+  const [modalState, setModalState] = useState<{ 
+    isOpen: boolean; 
+    id: number | null; 
+    actionType: "FLAG" | "ELIGIBILITY" | "DELETE" | null; 
+    currentStatus?: boolean; 
+    title: string; 
+    placeholder: string 
+  }>({
+    isOpen: false,
+    id: null,
+    actionType: null,
+    title: "",
+    placeholder: ""
+  });
+
+  const requestAction = (id: number, actionType: "FLAG" | "ELIGIBILITY" | "DELETE", currentStatus?: boolean) => {
+    if (actionType === "DELETE" && !confirm("Are you sure you want to permanently delete this content?")) return;
     
-    startTransition(async () => {
-      await togglePostFlag(id, !currentStatus, reason);
+    setModalState({
+      isOpen: true,
+      id,
+      actionType,
+      currentStatus,
+      title: actionType === "DELETE" ? "Reason for deletion" : "Reason for this action",
+      placeholder: actionType === "DELETE" ? "Reason for deletion:" : "Reason for this action:"
     });
   };
 
-  const handleToggleEligibility = (id: number, currentStatus: boolean) => {
-    const reason = window.prompt("Reason for this action:");
-    if (!reason) return;
+  const handleConfirmAction = (reason: string) => {
+    const { id, actionType, currentStatus } = modalState;
+    if (!id || !actionType) return;
+    
+    setModalState(prev => ({ ...prev, isOpen: false }));
     
     startTransition(async () => {
-      await togglePostEligibility(id, !currentStatus, reason);
-    });
-  };
-
-  const handleDelete = (id: number) => {
-    if (!confirm("Are you sure you want to permanently delete this content?")) return;
-    
-    const reason = window.prompt("Reason for deletion:");
-    if (!reason) return;
-    
-    setDeletingId(id);
-    startTransition(async () => {
-      await deletePost(id, reason);
-      setDeletingId(null);
+      if (actionType === "FLAG") {
+        await togglePostFlag(id, !currentStatus, reason);
+      } else if (actionType === "ELIGIBILITY") {
+        await togglePostEligibility(id, !currentStatus, reason);
+      } else if (actionType === "DELETE") {
+        setDeletingId(id);
+        await deletePost(id, reason);
+        setDeletingId(null);
+      }
     });
   };
 
@@ -154,22 +171,22 @@ export default function ContentTable({
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                        <div className="flex items-center justify-end gap-3">
                          <button 
-                            onClick={() => handleToggleFlag(post.id, post.isFlagged)}
+                            onClick={() => requestAction(post.id, "FLAG", post.isFlagged)}
                             disabled={isPending}
                             className={`text-xs font-semibold transition-colors disabled:opacity-50 ${post.isFlagged ? 'text-gray-400 hover:text-white' : 'text-orange-400 hover:text-orange-300'}`}
                           >
                             {post.isFlagged ? 'Unflag' : 'Flag'}
                          </button>
                          <button 
-                            onClick={() => handleToggleEligibility(post.id, post.isEligible)}
+                            onClick={() => requestAction(post.id, "ELIGIBILITY", post.isEligible)}
                             disabled={isPending}
                             className="text-xs font-semibold text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                           >
                             {post.isEligible ? 'Restrict' : 'Allow Earnings'}
                          </button>
                          <button 
-                            onClick={() => handleDelete(post.id)}
-                            disabled={isPending}
+                            onClick={() => requestAction(post.id, "DELETE")}
+                            disabled={deletingId === post.id || isPending}
                             className="text-xs font-semibold text-red-500 hover:text-red-400 transition-colors disabled:opacity-50"
                           >
                             Delete
@@ -183,6 +200,14 @@ export default function ContentTable({
           </table>
         </div>
         
+        <ReasonModal 
+          isOpen={modalState.isOpen}
+          title={modalState.title}
+          placeholder={modalState.placeholder}
+          onConfirm={handleConfirmAction}
+          onCancel={() => setModalState(prev => ({ ...prev, isOpen: false }))}
+        />
+
         {/* Pagination Footer */}
         {posts.length > 0 && (
            <Pagination totalItems={totalPosts} currentPage={currentPage} pageSize={pageSize} />
