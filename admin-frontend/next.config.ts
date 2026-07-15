@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: ['192.168.1.156:3002', '192.168.1.156']
-    }
+    },
+    turbopack: {}
   },
   devIndicators: {
     position: 'bottom-right',
