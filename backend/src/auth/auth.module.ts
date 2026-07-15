@@ -13,7 +13,7 @@ import { JwtStrategy } from './jwt.strategy';
     PassportModule,
     JwtModule.register({
       global: true,
-      secret: 'super-secret-key', // In production, use environment variables
+      secret: process.env.JWT_SECRET || 'super-secret-key',
       signOptions: { expiresIn: '7d' },
     }),
   ],
