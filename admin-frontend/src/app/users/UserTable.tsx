@@ -168,7 +168,7 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
       {viewingUser && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setViewingUser(null)}></div>
-          <div className="relative w-full max-w-[400px] bg-brand-card border-l border-brand-border/50 h-full p-6 shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
+          <div className="relative w-[400px] bg-brand-card border-l border-brand-border/50 h-full p-6 shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
             <button onClick={() => setViewingUser(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
             </button>

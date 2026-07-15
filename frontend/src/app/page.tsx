@@ -66,7 +66,7 @@ export default function Home() {
   return (
     <div className="w-full max-w-[650px] mx-auto min-h-screen">
       {/* Top Header */}
-      <header className="sticky top-0 bg-background/90 backdrop-blur-md border-b border-border z-10 flex">
+      <header className="sticky top-[60px] sm:top-0 bg-background/90 backdrop-blur-md border-b border-border z-10 flex">
         <button 
           onClick={() => setActiveTab("For you")}
           className={`px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-muted/50 relative ${activeTab === "For you" ? "text-foreground" : "text-muted-foreground"}`}

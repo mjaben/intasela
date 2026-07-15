@@ -88,7 +88,7 @@ export default function SidebarNav() {
   };
 
   return (
-    <aside className="w-[280px] h-screen sticky top-0 flex flex-col pt-4 pr-6 pb-6">
+    <aside className="hidden sm:flex w-[280px] h-screen sticky top-0 flex-col pt-4 pr-6 pb-6">
       {/* Brand Logo */}
       <div className="px-4 mb-8">
         <Link href="/" className="flex items-center gap-1">

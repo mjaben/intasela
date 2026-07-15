@@ -3,6 +3,9 @@ import "./globals.css";
 import SidebarNav from "@/components/SidebarNav";
 import RightSidebar from "@/components/RightSidebar";
 import ToastProvider from "@/components/ToastProvider";
+import MobileHeader from "@/components/MobileHeader";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileFAB from "@/components/MobileFAB";
 
 export const metadata: Metadata = {
   title: "Intasela",
@@ -18,16 +21,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased min-h-screen bg-background text-foreground flex justify-center" suppressHydrationWarning>
-        <div className="flex w-full max-w-[1280px] mx-auto px-4">
+      <body className="antialiased min-h-screen bg-background text-foreground flex flex-col items-center" suppressHydrationWarning>
+        <MobileHeader />
+        <div className="flex w-full max-w-[1280px] mx-auto px-0 sm:px-4">
           <SidebarNav />
           
-          <main className="flex-1 min-h-screen min-w-0 pb-20">
+          <main className="flex-1 min-h-screen min-w-0 pb-[80px] sm:pb-0">
             {children}
           </main>
 
           <RightSidebar />
         </div>
+        <MobileFAB />
+        <MobileBottomNav />
         <ToastProvider />
       </body>
     </html>
