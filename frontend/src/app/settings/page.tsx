@@ -19,7 +19,6 @@ export default function SettingsPage() {
     showLikesOnProfile: true,
     allowGuestPosts: true,
     contactMatching: true,
-    contactMatching: true,
     requireEmailVerification: false,
     recoveryQuestions: false,
     notifications: {

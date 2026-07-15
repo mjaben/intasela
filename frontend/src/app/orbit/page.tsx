@@ -265,7 +265,7 @@ function OrbitPlayer({ post }: { post: any }) {
             
             if (!hasViewedRef.current) {
               hasViewedRef.current = true;
-              setViews(prev => prev + 1);
+              setViews((prev: number) => prev + 1);
               fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${post.id}/view`, { method: "POST" }).catch(() => {});
             }
           } else {

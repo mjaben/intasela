@@ -88,7 +88,7 @@ export default function PostCard({
   
   const isUserBlocked = useBlockMuteStore(s => s.isUserBlocked(author.username));
   const isUserMuted = useBlockMuteStore(s => s.isUserMuted(author.username));
-  const isPostMuted = useBlockMuteStore(s => s.isPostMuted(id));
+  const isPostMuted = useBlockMuteStore(s => s.isPostMuted(String(id)));
   const toggleBlockUser = useBlockMuteStore(s => s.toggleBlockUser);
   const toggleMuteUser = useBlockMuteStore(s => s.toggleMuteUser);
   const toggleMutePost = useBlockMuteStore(s => s.toggleMutePost);
@@ -151,7 +151,7 @@ export default function PostCard({
     return () => observer.disconnect();
   }, [id, user?.username, author.username]);
 
-  const handleToggle = async (type: "LIKE" | "RESELA", e: React.MouseEvent) => {
+  const handleToggle = async (type: "LIKE" | "RESELA" | "BOOKMARK", e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isAuthenticated) {
       router.push("/login");
@@ -293,7 +293,7 @@ export default function PostCard({
   const handleMutePost = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isAuthenticated) return router.push("/login");
-    toggleMutePost(id);
+    toggleMutePost(String(id));
     addToast(isPostMuted ? `Unmuted post notifications` : `Muted post notifications`, "success");
     setShowOptionsMenu(false);
   };
