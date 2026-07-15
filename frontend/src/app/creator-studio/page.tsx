@@ -29,7 +29,7 @@ export default function CreatorStudioPage() {
       setLoading(true);
       try {
         const token = localStorage.getItem("access_token");
-        const res = await fetch(`http://localhost:3001/users/me/creator-studio?period=${period}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/me/creator-studio?period=${period}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) throw new Error("Failed to load studio data");

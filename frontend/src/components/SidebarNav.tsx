@@ -24,7 +24,7 @@ export default function SidebarNav() {
         const fetchCount = async () => {
           try {
             const token = localStorage.getItem("access_token");
-            const res = await fetch("http://localhost:3001/notifications/unread-count", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/notifications/unread-count`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {

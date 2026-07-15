@@ -20,7 +20,7 @@ function RecommendedUser({ user }: { user: { name: string, username: string } })
     try {
       const token = localStorage.getItem("access_token");
       const method = isFollowing ? 'DELETE' : 'POST';
-      const res = await fetch(`http://localhost:3001/users/${user.username}/follow`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${user.username}/follow`, {
         method,
         headers: { "Authorization": `Bearer ${token}` }
       });

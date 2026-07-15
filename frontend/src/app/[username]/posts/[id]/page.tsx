@@ -29,7 +29,7 @@ export default function PostDetail() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`http://localhost:3001/posts/${postId}`, { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${postId}`, { headers });
       if (!res.ok) throw new Error("Failed to fetch post");
       const data = await res.json();
       setPost(data);

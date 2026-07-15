@@ -16,7 +16,7 @@ export default function FollowingPage() {
   useEffect(() => {
     async function fetchFollowing() {
       try {
-        const res = await fetch(`http://localhost:3001/users/${username}/following`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${username}/following`);
         if (res.ok) {
           const data = await res.json();
           setFollowing(data);

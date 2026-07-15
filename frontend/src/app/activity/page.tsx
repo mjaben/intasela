@@ -28,7 +28,7 @@ export default function ActivityPage() {
       try {
         setLoading(true);
         const token = localStorage.getItem("access_token");
-        const res = await fetch("http://localhost:3001/notifications", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/notifications`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -38,7 +38,7 @@ export default function ActivityPage() {
         setNotifications(data);
 
         // Mark as read in the background
-        fetch("http://localhost:3001/notifications/read", {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/notifications/read`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` }
         });

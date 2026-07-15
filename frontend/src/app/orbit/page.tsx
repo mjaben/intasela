@@ -21,7 +21,7 @@ export default function OrbitFeed() {
         const headers: any = {};
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const res = await fetch(`http://localhost:3001/posts/orbit?type=${feedType}`, { headers });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/orbit?type=${feedType}`, { headers });
         if (res.ok) {
           const data = await res.json();
           setPosts(data);
@@ -193,7 +193,7 @@ function OrbitPlayer({ post }: { post: any }) {
 
     try {
       const token = localStorage.getItem("access_token");
-      await fetch(`http://localhost:3001/posts/${post.id}/engage`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${post.id}/engage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -217,7 +217,7 @@ function OrbitPlayer({ post }: { post: any }) {
 
     try {
       const token = localStorage.getItem("access_token");
-      await fetch(`http://localhost:3001/posts/${post.id}/engage`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${post.id}/engage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -241,7 +241,7 @@ function OrbitPlayer({ post }: { post: any }) {
 
     try {
       const token = localStorage.getItem("access_token");
-      await fetch(`http://localhost:3001/posts/${post.id}/engage`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${post.id}/engage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -266,7 +266,7 @@ function OrbitPlayer({ post }: { post: any }) {
             if (!hasViewedRef.current) {
               hasViewedRef.current = true;
               setViews(prev => prev + 1);
-              fetch(`http://localhost:3001/posts/${post.id}/view`, { method: "POST" }).catch(() => {});
+              fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${post.id}/view`, { method: "POST" }).catch(() => {});
             }
           } else {
             videoRef.current?.pause();
@@ -331,7 +331,7 @@ function OrbitPlayer({ post }: { post: any }) {
                       if(!isAuthenticated) return router.push("/login"); 
                       try {
                         const token = localStorage.getItem("access_token");
-                        await fetch(`http://localhost:3001/users/${post.author.username}/follow`, {
+                        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${post.author.username}/follow`, {
                           method: "POST",
                           headers: { "Authorization": `Bearer ${token}` }
                         });

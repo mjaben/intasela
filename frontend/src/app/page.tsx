@@ -38,7 +38,7 @@ export default function Home() {
       const token = localStorage.getItem("access_token");
       const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
       
-      let url = "http://localhost:3001/posts";
+      let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts`;
       if (activeTab === "Following") {
         url += "?type=following";
       }

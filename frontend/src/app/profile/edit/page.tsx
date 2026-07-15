@@ -27,7 +27,7 @@ export default function EditProfilePage() {
         return;
       }
       try {
-        const res = await fetch(`http://localhost:3001/users/profile/${currentUser.username}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/profile/${currentUser.username}`);
         if (res.ok) {
           const data = await res.json();
           setProfile(data);
@@ -59,7 +59,7 @@ export default function EditProfilePage() {
       formData.append('file', file);
       
       const token = localStorage.getItem("access_token");
-      const res = await fetch('http://localhost:3001/uploads/image', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/uploads/image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -89,7 +89,7 @@ export default function EditProfilePage() {
 
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch('http://localhost:3001/users/profile', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

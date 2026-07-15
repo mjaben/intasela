@@ -62,16 +62,16 @@ export default function ProfilePage() {
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
         // Fetch profile
-        const profileRes = await fetch(`http://localhost:3001/users/profile/${username}`, { headers });
+        const profileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/profile/${username}`, { headers });
         if (!profileRes.ok) throw new Error("Profile not found");
         const profileData = await profileRes.json();
         setProfile(profileData);
 
         // Fetch posts, replies, and likes concurrently
         const [postsRes, repliesRes, likesRes] = await Promise.all([
-          fetch(`http://localhost:3001/posts/user/${username}`, { headers }),
-          fetch(`http://localhost:3001/posts/user/${username}/replies`, { headers }),
-          fetch(`http://localhost:3001/posts/user/${username}/likes`, { headers })
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/user/${username}`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/user/${username}/replies`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/user/${username}/likes`, { headers })
         ]);
 
         if (postsRes.ok) setPosts(await postsRes.json());
@@ -207,7 +207,7 @@ export default function ProfilePage() {
                   try {
                     const token = localStorage.getItem('access_token');
                     const method = isFollowing ? 'DELETE' : 'POST';
-                    const res = await fetch(`http://localhost:3001/users/${profile.username}/follow`, {
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${profile.username}/follow`, {
                       method,
                       headers: { Authorization: `Bearer ${token}` }
                     });

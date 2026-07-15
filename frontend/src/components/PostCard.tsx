@@ -139,7 +139,7 @@ export default function PostCard({
         const headers: any = {};
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        fetch(`http://localhost:3001/posts/${id}/view`, { method: "POST", headers })
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${id}/view`, { method: "POST", headers })
           .catch(err => console.error("Failed to track view", err));
           
         observer.disconnect();
@@ -196,7 +196,7 @@ export default function PostCard({
 
     try {
       const token = localStorage.getItem("access_token");
-      await fetch(`http://localhost:3001/posts/${id}/engage`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${id}/engage`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -249,7 +249,7 @@ export default function PostCard({
     setIsDeleting(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/posts/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${id}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -320,7 +320,7 @@ export default function PostCard({
     if (!isAuthenticated) return router.push("/login");
     try {
       const token = localStorage.getItem("access_token");
-      await fetch(`http://localhost:3001/users/${author.username}/follow`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${author.username}/follow`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
@@ -452,7 +452,7 @@ export default function PostCard({
                     if(!isAuthenticated) return router.push("/login"); 
                     try {
                       const token = localStorage.getItem("access_token");
-                      await fetch(`http://localhost:3001/users/${author.username}/follow`, {
+                      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${author.username}/follow`, {
                         method: "POST",
                         headers: { "Authorization": `Bearer ${token}` }
                       });
@@ -526,7 +526,7 @@ export default function PostCard({
                                 if(!isAuthenticated) return router.push("/login"); 
                                 try {
                                   const token = localStorage.getItem("access_token");
-                                  await fetch(`http://localhost:3001/users/${author.username}/follow`, {
+                                  await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${author.username}/follow`, {
                                     method: "POST",
                                     headers: { "Authorization": `Bearer ${token}` }
                                   });

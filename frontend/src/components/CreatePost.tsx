@@ -56,7 +56,7 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
         formData.append("file", mediaFile);
         const endpoint = mediaFile.type.startsWith("video/") ? "/uploads/video" : "/uploads/image";
         
-        const uploadRes = await fetch(`http://localhost:3001${endpoint}`, {
+        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${endpoint}`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
           body: formData
@@ -86,7 +86,7 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
         payload.videoDuration = mediaData.duration;
       }
 
-      const res = await fetch("http://localhost:3001/posts", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

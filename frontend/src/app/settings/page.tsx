@@ -86,7 +86,7 @@ export default function SettingsPage() {
     const fetchSettings = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const res = await fetch("http://localhost:3001/users/me/settings", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/me/settings`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -122,7 +122,7 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users/me/settings", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/me/settings`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +171,7 @@ export default function SettingsPage() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users/me/posts", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/me/posts`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -193,7 +193,7 @@ export default function SettingsPage() {
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users/me", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/me`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -237,7 +237,7 @@ export default function SettingsPage() {
       
       try {
         const token = localStorage.getItem("access_token");
-        const res = await fetch("http://localhost:3001/uploads/image", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/uploads/image`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: data
@@ -257,7 +257,7 @@ export default function SettingsPage() {
     setErrorMsg("");
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -284,7 +284,7 @@ export default function SettingsPage() {
     setErrorMsg("");
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users/me/email/request-update", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/me/email/request-update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -309,7 +309,7 @@ export default function SettingsPage() {
     setErrorMsg("");
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http://localhost:3001/users/me/email/verify", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/me/email/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
