@@ -39,12 +39,12 @@ export default async function UsersModule(props: { searchParams?: Promise<{ [key
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-200 tracking-tight">User Directory</h1>
           <p className="text-sm text-gray-400 mt-1">Manage platform users, roles, and system access.</p>
         </div>
-        <button className="px-4 py-2 bg-brand text-brand-bg font-semibold text-sm rounded-lg hover:bg-brand-hover transition-colors">
+        <button className="px-4 py-2 bg-brand text-brand-bg font-semibold text-sm rounded-lg hover:bg-brand-hover transition-colors w-full sm:w-auto">
           Export Users
         </button>
       </div>

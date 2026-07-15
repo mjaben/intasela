@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import AdminSidebarNav from "./AdminSidebarNav";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -13,7 +13,12 @@ export default function AdminLayout({
   user: { firstName: string, role: string, permissions?: string[] | null } | null
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   // Simple mapping to format the pathname into a readable title
   const getPageTitle = () => {
@@ -46,36 +51,57 @@ export default function AdminLayout({
   const displayName = user?.firstName || "System Admin";
 
   return (
-    <div className="min-h-full flex w-full">
-      <AdminSidebarNav isCollapsed={isCollapsed} permissions={user?.permissions || null} role={user?.role || "admin"} />
+    <div className="min-h-full flex w-full relative">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      <AdminSidebarNav 
+        isCollapsed={isCollapsed} 
+        isMobileMenuOpen={isMobileMenuOpen}
+        permissions={user?.permissions || null} 
+        role={user?.role || "admin"} 
+      />
       
       <div className="flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-300">
         {/* Top Header Bar */}
-        <header className="h-16 border-b border-brand-border bg-brand-bg/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="flex items-center gap-4">
+        <header className="h-16 border-b border-brand-border bg-brand-bg/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* Desktop Toggle */}
             <button 
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="hidden md:block text-gray-400 hover:text-white transition-colors"
               title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             >
               {isCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
             </button>
-            <span className="text-sm font-medium text-gray-300">{getPageTitle()}</span>
+            {/* Mobile Toggle */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden text-gray-400 hover:text-white transition-colors"
+              title="Toggle Menu"
+            >
+              <PanelLeftOpen size={20} />
+            </button>
+            <span className="text-sm font-medium text-gray-300 truncate max-w-[140px] md:max-w-none">{getPageTitle()}</span>
           </div>
           
-          <div className="flex items-center gap-6">
-            {/* Removed dark mode toggle */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-brand-card border border-brand-border flex items-center justify-center text-xs font-bold text-white">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="w-8 h-8 rounded-full bg-brand-card border border-brand-border flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                 {initial}
               </div>
-              <span className="text-sm font-medium text-white">{displayName}</span>
+              <span className="text-sm font-medium text-white hidden sm:block truncate max-w-[100px] md:max-w-[200px]">{displayName}</span>
             </div>
           </div>
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           {children}
         </main>
       </div>

@@ -34,7 +34,7 @@ export default function ReasonModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCancel}></div>
-      <div className="relative bg-brand-card border border-brand-border/50 rounded-xl shadow-2xl w-[400px] p-6 animate-in fade-in zoom-in duration-200">
+      <div className="relative bg-brand-card border border-brand-border/50 rounded-xl shadow-2xl w-[calc(100%-2rem)] max-w-[400px] p-6 animate-in fade-in zoom-in duration-200">
         <h3 className="text-lg font-bold text-gray-200 mb-2">{title}</h3>
         <p className="text-sm text-gray-400 mb-6">
           This action will be logged in the system audit trail. Please provide a clear reason.

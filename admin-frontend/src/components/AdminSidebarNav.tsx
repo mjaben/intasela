@@ -70,28 +70,33 @@ const navGroups: {
 
 export default function AdminSidebarNav({ 
   isCollapsed, 
+  isMobileMenuOpen,
   permissions, 
   role 
 }: { 
   isCollapsed: boolean, 
+  isMobileMenuOpen?: boolean,
   permissions?: string[] | null, 
   role?: string 
 }) {
   const pathname = usePathname();
 
   return (
-    <aside className={`${isCollapsed ? 'w-[80px]' : 'w-[280px]'} transition-all duration-300 h-screen sticky top-0 flex flex-col bg-brand-bg text-gray-300 border-r border-brand-border flex-shrink-0 overflow-hidden`}>
+    <aside className={`
+      fixed inset-y-0 left-0 z-50 transform md:relative md:translate-x-0
+      ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      ${isCollapsed ? 'md:w-[80px]' : 'md:w-[280px]'} 
+      w-[280px] transition-all duration-300 h-screen sticky top-0 flex flex-col bg-brand-bg text-gray-300 border-r border-brand-border flex-shrink-0 overflow-hidden
+    `}>
       {/* Brand Logo */}
-      <div className={`px-6 py-8 flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} transition-all`}>
+      <div className={`px-6 py-8 flex items-center ${isCollapsed ? 'md:justify-center' : 'gap-3'} transition-all`}>
         <div className="w-8 h-8 rounded-lg bg-brand flex-shrink-0 flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(59,196,146,0.4)]">
           In
         </div>
-        {!isCollapsed && (
-          <div className="whitespace-nowrap transition-opacity duration-300">
-            <span className="text-xl font-bold tracking-tight text-white block leading-none mb-1">Intasela</span>
-            <span className="text-[9px] uppercase tracking-widest text-brand font-semibold leading-none">Super Admin</span>
-          </div>
-        )}
+        <div className={`whitespace-nowrap transition-opacity duration-300 ${isCollapsed ? 'md:hidden' : 'block'}`}>
+          <span className="text-xl font-bold tracking-tight text-white block leading-none mb-1">Intasela</span>
+          <span className="text-[9px] uppercase tracking-widest text-brand font-semibold leading-none">Super Admin</span>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -107,8 +112,9 @@ export default function AdminSidebarNav({
 
           return (
           <div key={group.title}>
-            <div className={`mb-2 ${isCollapsed ? 'text-center px-0' : 'px-3'} text-[11px] font-bold text-brand uppercase tracking-wider transition-all`}>
-              {isCollapsed ? "—" : group.title}
+            <div className={`mb-2 ${isCollapsed ? 'md:text-center md:px-0' : 'px-3'} text-[11px] font-bold text-brand uppercase tracking-wider transition-all block`}>
+              <span className={`${isCollapsed ? 'md:hidden' : ''}`}>{group.title}</span>
+              <span className={`hidden ${isCollapsed ? 'md:inline-block' : ''}`}>—</span>
             </div>
             <div className="space-y-1">
               {allowedItems.map((item) => {
@@ -118,14 +124,14 @@ export default function AdminSidebarNav({
                     key={item.name}
                     href={item.href}
                     title={isCollapsed ? item.name : undefined}
-                    className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-lg transition-all duration-200 font-medium text-[13px] group ${
+                    className={`flex items-center ${isCollapsed ? 'md:justify-center md:px-0' : 'gap-3 px-3'} gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 font-medium text-[13px] group ${
                       isActive
                         ? "bg-brand/10 text-brand font-semibold"
                         : "text-gray-400 hover:bg-brand-card hover:text-gray-200"
                     }`}
                   >
                     <item.icon className={`flex-shrink-0 w-4 h-4 ${isActive ? 'text-brand' : 'text-gray-500 group-hover:text-gray-300'} transition-colors`} />
-                    {!isCollapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                    <span className={`whitespace-nowrap ${isCollapsed ? 'md:hidden' : 'block'}`}>{item.name}</span>
                   </Link>
                 );
               })}
