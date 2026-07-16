@@ -640,6 +640,7 @@ export default function PostCard({
               </div>
             </div>
           </div>
+          )}
           
           {/* Body */}
           <div className={`leading-relaxed mb-2 text-foreground/90 break-words prose prose-invert max-w-none ${isDetailedView ? 'text-[17px]' : 'text-[14px]'}`}>
