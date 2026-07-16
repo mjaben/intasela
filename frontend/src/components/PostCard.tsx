@@ -65,6 +65,7 @@ export default function PostCard({
   mediaType?: string;
   mediaUrl?: string;
   thumbnailUrl?: string;
+  isDetailedView?: boolean;
 }) {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const user = useUserStore((state) => state.user);
@@ -421,28 +422,83 @@ export default function PostCard({
         </div>
       )}
 
-      <div className="flex gap-3">
-        {/* Avatar */}
-        <div 
-          className="w-10 h-10 rounded-full bg-muted shrink-0 overflow-hidden mt-0.5 cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={(e) => { e.stopPropagation(); router.push(`/@${author.username}`); }}
-        >
-          <img src={author.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${author.username}`} alt={author.name} className="w-full h-full object-cover" />
-        </div>
+      <div className={`flex ${isDetailedView ? 'flex-col gap-3' : 'gap-3'}`}>
+        {/* Detailed View Header */}
+        {isDetailedView && (
+          <div className="flex items-center justify-between w-full mb-1">
+            <div className="flex items-center gap-3 flex-1">
+              <div 
+                className="w-10 h-10 rounded-full bg-muted shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={(e) => { e.stopPropagation(); router.push(`/@${author.username}`); }}
+              >
+                <img src={author.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${author.username}`} alt={author.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col cursor-pointer" onClick={(e) => { e.stopPropagation(); router.push(`/@${author.username}`); }}>
+                <span className="font-bold text-[15px] hover:underline leading-tight">{author.name}</span>
+                <span className="text-muted-foreground text-[14px] leading-tight">@{author.username}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 relative">
+              {/* Detailed View Action Menu */}
+              {user?.username !== author.username && !isFollowing && (
+                <button 
+                  onClick={async (e) => { 
+                    e.stopPropagation(); 
+                    if(!isAuthenticated) return router.push("/login"); 
+                    try {
+                      const token = localStorage.getItem("access_token");
+                      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/${author.username}/follow`, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${token}` }
+                      });
+                      setFollow(author.username, true);
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  className="text-primary font-bold text-[11px] px-3 py-1 rounded-full border border-primary/40 hover:bg-primary/10 transition-colors uppercase tracking-wide whitespace-nowrap"
+                >
+                  {author.isFollower ? "Follow Back" : "Follow"}
+                </button>
+              )}
+
+              {/* 3-dot Menu */}
+              <div className="relative">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setShowOptionsMenu(!showOptionsMenu); }}
+                  className="p-1.5 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Avatar for normal view */}
+        {!isDetailedView && (
+          <div 
+            className="w-10 h-10 rounded-full bg-muted shrink-0 overflow-hidden mt-0.5 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={(e) => { e.stopPropagation(); router.push(`/@${author.username}`); }}
+          >
+            <img src={author.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${author.username}`} alt={author.name} className="w-full h-full object-cover" />
+          </div>
+        )}
         
         {/* Content Area */}
         <div className="flex-1 min-w-0">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-1">
-            <div className="flex items-center">
-              <span 
-                className="font-bold mr-2 text-[14px] cursor-pointer hover:underline"
-                onClick={(e) => { e.stopPropagation(); router.push(`/@${author.username}`); }}
-              >
-                {author.name}
-              </span>
-              <span className="text-muted-foreground text-[13px]">2h</span>
-            </div>
+          {/* Header for normal view */}
+          {!isDetailedView && (
+            <div className="flex justify-between items-start mb-1">
+              <div className="flex items-center">
+                <span 
+                  className="font-bold mr-2 text-[14px] cursor-pointer hover:underline"
+                  onClick={(e) => { e.stopPropagation(); router.push(`/@${author.username}`); }}
+                >
+                  {author.name}
+                </span>
+                <span className="text-muted-foreground text-[13px]">2h</span>
+              </div>
             {/* Top Right Actions */}
             <div className="flex items-center gap-2 relative">
               {user?.username !== author.username && !isFollowing && (
@@ -586,7 +642,7 @@ export default function PostCard({
           </div>
           
           {/* Body */}
-          <div className="text-[14px] leading-relaxed mb-2 text-foreground/90 break-words prose prose-invert max-w-none">
+          <div className={`leading-relaxed mb-2 text-foreground/90 break-words prose prose-invert max-w-none ${isDetailedView ? 'text-[17px]' : 'text-[14px]'}`}>
             <ReactMarkdown>{content}</ReactMarkdown>
             
             {/* Media Content */}
@@ -627,8 +683,17 @@ export default function PostCard({
             )}
           </div>
 
+          {/* Engagement Stats (Detailed View Only) */}
+          {isDetailedView && (
+            <div className="py-4 border-y border-border/50 my-3 text-[15px] text-muted-foreground flex items-center gap-5 overflow-x-auto whitespace-nowrap hide-scrollbar">
+              <span><b className="text-foreground font-bold">{stats.reselas || 0}</b> Reselas</span>
+              <span><b className="text-foreground font-bold">{stats.likes || 0}</b> Likes</span>
+              <span><b className="text-foreground font-bold">{stats.bookmarks || bookmarkCount || 0}</b> Bookmarks</span>
+            </div>
+          )}
+
           {/* Engagement Bar */}
-          <div className="flex items-center gap-5 sm:gap-8 text-muted-foreground text-[13px] mt-1 pr-2 sm:pr-4">
+          <div className={`flex items-center text-muted-foreground text-[13px] ${isDetailedView ? 'justify-around py-1' : 'gap-5 sm:gap-8 mt-1 pr-2 sm:pr-4'}`}>
             
             {/* 1. Heart (Like) */}
             <button 
@@ -764,7 +829,6 @@ export default function PostCard({
                     }}
                   />
                 </div>
-                {bookmarkCount > 0 && <span>{bookmarkCount}</span>}
               </button>
 
               {/* 6. Share */}

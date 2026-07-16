@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased min-h-screen bg-background text-foreground flex flex-col items-center" suppressHydrationWarning>
+      <body className="antialiased min-h-screen bg-background text-foreground flex flex-col items-center overflow-x-hidden max-w-[100vw]" suppressHydrationWarning>
         <MobileHeader />
         <div className="flex w-full max-w-[1280px] mx-auto px-0 sm:px-4">
           <SidebarNav />

@@ -42,9 +42,10 @@ export class UploadsController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
+    const baseUrl = process.env.APP_URL || 'http://localhost:3001';
     // Return the URL where the file can be accessed
     return {
-      url: `http://localhost:3001/uploads/${file.filename}`
+      url: `${baseUrl}/uploads/${file.filename}`
     };
   }
 
@@ -117,9 +118,10 @@ export class UploadsController {
                  // Remove original raw video to save space
                  try { fs.unlinkSync(inputPath); } catch (e) {}
 
+                 const baseUrl = process.env.APP_URL || 'http://localhost:3001';
                  resolve({
-                   url: `http://localhost:3001/uploads/${outputFilename}`,
-                   thumbnailUrl: `http://localhost:3001/uploads/${thumbnailFilename}`,
+                   url: `${baseUrl}/uploads/${outputFilename}`,
+                   thumbnailUrl: `${baseUrl}/uploads/${thumbnailFilename}`,
                    width,
                    height,
                    duration: Math.round(duration || 0),

@@ -91,6 +91,7 @@ export default function PostDetail() {
           onDelete={() => router.push("/")}
           parentPost={post.parent}
           isReplyContext={!!post.parent}
+          isDetailedView={true}
         />
       </div>
 
