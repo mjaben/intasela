@@ -152,7 +152,7 @@ export default function Home() {
               {/* Insert Ad every 3 posts */}
               {(index + 1) % 3 === 0 && (
                 <div className="px-6 py-2">
-                  <AdSlot format="horizontal" />
+                  <AdSlot format="horizontal" slotId="feed" />
                 </div>
               )}
             </div>

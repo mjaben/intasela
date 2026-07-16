@@ -137,7 +137,7 @@ export default function RightSidebar() {
 
       {/* AdSense Slot */}
       <div className="mt-auto pb-4">
-        <AdSlot format="vertical" />
+        <AdSlot format="vertical" slotId="sidebar" />
       </div>
 
     </aside>

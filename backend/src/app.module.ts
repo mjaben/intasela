@@ -13,6 +13,8 @@ import { UploadsModule } from './uploads/uploads.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MonetizationModule } from './monetization/monetization.module';
 import { AuditLogInterceptor } from './security/audit.interceptor';
+import { BullModule } from '@nestjs/bullmq';
+import { AdsModule } from './ads/ads.module';
 
 @Module({
   imports: [
@@ -22,6 +24,13 @@ import { AuditLogInterceptor } from './security/audit.interceptor';
     PostsModule,
     UploadsModule,
     NotificationsModule,
+    AdsModule,
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+      },
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',

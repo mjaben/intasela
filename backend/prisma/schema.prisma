@@ -58,6 +58,8 @@ model User {
   notificationsReceived Notification[] @relation("ReceivedNotifications")
   notificationsSent     Notification[] @relation("SentNotifications")
   
+  advertiserProfiles    Advertiser[]
+  
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -217,4 +219,83 @@ model SystemSetting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// -----------------------------------------------------------------------------
+// AD MANAGEMENT SYSTEM MODELS
+// -----------------------------------------------------------------------------
+
+model Advertiser {
+  id           String     @id @default(uuid())
+  companyName  String
+  email        String     @unique
+  phone        String?
+  verified     Boolean    @default(false)
+  userId       String?    
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  campaigns    Campaign[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Campaign {
+  id              String      @id @default(uuid())
+  advertiserId    String
+  advertiser      Advertiser  @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  name            String
+  budget          Float
+  remainingBudget Float
+  status          String      @default("PENDING") // PENDING, ACTIVE, PAUSED, COMPLETED, REJECTED
+  startDate       DateTime    @default(now())
+  endDate         DateTime?
+  bid             Float       // Target CPM
+  objective       String?     // e.g., "AWARENESS", "CONVERSION"
+  frequencyCap    Int         @default(3) // max impressions per user per 24h
+  targetCountry   String?
+  targetAge       String?
+  creatives       Creative[]
+  impressions     AdImpression[]
+  clicks          AdClick[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Creative {
+  id          String    @id @default(uuid())
+  campaignId  String
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  mediaUrl    String?   
+  mediaType   String?   // "IMAGE", "VIDEO"
+  headline    String?
+  description String?   @db.Text
+  ctaText     String?   
+  ctaLink     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model AdImpression {
+  id          String   @id @default(uuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId      String?
+  timestamp   DateTime @default(now())
+  device      String?
+  country     String?
+  cost        Float    
+  
+  @@index([campaignId, timestamp])
+  @@index([userId, timestamp])
+}
+
+model AdClick {
+  id          String   @id @default(uuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId      String?
+  timestamp   DateTime @default(now())
+  ip          String?
+  
+  @@index([campaignId, timestamp])
+  @@index([userId, timestamp])
 }

@@ -11,6 +11,7 @@
   "dependencies": {
     "framer-motion": "^12.42.2",
     "next": "16.2.10",
+    "next-google-adsense": "^1.2.0",
     "next-pwa": "^5.6.0",
     "nigeria-location-kit": "^1.0.5",
     "react": "19.2.4",
