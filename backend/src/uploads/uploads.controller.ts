@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -38,11 +38,13 @@ export class UploadsController {
       fileSize: 5 * 1024 * 1024, // 5MB limit
     }
   }))
-  uploadImage(@UploadedFile() file: Express.Multer.File) {
+  uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    const baseUrl = process.env.APP_URL || 'http://localhost:3001';
+    const host = req.get('host');
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = process.env.APP_URL || `${protocol}://${host}`;
     // Return the URL where the file can be accessed
     return {
       url: `${baseUrl}/uploads/${file.filename}`
@@ -70,10 +72,14 @@ export class UploadsController {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     }
   }))
-  async uploadVideo(@UploadedFile() file: Express.Multer.File) {
+  async uploadVideo(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
+
+    const host = req.get('host');
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = process.env.APP_URL || `${protocol}://${host}`;
 
     const inputPath = file.path;
     const outputFilename = `compressed-${file.filename}.mp4`;
@@ -118,7 +124,7 @@ export class UploadsController {
                  // Remove original raw video to save space
                  try { fs.unlinkSync(inputPath); } catch (e) {}
 
-                 const baseUrl = process.env.APP_URL || 'http://localhost:3001';
+                 // const baseUrl = process.env.APP_URL || 'http://localhost:3001';
                  resolve({
                    url: `${baseUrl}/uploads/${outputFilename}`,
                    thumbnailUrl: `${baseUrl}/uploads/${thumbnailFilename}`,
