@@ -41,7 +41,8 @@ export default function PostCard({
   reselaedBy,
   mediaType,
   mediaUrl,
-  thumbnailUrl
+  thumbnailUrl,
+  isDetailedView
 }: { 
   id: number;
   content: string;
