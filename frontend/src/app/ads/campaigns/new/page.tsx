@@ -118,7 +118,9 @@ const AutocompleteTagInput = ({ label, placeholder, tags, setTags, description, 
   );
 };
 
-export default function CreateCampaignWizard() {
+import { Suspense } from "react";
+
+function CreateCampaignForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useUserStore((state) => state.user);
@@ -801,5 +803,13 @@ export default function CreateCampaignWizard() {
 
       </div>
     </div>
+  );
+}
+
+export default function CreateCampaignWizard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <CreateCampaignForm />
+    </Suspense>
   );
 }
