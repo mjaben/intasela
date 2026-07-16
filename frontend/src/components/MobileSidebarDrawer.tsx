@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useUserStore } from "@/store/useUserStore";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
+import { useToastStore } from "@/store/useToastStore";
+import { useState } from "react";
 
 interface MobileSidebarDrawerProps {
   isOpen: boolean;
@@ -14,6 +17,10 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const logout = useUserStore((state) => state.logout);
   const router = useRouter();
+  const pathname = usePathname();
+  const businessAdsEnabled = useSystemSettingsStore((state) => state.businessAdsEnabled);
+  const addToast = useToastStore((state) => state.addToast);
+  const [businessExpanded, setBusinessExpanded] = useState(false);
 
   if (!isOpen) return null;
 
@@ -33,6 +40,11 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
       name: "Bookmarks",
       href: "/bookmarks",
       icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACRklEQVR4nO2ZuU9UURTGf4DgArI5yqIgUCiNMZFSY2IsrSxsLe2oaemgNjb+C7aUtiSWhFAAKpvKDI9xZpxhEQdZcpNTEMK8PPWcew15X3IyyZv3vnu/u54FUqRIoYlLQAcwCAzVsPvAiNi9mPc6algTxpgHSkBRbB1YirGFmP+iEzynrQociRUshDgRGfzi0IK0GEDIAVCnTfoduI5f/AbqtUnzwA38Yh+4oE3qNmgXflEFGrVJcwGE/LI4jrNAN36xB1zUJv0G9OAXP+USVsVXoBe/2AUua5OuBRCyA1zRJl0FbuIX20CzNukycAu/2AKuapN+BvrwiwrQqk36KYCQMtCmTfoRuI1flCRGUV9a50LIEjCAXxSBTm3SlQBCCsA1i3vExdo+kbeIgb4EmJG8RQzkfK1+/GLTQsh6gHskshCSDeCi5CyEbATwfiOLzR4FiBAjCyEhsiibFkJC5LXyFm0WLW7ZBEIyFg6cut+TYBVkLGKDds6BkIpFtBbCady2iJ9D7MsdoOUPv2kAngPP/mFGMhgky5LmmJzgUYkqp4FZ4APw9H+Ykb0E6UuX5B6Xi2wKeCjPXbHmBbAowh4nbPOHxUlZjcmMuwLoWzn33e+dGu+5WsdLyZG9Bx6EELJ/Rq3ikYx8VmYiaaNuQF7Jd++AuzFHficG9bwG6YQb1TlgRjr0txlzlw4dk03tBA35EHIoo56TWXiiyO06Oymb+/UJL7tsceQvy/ofxg49wBsRNCF7RL2q6xO9MkNu6aZIQUAcA5x4jYk8OqYWAAAAAElFTkSuQmCC"
+    },
+    {
+      name: "Business",
+      href: "/ads",
+      icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAD5klEQVR4nO2Ze4hUVRzHP3funZlzZ/buzGyik+uGuixElFBaWZHVH0GWUtkquGWG9hCMYLelaKlIIXoq0sOKEEu37GEmuIqFxUIr1eYjq00LW7XIV292xtbFunHgF1TM487WOGegD5y/7u9c7nd+5/xeA/+TFwvYDHw1zPU2hjAV2AmML3FNBI4AczGEd4AbStxjA5uApRjCBOAbIFLiviXAFsDBEDqB9hL3aO/1AyMwhHrgeyBRwp6z5V6chUE8Bjxegv0o4GtgJgZRK944LaC9vkM9wAMYRhvwUgn2zwFvSs4xBgfYD5wT0H4h8Ll40Siul9wRhCnAYaARw7Aki18ewFbfn0OS+Y1jmggpdtZd4CO5S0bSEyB8apFrgNUYysXAXqmTCtEB7ABiGEoXcGsRm/OB34BlwBXAWNNC7gTgWyBaxC4JLACelKLwIDAA9AIrgbuAq6SMD1Gh4lB/xHBIARcCt0jZrpuwA0AW2AasknePocyMA74rQ0LzgPPEg0PAdMrM08CDZXz/EmAtZUZXrBlgUpku7WVSEddRZpqAbrm0WUmGrwCLgNnSd+vkNxx0YNgfsEr4z8/0RBGwSARpYceA7cBy4CbgjIARSSfMJzAIJfnjduAF6QDvLbJnFrD7X3jzpIjSw4gzC9iMlopYRyxjaQXWF3huyRiomMcqSkyCwuQCNvr4vW/SGCgXbVKP5eN04KhEQqO9cUjGPbnQHvgQuA3DaQdeL/B8MbDRtEr4n9TI3dD5IxeT5Hkaw7lfKthcxIEvTBvK5aJOKuN8U5JnJUkaz33AijzPrgT2mTbP8qS5WiXNUYf0ET8BLRJS//rBI6SjvBTDaIzFYgMdd7f2zZ8355Pp06b2XTD53P6mpsYf0+lRBzwvftRx7GOWZQ05jnMkHA4fdhxnn2VZnSL8HmCeNE8VHdY1pFLJgf69u/xCa3dfr7/1vbf89ete9lc8/5T/6COL/bbWhcdbWmZlxo8bOwj4tm0/U0khac+ryRYTkmt9uWe7337nHUOuUhnHCS2odC6pc13311JFrHuj029oGJP1vHj3yRguBKEmEokcDypAH7Gb588dUkplQqGQUWVJxLbtE0FErH3tRb++fnS2trZWl+sjMY1QKHRCn/d8Aj779AP/xjmzB11X/WzbdjOmolR0YFtvd04Rr65Z6Z+aHpmJx+NdJv1bmxPPqzn47pYNfxOwa+dWf2bzNYNKqV+Aa6kGkslEn/7l/xSh80QykcgqpfRw7RSqhVQq0bVs6UP+xzt6/OtmXJ2NRqM/ADOoNsLh8MOXTLnod50YlVLLpQ+pSppd191j+hiHauMPBjbpBY9dbKYAAAAASUVORK5CYII="
     },
     {
       name: "Settings and privacy",
@@ -85,17 +97,56 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
         <nav className="p-4 flex-1 space-y-1">
           {isAuthenticated ? (
             navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={onClose}
-                className="flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-[15px]"
-              >
-                <div className="w-[20px] h-[20px] flex items-center justify-center relative">
-                  <img src={item.icon} alt={item.name} className="w-full h-full object-contain invert opacity-80" />
+              <div key={item.name}>
+                <div
+                  onClick={() => {
+                    if (item.name === "Business") {
+                      if (!businessAdsEnabled) {
+                        addToast("Not Available at the moment, check back.");
+                        return;
+                      }
+                      setBusinessExpanded(!businessExpanded);
+                    } else {
+                      onClose();
+                      router.push(item.href);
+                    }
+                  }}
+                  className={`flex items-center justify-between gap-4 px-4 py-3.5 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-[15px] cursor-pointer ${pathname.startsWith("/ads") && item.name === "Business" ? 'bg-accent/30' : ''}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-[20px] h-[20px] flex items-center justify-center relative">
+                      <img src={item.icon} alt={item.name} className="w-full h-full object-contain invert opacity-80" />
+                    </div>
+                    {item.name}
+                  </div>
+                  {item.name === "Business" && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform text-muted-foreground ${businessExpanded ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  )}
                 </div>
-                {item.name}
-              </Link>
+                
+                {item.name === "Business" && businessExpanded && (
+                  <div className="ml-11 mt-1 mb-2 space-y-2 border-l-2 border-border/50 pl-4">
+                    <div 
+                      onClick={() => { onClose(); router.push('/ads'); }}
+                      className={`px-3 py-2 rounded-md text-[14px] hover:bg-accent/50 cursor-pointer ${pathname === '/ads' ? 'font-bold text-primary' : 'text-muted-foreground'}`}
+                    >
+                      Manage Ads
+                    </div>
+                    <div 
+                      onClick={() => { onClose(); router.push('/ads/campaigns/new'); }}
+                      className={`px-3 py-2 rounded-md text-[14px] hover:bg-accent/50 cursor-pointer ${pathname === '/ads/campaigns/new' ? 'font-bold text-primary' : 'text-muted-foreground'}`}
+                    >
+                      Create Campaign
+                    </div>
+                    <div 
+                      onClick={() => { onClose(); router.push('/ads/wallet'); }}
+                      className={`px-3 py-2 rounded-md text-[14px] hover:bg-accent/50 cursor-pointer ${pathname === '/ads/wallet' ? 'font-bold text-primary' : 'text-muted-foreground'}`}
+                    >
+                      Ad Wallet
+                    </div>
+                  </div>
+                )}
+              </div>
             ))
           ) : (
             <div className="p-4 text-center text-muted-foreground text-sm">

@@ -7,6 +7,9 @@ import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileFAB from "@/components/MobileFAB";
 import { GoogleAdSense } from "next-google-adsense";
+import { useEffect } from "react";
+import { useUserStore } from "@/store/useUserStore";
+import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
 
 export const metadata: Metadata = {
   title: "Intasela",

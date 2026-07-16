@@ -260,6 +260,7 @@ model Campaign {
   advertiser      Advertiser  @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
   name            String
   budget          Float
+  dailyBudget     Float?      @default(0) // Added for daily pacing
   remainingBudget Float
   status          String      @default("PENDING") // PENDING, ACTIVE, PAUSED, COMPLETED, REJECTED
   startDate       DateTime    @default(now())
@@ -269,6 +270,9 @@ model Campaign {
   frequencyCap    Int         @default(3) // max impressions per user per 24h
   targetCountry   String?
   targetAge       String?
+  targetGender    String?     // e.g., "ALL", "MALE", "FEMALE"
+  interests       String?     // Comma separated list or JSON string
+  keywords        String?     // Comma separated list of keywords
   creatives       Creative[]
   impressions     AdImpression[]
   clicks          AdClick[]
@@ -280,6 +284,7 @@ model Creative {
   id          String    @id @default(uuid())
   campaignId  String
   campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  postId      Int?      // Link to an existing Post for business ads
   mediaUrl    String?   
   mediaType   String?   // "IMAGE", "VIDEO"
   headline    String?
@@ -303,6 +308,7 @@ model AdImpression {
   @@index([campaignId, timestamp])
   @@index([userId, timestamp])
 }
+
 
 model AdClick {
   id          String   @id @default(uuid())

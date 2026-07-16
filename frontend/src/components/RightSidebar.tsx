@@ -61,7 +61,7 @@ function RecommendedUser({ user }: { user: { name: string, username: string } })
 export default function RightSidebar() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/wallet") || pathname.startsWith("/creator-studio") || pathname.startsWith("/orbit") || pathname.startsWith("/settings")) {
+  if (pathname.startsWith("/wallet") || pathname.startsWith("/creator-studio") || pathname.startsWith("/orbit") || pathname.startsWith("/settings") || pathname.startsWith("/ads/campaigns/new")) {
     return null;
   }
 

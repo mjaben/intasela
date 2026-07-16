@@ -59,11 +59,19 @@ const navGroups: {
     ]
   },
   {
+    title: "Business",
+    items: [
+      { name: "Ad Funding", href: "/business/funding", icon: Wallet, permission: "MANAGE_FINANCE" },
+      { name: "Ad Campaigns", href: "/business/campaigns", icon: Megaphone, permission: "MANAGE_SYSTEM" },
+      { name: "Ad Manager", href: "/settings/ads", icon: FileText, permission: "MANAGE_SYSTEM" },
+      { name: "Ad Decision Engine", href: "/settings/ads/engine", icon: SlidersHorizontal, permission: "MANAGE_SYSTEM" },
+    ]
+  },
+  {
     title: "System",
     items: [
       { name: "Team Members", href: "/settings/team", icon: ShieldAlert, permission: "MANAGE_SYSTEM" },
       { name: "Platform Settings", href: "/settings", icon: Settings, permission: "MANAGE_SYSTEM" },
-      { name: "Ad Manager", href: "/settings/ads", icon: Megaphone, permission: "MANAGE_SYSTEM" },
     ]
   }
 ];
@@ -112,7 +120,13 @@ export default function AdminSidebarNav({
             </div>
             <div className="space-y-1">
               {allowedItems.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                let isActive = false;
+                if (item.href === '/' || item.href === '/settings') {
+                  isActive = pathname === item.href;
+                } else {
+                  isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                }
+                
                 return (
                   <Link
                     key={item.name}

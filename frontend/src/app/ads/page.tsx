@@ -1,6 +1,7 @@
 "use client";
 
 import { useUserStore } from "@/store/useUserStore";
+import Link from "next/link";
 
 export default function AdvertiserPortal() {
   const user = useUserStore((s) => s.user);
@@ -16,7 +17,7 @@ export default function AdvertiserPortal() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
         <div className="bg-card border border-border p-6 rounded-xl">
           <h3 className="text-muted-foreground font-semibold text-sm mb-2">Total Spend</h3>
-          <div className="text-3xl font-bold">$0.00</div>
+          <div className="text-3xl font-bold">₦0.00</div>
         </div>
         <div className="bg-card border border-border p-6 rounded-xl">
           <h3 className="text-muted-foreground font-semibold text-sm mb-2">Active Campaigns</h3>
@@ -32,9 +33,9 @@ export default function AdvertiserPortal() {
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="p-6 border-b border-border flex items-center justify-between">
           <h2 className="text-xl font-bold">Your Campaigns</h2>
-          <button className="bg-primary text-primary-foreground font-bold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-opacity">
+          <Link href="/ads/campaigns/new" className="bg-primary text-primary-foreground font-bold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-opacity">
             + New Campaign
-          </button>
+          </Link>
         </div>
         <div className="p-10 text-center flex flex-col items-center justify-center">
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">

@@ -5,6 +5,7 @@ import { useFeedStore } from "@/store/useFeedStore";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useToastStore } from "@/store/useToastStore";
 import { useBlockMuteStore } from "@/store/useBlockMuteStore";
+import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from 'react-markdown';
 import { useState, useEffect, useRef } from 'react';
@@ -41,7 +42,8 @@ export default function PostCard({
   reselaedBy,
   mediaType,
   mediaUrl,
-  thumbnailUrl
+  thumbnailUrl,
+  isBoosted
 }: { 
   id: number;
   content: string;
@@ -65,10 +67,12 @@ export default function PostCard({
   mediaType?: string;
   mediaUrl?: string;
   thumbnailUrl?: string;
+  isBoosted?: boolean;
 }) {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const user = useUserStore((state) => state.user);
   const { openComposer } = useFeedStore();
+  const businessAdsEnabled = useSystemSettingsStore((state) => state.businessAdsEnabled);
   const router = useRouter();
 
   // Optimistic UI State
@@ -444,8 +448,14 @@ export default function PostCard({
               <span className="text-muted-foreground text-[13px]">2h</span>
             </div>
             {/* Top Right Actions */}
-            <div className="flex items-center gap-2 relative">
-              {user?.username !== author.username && !isFollowing && (
+            <div className="flex flex-col items-end gap-1 relative">
+              {isBoosted && (
+                <span className="text-[7.5px] uppercase font-medium text-muted-foreground tracking-widest bg-muted px-1 py-0.5 rounded absolute -top-3 right-0">
+                  Boosted
+                </span>
+              )}
+              <div className="flex items-center gap-2">
+                {user?.username !== author.username && !isFollowing && (
                 <button 
                   onClick={async (e) => { 
                     e.stopPropagation(); 
@@ -500,14 +510,28 @@ export default function PostCard({
                       </button>
 
                       {user?.username === author.username ? (
-                        /* Author-only Options */
-                        <button 
-                          onClick={handleDelete} 
-                          className="w-full px-2.5 py-2 hover:bg-red-500/10 text-left rounded-lg text-red-500 font-medium flex items-center gap-2.5 transition-colors text-[13px] mt-0.5"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                          Delete
-                        </button>
+                        <div className="flex flex-col gap-0.5 mt-0.5">
+                          {businessAdsEnabled && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowOptionsMenu(false);
+                                router.push(`/ads/campaigns/new?postId=${id}`);
+                              }}
+                              className="w-full px-2.5 py-2 hover:bg-brand/10 text-left rounded-lg text-brand font-medium flex items-center gap-2.5 transition-colors text-[13px]"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                              Boost Post
+                            </button>
+                          )}
+                          <button 
+                            onClick={handleDelete} 
+                            className="w-full px-2.5 py-2 hover:bg-red-500/10 text-left rounded-lg text-red-500 font-medium flex items-center gap-2.5 transition-colors text-[13px]"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            Delete
+                          </button>
+                        </div>
                       ) : (
                         /* Non-Author Options */
                         <>
@@ -583,6 +607,7 @@ export default function PostCard({
                 )}
               </div>
             </div>
+            </div>
           </div>
           
           {/* Body */}
@@ -628,7 +653,7 @@ export default function PostCard({
           </div>
 
           {/* Engagement Bar */}
-          <div className="flex items-center gap-5 sm:gap-8 text-muted-foreground text-[13px] mt-1 pr-2 sm:pr-4">
+          <div className="flex items-center gap-3 sm:gap-6 text-muted-foreground text-[13px] mt-1 pr-1 sm:pr-2">
             
             {/* 1. Heart (Like) */}
             <button 
@@ -742,11 +767,11 @@ export default function PostCard({
               <span className="">{views}</span>
             </button>
 
-            <div className="flex gap-0 ml-auto">
+            <div className="flex gap-1 ml-auto shrink-0">
               {/* 5. Bookmark */}
               <button 
                 onClick={(e) => handleToggle("BOOKMARK", e)} 
-                className={`flex items-center gap-1 transition-colors group mr-2 ${isBookmarked ? 'text-primary' : 'hover:text-primary'}`} 
+                className={`flex items-center gap-1 transition-colors group ${isBookmarked ? 'text-primary' : 'hover:text-primary'}`} 
                 title="Bookmark"
               >
                 <div className="p-1.5 rounded-full group-hover:bg-primary/10 transition-colors">
@@ -770,19 +795,13 @@ export default function PostCard({
               <div className="relative">
                 <button onClick={handleShareMenuClick} className="flex items-center transition-colors group" title="Share">
                   <div className="p-1.5 rounded-full group-hover:bg-accent transition-colors">
-                    <div 
-                      className="w-[18px] h-[18px] transition-transform group-active:scale-90 opacity-70 group-hover:opacity-100 bg-current"
-                      style={{
-                        WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFeklEQVR4nO2YWWxVRRzGv57l9pw5M2dugRKogrUsoizWEoOpNKISyxJAG6MPRh5wQ1EIBoQoEhRlq1i2ihgpAtoGWVqWQheQQmmBspRSKtByH0xQY8pm771Ny9IxU69GiJR7j0QOSX/J5D7cZOZ8c87/P998QDvttHM30FHTlMler33UNI1LUVFR1wzDaODcrtI0bToAL1xOlMfjmWyahn/0qBGNWV9nivKynaL2VKWoOLBbrFm9QqQ9N7rRNI0GXVdehktRGaM5D/Tu5S8u2ix8dVU3HUWFeSIurmuAEDIDboMQsjApKTFw4vjBNkX4QuPQwRLRsWOHAIBhcBEDbMaChyv2hCXCFxrZ360UlmX9DECHG6CU5rw3ddK1SET4QiMxccDvAJ6FGyCE1O8q3hqxCF9dlZg7Z5awbTsPbkC217rTlY6EFBXmCcao/LzuPJqmXg63yH03jNpTR4WiKNfgBjhnvtyN2Xe/EMuysqZOmXjViZDt2zYISukvcAlPxcbGBp3UydsTXr9iWdZKuIA0AGc0TaufN2dWSyQi9pfvEoSQIIBeThYeZFO6xTCMS6qqXpWDMXqWUboOQCoAJcx5kgCUAPgRwHAAA4lpBnfkbwxLxPFj5aJ/vwf9pml+HKkAg1K6tkNMTOCjWe+3lO8r/rvYCrZvEh/OmNaScH98g2WRWgDJbcwjdy8bgPyuX5Me668/FEV5iVKrce3qr25ZF/Hx9/kptVZFsHGtaIyx0qFPDwm21SbP1B4TSxanC8siQV3XX71hjm4AVgCoB/CBPNBvstZQ0zTOpaQkBzKXLRRlpUVCrlm6p0Asz8wQqc88HZSWXtO08YgUSsnS5ORBQWmnw3ntO4u2CMaY/HZHSB8FYDWA8wDmAugQxpKGoijjOedlpmlc0DTtMjHN814v368oyltO7yM9CSGNRw5FbuhUVW0OfULT7vhliBAjY/wb46446fEDkxIbFUV5B26AMfrT5twcR6fusqWfCc7tfXADmqZdrqmucCRkb0mB7PPn4AIU6WOcOlPZ63Vdb4IbME3jogwAnAjZvWuboJT8BjcQE8NLv8j83JGQxRnzZY3I09sVjHtyyGC/EyH9+j3UCGCBvDv9x2fQb4cQkxCzPtLOlZOdJaKjoy8BqAZQA2ACADvMNWM9Hs9Mzu2Tuq41yTrVNK2Zc7smFNCFO8/1qKo6pnOnTv5wU459ewsF51ye7CNDUzwBYF3odF8EoPvN1pIBnWEYgRdfSGvK/nalqK7a3zqn/JUB3cgRqY1GdHSDfCZHYigh07t06RzI37r+lm/Cy7n0Q+/+yzRxANIByJYsDV+f69ag1qqEhPhAyQ/5ba6x4fs1wrZZUNeVcY7EqKr6vGmaF4elDg2u+HJxq6GTO7WnZEerWRz8+GN+0zTq//EmbkZMyDjKjrZMZr2GYUzv3btnoPr4gbBDB/LnXeRRxzdTRVEmeL3eMtM0z+u63ixriHMuu9Mr0vBFMJc0kEukI/Z49Ca5MZHU4YL5s1sYoyduQzO5PWialjVq1PCI/Vzd6UpxT1zXBgApcAOcMd+G9WsdnVVTp0y86pY7u3wjzU5zrdyN2ULGSXAD8pyQV2YnQmqqK+S95wrckv2W7N7uSEjtqUohI1e4Adum2z79ZKYjIYUFuYJS61e4hDE9eiT4ZXgRqZBJE9+UAd03cAkKY9ZJeS5EGtBRywrc6BDuNA8TQgJ5m8ILs48dLRN9+/aRAd1suA1VVUdKMUuXpLcpIm9Ttuje7V4/Y9bySAO6/5NHKLXq+vfv25A+f7Yo3JErjhze21rUizLmiZSUZOnnLui6MhZ3AXKX0zi38xljZ6OjPUGbsbOc82IAY9tIKdtppx2Exx/mJPtyEUXPCAAAAABJRU5ErkJggg==)',
-                        WebkitMaskSize: 'contain',
-                        WebkitMaskRepeat: 'no-repeat',
-                        WebkitMaskPosition: 'center',
-                        maskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFeklEQVR4nO2YWWxVRRzGv57l9pw5M2dugRKogrUsoizWEoOpNKISyxJAG6MPRh5wQ1EIBoQoEhRlq1i2ihgpAtoGWVqWQheQQmmBspRSKtByH0xQY8pm771Ny9IxU69GiJR7j0QOSX/J5D7cZOZ8c87/P998QDvttHM30FHTlMler33UNI1LUVFR1wzDaODcrtI0bToAL1xOlMfjmWyahn/0qBGNWV9nivKynaL2VKWoOLBbrFm9QqQ9N7rRNI0GXVdehktRGaM5D/Tu5S8u2ix8dVU3HUWFeSIurmuAEDIDboMQsjApKTFw4vjBNkX4QuPQwRLRsWOHAIBhcBEDbMaChyv2hCXCFxrZ360UlmX9DECHG6CU5rw3ddK1SET4QiMxccDvAJ6FGyCE1O8q3hqxCF9dlZg7Z5awbTsPbkC217rTlY6EFBXmCcao/LzuPJqmXg63yH03jNpTR4WiKNfgBjhnvtyN2Xe/EMuysqZOmXjViZDt2zYISukvcAlPxcbGBp3UydsTXr9iWdZKuIA0AGc0TaufN2dWSyQi9pfvEoSQIIBeThYeZFO6xTCMS6qqXpWDMXqWUboOQCoAJcx5kgCUAPgRwHAAA4lpBnfkbwxLxPFj5aJ/vwf9pml+HKkAg1K6tkNMTOCjWe+3lO8r/rvYCrZvEh/OmNaScH98g2WRWgDJbcwjdy8bgPyuX5Me668/FEV5iVKrce3qr25ZF/Hx9/kptVZFsHGtaIyx0qFPDwm21SbP1B4TSxanC8siQV3XX71hjm4AVgCoB/CBPNBvstZQ0zTOpaQkBzKXLRRlpUVCrlm6p0Asz8wQqc88HZSWXtO08YgUSsnS5ORBQWmnw3ntO4u2CMaY/HZHSB8FYDWA8wDmAugQxpKGoijjOedlpmlc0DTtMjHN814v368oyltO7yM9CSGNRw5FbuhUVW0OfULT7vhliBAjY/wb46446fEDkxIbFUV5B26AMfrT5twcR6fusqWfCc7tfXADmqZdrqmucCRkb0mB7PPn4AIU6WOcOlPZ63Vdb4IbME3jogwAnAjZvWuboJT8BjcQE8NLv8j83JGQxRnzZY3I09sVjHtyyGC/EyH9+j3UCGCBvDv9x2fQb4cQkxCzPtLOlZOdJaKjoy8BqAZQA2ACADvMNWM9Hs9Mzu2Tuq41yTrVNK2Zc7smFNCFO8/1qKo6pnOnTv5wU459ewsF51ye7CNDUzwBYF3odF8EoPvN1pIBnWEYgRdfSGvK/nalqK7a3zqn/JUB3cgRqY1GdHSDfCZHYigh07t06RzI37r+lm/Cy7n0Q+/+yzRxANIByJYsDV+f69ag1qqEhPhAyQ/5ba6x4fs1wrZZUNeVcY7EqKr6vGmaF4elDg2u+HJxq6GTO7WnZEerWRz8+GN+0zTq//EmbkZMyDjKjrZMZr2GYUzv3btnoPr4gbBDB/LnXeRRxzdTRVEmeL3eMtM0z+u63ixriHMuu9Mr0vBFMJc0kEukI/Z49Ca5MZHU4YL5s1sYoyduQzO5PWialjVq1PCI/Vzd6UpxT1zXBgApcAOcMd+G9WsdnVVTp0y86pY7u3wjzU5zrdyN2ULGSXAD8pyQV2YnQmqqK+S95wrckv2W7N7uSEjtqUohI1e4Adum2z79ZKYjIYUFuYJS61e4hDE9eiT4ZXgRqZBJE9+UAd03cAkKY9ZJeS5EGtBRywrc6BDuNA8TQgJ5m8ILs48dLRN9+/aRAd1suA1VVUdKMUuXpLcpIm9Ttuje7V4/Y9bySAO6/5NHKLXq+vfv25A+f7Yo3JErjhze21rUizLmiZSUZOnnLui6MhZ3AXKX0zi38xljZ6OjPUGbsbOc82IAY9tIKdtppx2Exx/mJPtyEUXPCAAAAABJRU5ErkJggg==)',
-                        maskSize: 'contain',
-                        maskRepeat: 'no-repeat',
-                        maskPosition: 'center',
-                      }}
-                    />
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-opacity text-current">
+                      <circle cx="18" cy="5" r="3"></circle>
+                      <circle cx="6" cy="12" r="3"></circle>
+                      <circle cx="18" cy="19" r="3"></circle>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
                   </div>
                 </button>
               

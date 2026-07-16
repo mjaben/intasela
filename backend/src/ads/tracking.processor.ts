@@ -15,6 +15,9 @@ export class TrackingProcessor extends WorkerHost {
     const { name, data } = job;
 
     try {
+      const campaignObj = await this.prisma.campaign.findUnique({ where: { id: data.campaignId } });
+      if (!campaignObj) return;
+
       if (name === 'impression') {
         // 1. Log the impression
         await this.prisma.adImpression.create({
@@ -27,26 +30,29 @@ export class TrackingProcessor extends WorkerHost {
           }
         });
 
-        // 2. Decrement Campaign Budget
-        const campaign = await this.prisma.campaign.update({
-          where: { id: data.campaignId },
-          data: {
-            remainingBudget: {
-              decrement: data.cost
+        // 2. Decrement Campaign Budget ONLY IF AWARENESS (CPM)
+        if (campaignObj.objective === 'AWARENESS' && data.cost) {
+          const campaign = await this.prisma.campaign.update({
+            where: { id: data.campaignId },
+            data: {
+              remainingBudget: {
+                decrement: data.cost
+              }
             }
-          }
-        });
-
-        // 3. Pause campaign if out of budget
-        if (campaign.remainingBudget <= 0 && campaign.status === 'ACTIVE') {
-          await this.prisma.campaign.update({
-            where: { id: campaign.id },
-            data: { status: 'PAUSED' }
           });
-          this.logger.log(`Campaign ${campaign.id} paused due to empty budget.`);
+
+          // 3. Pause campaign if out of budget
+          if (campaign.remainingBudget <= 0 && campaign.status === 'ACTIVE') {
+            await this.prisma.campaign.update({
+              where: { id: campaign.id },
+              data: { status: 'PAUSED' }
+            });
+            this.logger.log(`Campaign ${campaign.id} paused due to empty budget.`);
+          }
         }
       } 
       else if (name === 'click') {
+        // 1. Log the click
         await this.prisma.adClick.create({
           data: {
             campaignId: data.campaignId,
@@ -54,6 +60,27 @@ export class TrackingProcessor extends WorkerHost {
             ip: data.ip
           }
         });
+
+        // 2. Decrement Campaign Budget ONLY IF NOT AWARENESS (CPC)
+        if (campaignObj.objective !== 'AWARENESS' && data.cost) {
+          const campaign = await this.prisma.campaign.update({
+            where: { id: data.campaignId },
+            data: {
+              remainingBudget: {
+                decrement: data.cost
+              }
+            }
+          });
+
+          // 3. Pause campaign if out of budget
+          if (campaign.remainingBudget <= 0 && campaign.status === 'ACTIVE') {
+            await this.prisma.campaign.update({
+              where: { id: campaign.id },
+              data: { status: 'PAUSED' }
+            });
+            this.logger.log(`Campaign ${campaign.id} paused due to empty budget.`);
+          }
+        }
       }
     } catch (error) {
       this.logger.error(`Error processing ad tracking job ${job.id}`, error);

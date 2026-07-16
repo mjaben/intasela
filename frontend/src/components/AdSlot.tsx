@@ -138,7 +138,7 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
           {creative.headline && <h4 className="font-bold text-[15px] mb-1 line-clamp-2 pr-12">{creative.headline}</h4>}
           {creative.description && <p className="text-muted-foreground text-[13px] line-clamp-2 mb-3">{creative.description}</p>}
           
-          {creative.ctaText && (
+          {creative.ctaText && creative.ctaText !== "None" && (
             <div className="mt-auto self-start bg-primary/10 text-primary font-bold text-xs px-3 py-1.5 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
               {creative.ctaText}
             </div>
@@ -155,15 +155,23 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
   // NOTE: In production, you would use actual slotIds from AdSense.
   // For development, next-google-adsense will render a dummy block.
   
+  if (process.env.NODE_ENV === 'development') {
+    return (
+      <div className={`w-full my-4 flex flex-col items-center justify-center bg-muted/30 border border-dashed border-muted-foreground/30 min-h-[50px] ${isVertical ? 'h-[600px]' : 'h-[90px]'}`}>
+        <span className="text-muted-foreground/50 text-[10px] uppercase tracking-widest font-bold">Google AdSense Placeholder</span>
+      </div>
+    );
+  }
+  
   return (
     <div className={`w-full my-4 flex flex-col items-center justify-center overflow-hidden min-h-[50px]`}>
       <span className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center">Advertisement</span>
       <div className="w-full max-w-full overflow-x-auto no-scrollbar flex justify-center">
         <AdUnit 
+          key={slotId}
           publisherId="pub-1173851541726956"
-          slotId="0000000000" // Replace with real slot ID from Google AdSense dashboard later
+          slotId={slotId === 'feed' ? '1111111111' : slotId === 'sidebar' ? '2222222222' : '0000000000'} 
           layout={format === 'in-feed' ? 'in-article' : 'display'}
-          dummySize={dummySize as any}
         />
       </div>
     </div>
