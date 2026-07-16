@@ -408,7 +408,7 @@ export default function PostCard({
   return (
     <>
     <style>{SCREAM_ANIMATION}</style>
-    <article ref={cardRef as any} className={`${isThreadContext ? 'py-2' : 'border-b border-border py-4'} px-0 transition-colors cursor-pointer relative`} onClick={() => router.push(`/@${author.username}/posts/${id}`)}>
+    <article ref={cardRef as any} className={`${isThreadContext ? 'py-2' : 'border-b border-border py-4'} px-4 transition-colors cursor-pointer relative`} onClick={() => router.push(`/@${author.username}/posts/${id}`)}>
       
       {reselaedBy && !parentPost && (
         <div className="flex items-center gap-2 text-muted-foreground text-[13px] font-medium pl-[56px] mb-2 sm:pl-[64px]">
