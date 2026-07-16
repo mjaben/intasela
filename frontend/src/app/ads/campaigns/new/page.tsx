@@ -162,6 +162,7 @@ export default function CreateCampaignWizard() {
   // Form State: Step 2
   const [targeting, setTargeting] = useState({
     targetCountry: "",
+    targetStates: [] as string[],
     targetAgeMin: "18",
     targetAgeMax: "65",
     targetGender: "ALL",
@@ -238,7 +239,8 @@ export default function CreateCampaignWizard() {
 
   let targetCount = 0;
   if (targeting.targetCountry) targetCount++;
-  if (targeting.targetAge) targetCount++;
+  if (targeting.targetStates && targeting.targetStates.length > 0) targetCount++;
+  if (targeting.targetAgeMin || targeting.targetAgeMax) targetCount++;
   if (targeting.targetGender !== "ALL") targetCount++;
   if (targeting.interests) targetCount++;
   if (targeting.keywords) targetCount++;
@@ -270,6 +272,7 @@ export default function CreateCampaignWizard() {
           campaignData: {
             ...formData,
             ...targeting,
+            targetStates: targeting.targetStates.length > 0 ? targeting.targetStates : null,
             targetAge: `${targeting.targetAgeMin}-${targeting.targetAgeMax}`,
             interests: targeting.interests.join(", "),
             keywords: targeting.keywords.join(", "),
@@ -441,7 +444,7 @@ export default function CreateCampaignWizard() {
                   <label className="block text-[11px] text-muted-foreground font-semibold mb-1.5 uppercase tracking-wider">Target Country</label>
                   <select 
                     value={targeting.targetCountry}
-                    onChange={(e) => setTargeting({...targeting, targetCountry: e.target.value})}
+                    onChange={(e) => setTargeting({...targeting, targetCountry: e.target.value, targetStates: []})}
                     className="w-full bg-background border border-border rounded-lg py-2.5 px-4 focus:outline-none focus:border-primary font-medium text-sm appearance-none" 
                   >
                     <option value="">All Countries</option>
@@ -468,6 +471,25 @@ export default function CreateCampaignWizard() {
                     />
                   </div>
                 </div>
+                {targeting.targetCountry === "Nigeria" && (
+                  <div className="col-span-2 bg-muted/10 border border-border rounded-xl p-4">
+                    <AutocompleteTagInput 
+                      label="Target States (Nigeria)"
+                      placeholder="Search and select states..."
+                      description="Leave empty to target all of Nigeria."
+                      tags={targeting.targetStates}
+                      setTags={(tags) => setTargeting({...targeting, targetStates: tags})}
+                      options={[
+                        "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
+                        "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT - Abuja", "Gombe", 
+                        "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", 
+                        "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", 
+                        "Taraba", "Yobe", "Zamfara"
+                      ]}
+                    />
+                  </div>
+                )}
+                
                 <div className="col-span-2 bg-muted/10 border border-border rounded-xl p-4">
                   <label className="block text-[11px] text-muted-foreground font-semibold mb-1.5 uppercase tracking-wider">Gender</label>
                   <select 
@@ -489,7 +511,23 @@ export default function CreateCampaignWizard() {
                   description="Target users by content affinity"
                   tags={targeting.interests}
                   setTags={(tags) => setTargeting({...targeting, interests: tags})}
-                  options={["Technology", "Finance", "Art", "Music", "Gaming", "Business", "Lifestyle", "Education"]}
+                  options={[
+                    "Arts & Entertainment", "Movies & TV", "Action Movies", "Comedy", "Drama", "Sci-Fi & Fantasy", "Music", "Pop", "Hip-Hop & Rap", "Afrobeats", "Rock", "Electronic / EDM", "Classical", "Books & Literature", "Theater & Performing Arts", "Visual Arts & Design",
+                    "Business & Finance", "Entrepreneurship", "Investing & Stocks", "Marketing & Advertising", "Small Business", "Economics", "Cryptocurrency & Blockchain",
+                    "Careers & Education", "Job Searching & Careers", "Higher Education", "Online Learning", "Professional Development",
+                    "Family & Parenting", "Parenting", "Motherhood", "Fatherhood", "Family Activities", "Pregnancy & Newborns",
+                    "Food & Drink", "Cooking & Recipes", "Restaurants", "Healthy Eating & Nutrition", "Coffee & Tea", "Wine & Beer",
+                    "Health & Fitness", "Fitness & Exercise", "Mental Health", "Nutrition & Diet", "Yoga & Meditation", "Weight Loss",
+                    "Hobbies & Interests", "Gaming", "Video Games", "Esports", "Board Games", "Photography", "Gardening", "DIY & Crafts", "Travel", "Pets & Animals",
+                    "News & Politics", "World News", "Technology News", "Science News", "Business News", "Breaking News", "Local News", "National News", "Politics News", "Current Events", "Opinion Piece",
+                    "Science & Technology", "Gadgets & Consumer Tech", "Artificial Intelligence", "Space & Astronomy", "Environment & Climate", "Programming & Software",
+                    "Sports", "Football (Soccer)", "American Football", "Basketball", "Baseball", "Tennis", "Motorsports", "Combat Sports",
+                    "Style & Fashion", "Men's Fashion", "Women's Fashion", "Beauty & Makeup", "Streetwear", "Luxury Fashion",
+                    "Travel & Events", "Destinations", "Adventure Travel", "Luxury Travel", "Festivals & Events",
+                    "Lifestyle Stages", "College Students", "New Parents", "Empty Nesters", "Newlyweds",
+                    "Automotive", "Car Enthusiasts", "Electric Vehicles",
+                    "Shopping & Retail", "Online Shoppers", "Luxury Buyers"
+                  ]}
                 />
                 
                 <TagInput 

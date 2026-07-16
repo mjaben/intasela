@@ -269,6 +269,7 @@ model Campaign {
   objective       String?     // e.g., "AWARENESS", "CONVERSION"
   frequencyCap    Int         @default(3) // max impressions per user per 24h
   targetCountry   String?
+  targetStates    String?     // Comma separated list of states/regions
   targetAge       String?
   targetGender    String?     // e.g., "ALL", "MALE", "FEMALE"
   interests       String?     // Comma separated list or JSON string

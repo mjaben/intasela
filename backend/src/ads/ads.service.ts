@@ -260,10 +260,11 @@ export class AdsService {
           startDate: new Date(campaignData.startDate),
           endDate: campaignData.endDate ? new Date(campaignData.endDate) : null,
           targetCountry: campaignData.targetCountry,
+          targetStates: campaignData.targetStates ? JSON.stringify(campaignData.targetStates) : null,
           targetAge: campaignData.targetAge,
           targetGender: campaignData.targetGender,
-          interests: campaignData.interests,
-          keywords: campaignData.keywords,
+          interests: campaignData.interests ? JSON.stringify(campaignData.interests) : null,
+          keywords: campaignData.keywords ? JSON.stringify(campaignData.keywords) : null,
           creatives: {
             create: {
               postId: creativeData.postId ? Number(creativeData.postId) : null,

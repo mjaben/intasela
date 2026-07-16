@@ -264,16 +264,32 @@ export default function RegisterPage() {
             
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Interests (Select top 3)</label>
-              <div className="flex flex-wrap gap-2">
-                {["Technology", "Finance", "Art", "Music", "Gaming", "Business", "Lifestyle", "Education"].map((interest) => (
+              <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto custom-scrollbar p-3 border border-gray-800 bg-[#09090b]/50 rounded-xl">
+                {[
+                  "Arts & Entertainment", "Movies & TV", "Action Movies", "Comedy", "Drama", "Sci-Fi & Fantasy", "Music", "Pop", "Hip-Hop & Rap", "Afrobeats", "Rock", "Electronic / EDM", "Classical", "Books & Literature", "Theater & Performing Arts", "Visual Arts & Design",
+                  "Business & Finance", "Entrepreneurship", "Investing & Stocks", "Marketing & Advertising", "Small Business", "Economics", "Cryptocurrency & Blockchain",
+                  "Careers & Education", "Job Searching & Careers", "Higher Education", "Online Learning", "Professional Development",
+                  "Family & Parenting", "Parenting", "Motherhood", "Fatherhood", "Family Activities", "Pregnancy & Newborns",
+                  "Food & Drink", "Cooking & Recipes", "Restaurants", "Healthy Eating & Nutrition", "Coffee & Tea", "Wine & Beer",
+                  "Health & Fitness", "Fitness & Exercise", "Mental Health", "Nutrition & Diet", "Yoga & Meditation", "Weight Loss",
+                  "Hobbies & Interests", "Gaming", "Video Games", "Esports", "Board Games", "Photography", "Gardening", "DIY & Crafts", "Travel", "Pets & Animals",
+                  "News & Politics", "World News", "Technology News", "Science News", "Business News", "Breaking News", "Local News", "National News", "Politics News", "Current Events", "Opinion Piece",
+                  "Science & Technology", "Gadgets & Consumer Tech", "Artificial Intelligence", "Space & Astronomy", "Environment & Climate", "Programming & Software",
+                  "Sports", "Football (Soccer)", "American Football", "Basketball", "Baseball", "Tennis", "Motorsports", "Combat Sports",
+                  "Style & Fashion", "Men's Fashion", "Women's Fashion", "Beauty & Makeup", "Streetwear", "Luxury Fashion",
+                  "Travel & Events", "Destinations", "Adventure Travel", "Luxury Travel", "Festivals & Events",
+                  "Lifestyle Stages", "College Students", "New Parents", "Empty Nesters", "Newlyweds",
+                  "Automotive", "Car Enthusiasts", "Electric Vehicles",
+                  "Shopping & Retail", "Online Shoppers", "Luxury Buyers"
+                ].map((interest) => (
                   <button
                     type="button"
                     key={interest}
                     onClick={() => handleInterestToggle(interest)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                    className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
                       formData.interests.includes(interest) 
                       ? "bg-[#3BC492] text-black border-[#3BC492]" 
-                      : "bg-[#09090b] text-gray-400 border-gray-700 hover:border-gray-500"
+                      : "bg-[#09090b] text-gray-400 border-gray-700 hover:border-gray-500 hover:text-gray-200"
                     }`}
                   >
                     {interest}
