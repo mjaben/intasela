@@ -98,7 +98,7 @@ export default function Home() {
         {isAuthenticated ? (
           <CreatePost onPostCreated={fetchPosts} />
         ) : showLoginPrompt ? (
-          <div className="text-center py-6 relative">
+          <div className="text-center py-6 relative hidden sm:block">
             <button 
               onClick={() => setShowLoginPrompt(false)} 
               className="absolute top-2 right-2 text-gray-500 hover:text-white transition-colors"

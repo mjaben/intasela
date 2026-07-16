@@ -101,7 +101,9 @@ export default function SidebarNav() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-2">
-        {navItems.map((item) => (
+        {navItems
+          .filter(item => isAuthenticated || item.name === "Home" || item.name === "Orbit")
+          .map((item) => (
           <Link
             key={item.name}
             href={getNavHref(item)}
