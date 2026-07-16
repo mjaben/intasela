@@ -628,7 +628,7 @@ export default function PostCard({
           </div>
 
           {/* Engagement Bar */}
-          <div className="flex items-center gap-8 text-muted-foreground text-[13px] mt-1">
+          <div className="flex items-center gap-5 sm:gap-8 text-muted-foreground text-[13px] mt-1 pr-2 sm:pr-4">
             
             {/* 1. Heart (Like) */}
             <button 
