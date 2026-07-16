@@ -233,9 +233,25 @@ model Advertiser {
   verified     Boolean    @default(false)
   userId       String?    
   user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  adWalletBalance Float   @default(0.0)
   campaigns    Campaign[]
+  transactions AdvertiserTransaction[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model AdvertiserTransaction {
+  id           String      @id @default(uuid())
+  advertiserId String
+  advertiser   Advertiser  @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  amount       Float
+  type         String      // "MANUAL_FUNDING", "CAMPAIGN_SPEND"
+  status       String      @default("PENDING") // PENDING, COMPLETED, REJECTED
+  reference    String?     // Sender name or bank reference
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  @@index([advertiserId, createdAt])
 }
 
 model Campaign {

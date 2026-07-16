@@ -83,4 +83,114 @@ export class AdsService {
     await this.trackingQueue.add('click', data);
     return { success: true };
   }
+
+  // --- PHASE 2: WALLET & CAMPAIGN MANAGEMENT ---
+
+  async getOrCreateAdvertiser(userId: string, email: string, name: string) {
+    let advertiser = await this.prisma.advertiser.findFirst({ where: { userId } });
+    if (!advertiser) {
+      advertiser = await this.prisma.advertiser.create({
+        data: {
+          userId,
+          email,
+          companyName: name || 'My Business',
+        }
+      });
+    }
+    return advertiser;
+  }
+
+  async requestManualFunding(advertiserId: string, amount: number, reference: string) {
+    return this.prisma.advertiserTransaction.create({
+      data: {
+        advertiserId,
+        amount,
+        type: 'MANUAL_FUNDING',
+        status: 'PENDING',
+        reference
+      }
+    });
+  }
+
+  async approveFunding(transactionId: string) {
+    const tx = await this.prisma.advertiserTransaction.findUnique({ where: { id: transactionId } });
+    if (!tx || tx.status !== 'PENDING') throw new Error("Invalid transaction");
+
+    // Start a Prisma transaction to ensure atomicity
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Mark TX as completed
+      const updatedTx = await prisma.advertiserTransaction.update({
+        where: { id: transactionId },
+        data: { status: 'COMPLETED' }
+      });
+
+      // 2. Increment Wallet Balance
+      await prisma.advertiser.update({
+        where: { id: tx.advertiserId },
+        data: { adWalletBalance: { increment: tx.amount } }
+      });
+
+      return updatedTx;
+    });
+  }
+
+  async createCampaign(advertiserId: string, campaignData: any, creativeData: any) {
+    const advertiser = await this.prisma.advertiser.findUnique({ where: { id: advertiserId } });
+    if (!advertiser || advertiser.adWalletBalance < campaignData.budget) {
+      throw new Error("Insufficient ad wallet balance.");
+    }
+
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Deduct budget from wallet
+      await prisma.advertiser.update({
+        where: { id: advertiserId },
+        data: { adWalletBalance: { decrement: campaignData.budget } }
+      });
+
+      // 2. Record the spend transaction
+      await prisma.advertiserTransaction.create({
+        data: {
+          advertiserId,
+          amount: campaignData.budget,
+          type: 'CAMPAIGN_SPEND',
+          status: 'COMPLETED',
+          reference: `Funded Campaign: ${campaignData.name}`
+        }
+      });
+
+      // 3. Create Campaign and Creative
+      return prisma.campaign.create({
+        data: {
+          advertiserId,
+          name: campaignData.name,
+          budget: campaignData.budget,
+          remainingBudget: campaignData.budget,
+          status: 'PENDING', // Awaiting Admin Approval
+          bid: campaignData.bid,
+          objective: campaignData.objective,
+          startDate: new Date(campaignData.startDate),
+          endDate: campaignData.endDate ? new Date(campaignData.endDate) : null,
+          targetCountry: campaignData.targetCountry,
+          creatives: {
+            create: {
+              mediaUrl: creativeData.mediaUrl,
+              mediaType: creativeData.mediaType,
+              headline: creativeData.headline,
+              description: creativeData.description,
+              ctaText: creativeData.ctaText,
+              ctaLink: creativeData.ctaLink
+            }
+          }
+        },
+        include: { creatives: true }
+      });
+    });
+  }
+
+  async approveCampaign(campaignId: string) {
+    return this.prisma.campaign.update({
+      where: { id: campaignId },
+      data: { status: 'ACTIVE' }
+    });
+  }
 }
