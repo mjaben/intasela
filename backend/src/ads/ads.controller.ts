@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Body, Req, UseGuards, Param } from '@nestjs/common';
 import { AdsService } from './ads.service';
-import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // Assuming standard NestJS auth
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -11,9 +10,8 @@ export class AdsController {
     private readonly prisma: PrismaService
   ) {}
 
-  @UseGuards(OptionalJwtAuthGuard)
   @Get('decide')
-  async decideAd(@Req() req) {
+  async decideAd(@Req() req: any) {
     const userContext = {
       userId: req.user?.id,
       device: req.headers['user-agent'],
@@ -21,10 +19,9 @@ export class AdsController {
     return this.adsService.decideAd(userContext);
   }
 
-  @UseGuards(OptionalJwtAuthGuard)
   @Post('track/impression')
   async trackImpression(
-    @Req() req,
+    @Req() req: any,
     @Body() body: { campaignId: string, cost: number, device?: string, country?: string }
   ) {
     return this.adsService.trackImpression({
@@ -36,10 +33,9 @@ export class AdsController {
     });
   }
 
-  @UseGuards(OptionalJwtAuthGuard)
   @Post('track/click')
   async trackClick(
-    @Req() req,
+    @Req() req: any,
     @Body() body: { campaignId: string }
   ) {
     return this.adsService.trackClick({
@@ -53,7 +49,7 @@ export class AdsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMyAdvertiserProfile(@Req() req) {
+  async getMyAdvertiserProfile(@Req() req: any) {
     const advertiser = await this.adsService.getOrCreateAdvertiser(req.user.id, req.user.email, req.user.name);
     const campaigns = await this.prisma.campaign.findMany({ 
       where: { advertiserId: advertiser.id },
@@ -65,7 +61,7 @@ export class AdsController {
   @UseGuards(JwtAuthGuard)
   @Post('wallet/fund')
   async fundWallet(
-    @Req() req,
+    @Req() req: any,
     @Body() body: { amount: number, reference: string }
   ) {
     const advertiser = await this.adsService.getOrCreateAdvertiser(req.user.id, req.user.email, req.user.name);
@@ -75,7 +71,7 @@ export class AdsController {
   @UseGuards(JwtAuthGuard)
   @Post('campaigns')
   async createCampaign(
-    @Req() req,
+    @Req() req: any,
     @Body() body: { campaignData: any, creativeData: any }
   ) {
     const advertiser = await this.adsService.getOrCreateAdvertiser(req.user.id, req.user.email, req.user.name);
