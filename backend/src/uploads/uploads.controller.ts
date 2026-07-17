@@ -1,4 +1,5 @@
 import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Req } from '@nestjs/common';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -14,6 +15,19 @@ if (!fs.existsSync(uploadDir)) {
 
 @Controller('uploads')
 export class UploadsController {
+  
+  private s3Client: S3Client;
+
+  constructor() {
+    this.s3Client = new S3Client({
+      region: 'auto',
+      endpoint: process.env.R2_ENDPOINT || 'https://07cb382365e6a2e28addc63ed3de3f13.r2.cloudflarestorage.com',
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '5fcd61f61c1fbe8b4c14011b3810ff66',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '32ae8e997be8cf2af3bd4e40819d8ef9c413368bb28add4c9c7ee07f2d1ee6f7',
+      },
+    });
+  }
   
   @UseGuards(JwtAuthGuard)
   @Post('image')
@@ -38,17 +52,35 @@ export class UploadsController {
       fileSize: 5 * 1024 * 1024, // 5MB limit
     }
   }))
-  uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  async uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-    const host = req.get('host');
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const baseUrl = process.env.APP_URL || `${protocol}://${host}`;
-    // Return the URL where the file can be accessed
-    return {
-      url: `${baseUrl}/uploads/${file.filename}`
-    };
+
+    try {
+      const fileBuffer = fs.readFileSync(file.path);
+      
+      const command = new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME || 'intasela',
+        Key: file.filename,
+        Body: fileBuffer,
+        ContentType: file.mimetype,
+      });
+
+      await this.s3Client.send(command);
+
+      // Remove temporary file
+      try { fs.unlinkSync(file.path); } catch (e) {}
+
+      const baseUrl = process.env.R2_PUBLIC_URL || 'https://media.naijanews360.com.ng';
+      return {
+        url: `${baseUrl}/${file.filename}`
+      };
+    } catch (err) {
+      console.error('R2 Upload Error:', err);
+      // Fallback or just throw error
+      throw new BadRequestException('Failed to upload image to cloud storage');
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -76,10 +108,6 @@ export class UploadsController {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
-
-    const host = req.get('host');
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const baseUrl = process.env.APP_URL || `${protocol}://${host}`;
 
     const inputPath = file.path;
     const outputFilename = `compressed-${file.filename}.mp4`;
@@ -120,19 +148,50 @@ export class UploadsController {
                 '-preset fast'
               ])
               .save(outputPath)
-              .on('end', () => {
-                 // Remove original raw video to save space
-                 try { fs.unlinkSync(inputPath); } catch (e) {}
+              .on('end', async () => {
+                 try {
+                   // Read the compressed video and thumbnail from disk
+                   const videoBuffer = fs.readFileSync(outputPath);
+                   const thumbPath = path.join('./uploads', thumbnailFilename);
+                   const thumbBuffer = fs.readFileSync(thumbPath);
 
-                 // const baseUrl = process.env.APP_URL || 'http://localhost:3001';
-                 resolve({
-                   url: `${baseUrl}/uploads/${outputFilename}`,
-                   thumbnailUrl: `${baseUrl}/uploads/${thumbnailFilename}`,
-                   width,
-                   height,
-                   duration: Math.round(duration || 0),
-                   mediaType: 'VIDEO'
-                 });
+                   const videoCommand = new PutObjectCommand({
+                     Bucket: process.env.R2_BUCKET_NAME || 'intasela',
+                     Key: outputFilename,
+                     Body: videoBuffer,
+                     ContentType: 'video/mp4',
+                   });
+
+                   const thumbCommand = new PutObjectCommand({
+                     Bucket: process.env.R2_BUCKET_NAME || 'intasela',
+                     Key: thumbnailFilename,
+                     Body: thumbBuffer,
+                     ContentType: 'image/jpeg',
+                   });
+
+                   await Promise.all([
+                     this.s3Client.send(videoCommand),
+                     this.s3Client.send(thumbCommand)
+                   ]);
+
+                   // Clean up temporary local files
+                   try { fs.unlinkSync(inputPath); } catch (e) {}
+                   try { fs.unlinkSync(outputPath); } catch (e) {}
+                   try { fs.unlinkSync(thumbPath); } catch (e) {}
+
+                   const baseUrl = process.env.R2_PUBLIC_URL || 'https://media.naijanews360.com.ng';
+                   resolve({
+                     url: `${baseUrl}/${outputFilename}`,
+                     thumbnailUrl: `${baseUrl}/${thumbnailFilename}`,
+                     width,
+                     height,
+                     duration: Math.round(duration || 0),
+                     mediaType: 'VIDEO'
+                   });
+                 } catch (err) {
+                   console.error('R2 Video Upload Error:', err);
+                   reject(new BadRequestException('Failed to upload video to cloud storage'));
+                 }
               })
               .on('error', (err: any) => {
                  console.error('Compression error:', err);
