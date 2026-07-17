@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
+import { GeistPixelSquare, GeistPixelGrid, GeistPixelCircle, GeistPixelTriangle, GeistPixelLine } from 'geist/font/pixel';
 import "./globals.css";
 import SidebarNav from "@/components/SidebarNav";
 import RightSidebar from "@/components/RightSidebar";
@@ -32,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased min-h-screen bg-background text-foreground flex flex-col items-center overflow-x-hidden max-w-[100vw]" suppressHydrationWarning>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased min-h-screen bg-background text-foreground flex flex-col items-center overflow-x-hidden max-w-[100vw]`} suppressHydrationWarning>
         <GoogleAdSense publisherId="pub-1173851541726956" />
         <MobileHeader />
         <div className="flex w-full max-w-[1280px] mx-auto px-0 sm:px-4">
