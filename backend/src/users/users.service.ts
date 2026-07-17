@@ -25,6 +25,28 @@ export class UsersService {
     });
   }
 
+  async searchUsers(query: string) {
+    if (!query || query.length < 2) return [];
+    
+    return this.prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { contains: query, mode: 'insensitive' } },
+          { firstName: { contains: query, mode: 'insensitive' } },
+          { lastName: { contains: query, mode: 'insensitive' } },
+        ]
+      },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true
+      },
+      take: 10
+    });
+  }
+
   async getSettings(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

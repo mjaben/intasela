@@ -20,9 +20,16 @@ export class NotificationsService {
         },
         post: {
           select: {
+            id: true,
             content: true,
+            space: {
+              select: { id: true, name: true }
+            }
           },
         },
+        space: {
+          select: { id: true, name: true }
+        }
       },
     });
   }

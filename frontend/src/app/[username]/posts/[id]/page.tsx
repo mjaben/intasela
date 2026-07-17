@@ -87,6 +87,7 @@ export default function PostDetail() {
           quotedPost={post.quotedPost}
           mediaType={post.mediaType}
           mediaUrl={post.mediaUrl}
+          mediaUrls={post.mediaUrls}
           thumbnailUrl={post.thumbnailUrl}
           onDelete={() => router.push("/")}
           parentPost={post.parent}
@@ -141,6 +142,7 @@ export default function PostDetail() {
               quotedPost={reply.quotedPost}
               mediaType={reply.mediaType}
               mediaUrl={reply.mediaUrl}
+              mediaUrls={reply.mediaUrls}
               thumbnailUrl={reply.thumbnailUrl}
               onDelete={() => fetchPost()}
             />

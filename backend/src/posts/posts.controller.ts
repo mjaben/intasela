@@ -11,7 +11,7 @@ export class PostsController {
   ) {}
 
   @Get()
-  async getFeed(@Headers('authorization') authHeader: string, @Query('type') type?: string) {
+  async getFeed(@Headers('authorization') authHeader: string, @Query('type') type?: string, @Query('spaceId') spaceId?: string) {
     let currentUserId: string | undefined;
     if (authHeader) {
       try {
@@ -22,7 +22,7 @@ export class PostsController {
         // invalid token, treat as anonymous
       }
     }
-    return this.postsService.getFeed(currentUserId, type);
+    return this.postsService.getFeed(currentUserId, type, spaceId);
   }
 
   @Get('orbit')
@@ -103,12 +103,13 @@ export class PostsController {
   async createPost(@Request() req: any, @Body() body: any) {
     return this.postsService.createPost(req.user.id, body.content, body.parentId, body.quotedPostId, {
       mediaUrl: body.mediaUrl,
+      mediaUrls: body.mediaUrls,
       thumbnailUrl: body.thumbnailUrl,
       mediaType: body.mediaType,
       videoWidth: body.videoWidth,
       videoHeight: body.videoHeight,
       videoDuration: body.videoDuration
-    });
+    }, body.spaceId);
   }
 
   @UseGuards(JwtAuthGuard)

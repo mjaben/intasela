@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useToastStore } from "@/store/useToastStore";
+import { useMediaViewerStore } from "@/store/useMediaViewerStore";
 import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
 import { useRouter } from "next/navigation";
@@ -42,8 +43,11 @@ export default function PostCard({
   reselaedBy,
   mediaType,
   mediaUrl,
+  mediaUrls,
   thumbnailUrl,
-  isBoosted
+  isBoosted,
+  space,
+  hideMedia
 }: { 
   id: number;
   content: string;
@@ -66,8 +70,11 @@ export default function PostCard({
   reselaedBy?: string;
   mediaType?: string;
   mediaUrl?: string;
+  mediaUrls?: string[];
   thumbnailUrl?: string;
   isBoosted?: boolean;
+  space?: { id: string, name: string };
+  hideMedia?: boolean;
 }) {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const user = useUserStore((state) => state.user);
@@ -98,6 +105,14 @@ export default function PostCard({
   const toggleMutePost = useBlockMuteStore(s => s.toggleMutePost);
 
   const addToast = useToastStore((state) => state.addToast);
+  const openViewer = useMediaViewerStore(s => s.openViewer);
+
+  const handleMediaClick = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    openViewer({
+      id, content, author, earned, stats, userInteractions, quotedPost, mediaType, mediaUrl, mediaUrls, thumbnailUrl, space
+    }, index);
+  };
   
   const [showReselaMenu, setShowReselaMenu] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
@@ -380,6 +395,7 @@ export default function PostCard({
             earned={parentPost.earned || 0}
             mediaType={parentPost.mediaType}
             mediaUrl={parentPost.mediaUrl}
+            mediaUrls={parentPost.mediaUrls}
             thumbnailUrl={parentPost.thumbnailUrl}
           />
           {/* Vertical Connecting Line */}
@@ -402,6 +418,7 @@ export default function PostCard({
              earned={earned}
              mediaType={mediaType}
              mediaUrl={mediaUrl}
+             mediaUrls={mediaUrls}
              thumbnailUrl={thumbnailUrl}
           />
         </div>
@@ -438,14 +455,22 @@ export default function PostCard({
         <div className="flex-1 min-w-0">
           {/* Header */}
           <div className="flex justify-between items-start mb-1">
-            <div className="flex items-center">
+            <div className="flex items-center flex-wrap gap-x-1">
               <span 
-                className="font-bold mr-2 text-[14px] cursor-pointer hover:underline"
+                className="font-bold mr-1 text-[14px] cursor-pointer hover:underline"
                 onClick={(e) => { e.stopPropagation(); router.push(`/@${author.username}`); }}
               >
                 {author.name}
               </span>
-              <span className="text-muted-foreground text-[13px]">2h</span>
+              {space && (
+                <span 
+                  className="text-xs bg-[#3BC492]/10 text-[#3BC492] px-1.5 py-0.5 rounded cursor-pointer hover:bg-[#3BC492]/20 transition-colors"
+                  onClick={(e) => { e.stopPropagation(); router.push(`/spaces/${space.id}`); }}
+                >
+                  in {space.name}
+                </span>
+              )}
+              <span className="text-muted-foreground text-[13px] ml-1">2h</span>
             </div>
             {/* Top Right Actions */}
             <div className="flex flex-col items-end gap-1 relative">
@@ -615,22 +640,37 @@ export default function PostCard({
             <ReactMarkdown>{content}</ReactMarkdown>
             
             {/* Media Content */}
-            {mediaUrl && mediaType === 'VIDEO' && (
-              <div className="mt-3 rounded-2xl overflow-hidden border border-border" onClick={(e) => e.stopPropagation()}>
+            {!hideMedia && (mediaUrl || (mediaUrls && mediaUrls.length > 0)) && mediaType === 'VIDEO' && (
+              <div className="mt-3 inline-block rounded-xl overflow-hidden border border-border max-w-[90%] sm:max-w-[80%]" onClick={(e) => handleMediaClick(e, 0)}>
                 <video 
-                  src={mediaUrl} 
+                  src={mediaUrl || mediaUrls?.[0]} 
                   poster={thumbnailUrl} 
                   controls 
-                  className="w-full max-h-[500px] object-contain"
+                  className="w-full max-h-[200px] sm:max-h-[280px] object-contain"
                   preload="metadata"
                 />
               </div>
             )}
 
-            {mediaUrl && mediaType === 'IMAGE' && (
-              <div className="mt-3 rounded-2xl overflow-hidden border border-border" onClick={(e) => e.stopPropagation()}>
-                <img src={mediaUrl} alt="Post media" className="w-full max-h-[500px] object-cover" />
-              </div>
+            {!hideMedia && (mediaUrl || (mediaUrls && mediaUrls.length > 0)) && mediaType === 'IMAGE' && (
+              <>
+                {mediaUrls && mediaUrls.length > 1 ? (
+                  <div 
+                    className="mt-3 flex overflow-x-auto snap-x snap-mandatory gap-0.5 pb-1 no-scrollbar"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {mediaUrls.map((url, index) => (
+                      <div key={index} className="shrink-0 w-[75%] sm:w-[65%] snap-center rounded-xl overflow-hidden border border-border cursor-pointer" onClick={(e) => handleMediaClick(e, index)}>
+                        <img src={url} alt={`Post media ${index}`} className="w-full h-[180px] sm:h-[240px] object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-3 inline-block rounded-xl overflow-hidden border border-border cursor-pointer max-w-[90%] sm:max-w-[80%]" onClick={(e) => handleMediaClick(e, 0)}>
+                    <img src={mediaUrls?.[0] || mediaUrl} alt="Post media" className="w-full max-h-[200px] sm:max-h-[280px] object-cover" />
+                  </div>
+                )}
+              </>
             )}
             
             {quotedPost && (

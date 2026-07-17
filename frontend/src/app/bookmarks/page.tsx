@@ -127,6 +127,7 @@ export default function BookmarksPage() {
               parentPost={post.parent}
               mediaType={post.mediaType}
               mediaUrl={post.mediaUrl}
+              mediaUrls={post.mediaUrls}
               thumbnailUrl={post.thumbnailUrl}
               onDelete={(id) => setPosts(prev => prev.filter(p => p.id !== id))}
               onUnbookmark={handleUnbookmark}

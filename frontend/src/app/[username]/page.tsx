@@ -288,6 +288,7 @@ export default function ProfilePage() {
                 reselaedBy={post.reselaedBy}
                 mediaType={post.mediaType}
                 mediaUrl={post.mediaUrl}
+                mediaUrls={post.mediaUrls}
                 thumbnailUrl={post.thumbnailUrl}
                 onDelete={handleDelete}
                 onUnresela={(id) => {
@@ -326,6 +327,7 @@ export default function ProfilePage() {
                 isReplyContext={true}
                 mediaType={post.mediaType}
                 mediaUrl={post.mediaUrl}
+                mediaUrls={post.mediaUrls}
                 thumbnailUrl={post.thumbnailUrl}
                 onDelete={handleDelete}
               />
@@ -357,6 +359,7 @@ export default function ProfilePage() {
                 quotedPost={post.quotedPost}
                 mediaType={post.mediaType}
                 mediaUrl={post.mediaUrl}
+                mediaUrls={post.mediaUrls}
                 thumbnailUrl={post.thumbnailUrl}
                 onDelete={handleDelete}
                 onUnlike={(id) => setLikes((prev) => prev.filter(p => p.id !== id))}

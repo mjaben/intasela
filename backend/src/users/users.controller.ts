@@ -7,6 +7,11 @@ import { JwtService } from '@nestjs/jwt';
 export class UsersController {
   constructor(private readonly usersService: UsersService, private jwtService: JwtService) {}
 
+  @Get('search')
+  async searchUsers(@Query('q') query: string) {
+    return this.usersService.searchUsers(query);
+  }
+
   @Get('profile/:username')
   async getProfile(@Param('username') username: string, @Headers('authorization') authHeader?: string) {
     let currentUserId: string | undefined;

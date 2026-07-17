@@ -5,12 +5,15 @@ import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
 import ReactMarkdown from 'react-markdown';
 
-export default function CreatePost({ onPostCreated, hideInline = false }: { onPostCreated: () => void, hideInline?: boolean }) {
+export default function CreatePost({ onPostCreated, hideInline = false, spaceId }: { onPostCreated: () => void, hideInline?: boolean, spaceId?: string }) {
   const [content, setContent] = useState("");
-  const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [spaces, setSpaces] = useState<any[]>([]);
+  const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(spaceId || null);
+  const [isSpaceDropdownOpen, setIsSpaceDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const user = useUserStore((state) => state.user);
@@ -40,6 +43,34 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
     };
   }, [isOpen, closeComposer]);
 
+  useEffect(() => {
+    if (spaceId) {
+      setSelectedSpaceId(spaceId);
+      return;
+    }
+    
+    if (isAuthenticated && isOpen) {
+      const fetchMySpaces = async () => {
+        try {
+          const token = localStorage.getItem("access_token");
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const mySpaces = data.filter((s: any) => 
+              s.members?.some((m: any) => m.userId === user?.id && m.status === 'ACTIVE')
+            );
+            setSpaces(mySpaces);
+          }
+        } catch (err) {
+          console.error("Failed to fetch spaces for composer", err);
+        }
+      };
+      fetchMySpaces();
+    }
+  }, [isAuthenticated, isOpen, spaceId, user?.id]);
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!content.trim()) return;
@@ -50,23 +81,30 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
     try {
       const token = localStorage.getItem("access_token");
       let mediaData = null;
+      let mediaUrls: string[] = [];
 
-      if (mediaFile) {
-        const formData = new FormData();
-        formData.append("file", mediaFile);
-        const endpoint = mediaFile.type.startsWith("video/") ? "/uploads/video" : "/uploads/image";
-        
-        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${endpoint}`, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}` },
-          body: formData
+      if (mediaFiles.length > 0) {
+        const uploadPromises = mediaFiles.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          const endpoint = file.type.startsWith("video/") ? "/uploads/video" : "/uploads/image";
+          
+          const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${endpoint}`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+          });
+          
+          if (!uploadRes.ok) {
+            const errRes = await uploadRes.json();
+            throw new Error(errRes.message || "Failed to upload media");
+          }
+          return await uploadRes.json();
         });
         
-        if (!uploadRes.ok) {
-          const errRes = await uploadRes.json();
-          throw new Error(errRes.message || "Failed to upload media");
-        }
-        mediaData = await uploadRes.json();
+        const results = await Promise.all(uploadPromises);
+        mediaData = results[0]; // For fallback and video details
+        mediaUrls = results.map(r => r.url);
       }
 
       const payload: any = { content };
@@ -76,10 +114,17 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
       } else if (mode === 'QUOTE' && targetPost) {
         payload.quotedPostId = targetPost.id;
       }
+      
+      if (selectedSpaceId) {
+        payload.spaceId = selectedSpaceId;
+      }
 
       if (mediaData) {
         payload.mediaUrl = mediaData.url;
-        payload.mediaType = mediaData.mediaType || (mediaFile?.type.startsWith('video/') ? 'VIDEO' : 'IMAGE');
+        if (mediaUrls.length > 0) {
+          payload.mediaUrls = mediaUrls;
+        }
+        payload.mediaType = mediaData.mediaType || (mediaFiles[0]?.type.startsWith('video/') ? 'VIDEO' : 'IMAGE');
         payload.thumbnailUrl = mediaData.thumbnailUrl;
         payload.videoWidth = mediaData.width;
         payload.videoHeight = mediaData.height;
@@ -95,12 +140,15 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to create post");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.message || "Failed to create post");
+      }
 
       setContent(""); // Clear input on success
-      setMediaFile(null);
-      if (mediaPreview) URL.revokeObjectURL(mediaPreview);
-      setMediaPreview(null);
+      setMediaFiles([]);
+      mediaPreviews.forEach(p => URL.revokeObjectURL(p));
+      setMediaPreviews([]);
       closeComposer(); // Close modal
       onPostCreated(); // Refresh feed
     } catch (err: any) {
@@ -111,25 +159,41 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File size must be less than 10MB");
+    const hasVideo = files.some(f => f.type.startsWith('video/')) || mediaFiles.some(f => f.type.startsWith('video/'));
+    
+    if (hasVideo && (files.length > 1 || mediaFiles.length > 0)) {
+      setError("You can only upload 1 video per post, and it cannot be mixed with images.");
       return;
     }
 
-    setMediaFile(file);
-    if (mediaPreview) URL.revokeObjectURL(mediaPreview);
-    setMediaPreview(URL.createObjectURL(file));
+    if (mediaFiles.length + files.length > 4) {
+      setError("You can only upload up to 4 images per post.");
+      return;
+    }
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError("Each file size must be less than 10MB");
+        return;
+      }
+    }
+
+    setMediaFiles(prev => [...prev, ...files]);
+    setMediaPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
     setError("");
+    
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeMedia = () => {
-    setMediaFile(null);
-    if (mediaPreview) URL.revokeObjectURL(mediaPreview);
-    setMediaPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  const removeMedia = (index: number) => {
+    setMediaFiles(prev => prev.filter((_, i) => i !== index));
+    setMediaPreviews(prev => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const UserAvatar = ({ size = "sm", src, fallback }: { size?: "sm" | "md", src?: string, fallback?: string }) => {
@@ -196,7 +260,51 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
                 <UserAvatar size="md" src={user?.avatarUrl} fallback={user?.username} />
                 <div className="flex flex-col w-full relative">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-semibold text-white text-[15px]">{user?.username}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-semibold text-white text-[15px]">{user?.username}</span>
+                      
+                      {!spaceId && spaces.length > 0 && mode !== 'REPLY' && mode !== 'QUOTE' && (
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setIsSpaceDropdownOpen(!isSpaceDropdownOpen)}
+                            className="flex items-center gap-1.5 bg-[#262626]/80 hover:bg-[#333333] text-xs font-medium text-[#3BC492] px-3 py-1 rounded-full border border-[#3BC492]/20 transition-colors"
+                          >
+                            {selectedSpaceId ? spaces.find(s => s.id === selectedSpaceId)?.name : "Public Feed"}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${isSpaceDropdownOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
+                          </button>
+                          
+                          {isSpaceDropdownOpen && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setIsSpaceDropdownOpen(false)}></div>
+                              <div className="absolute top-full left-0 mt-2 w-48 bg-[#18181b] border border-gray-800 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="p-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => { setSelectedSpaceId(null); setIsSpaceDropdownOpen(false); }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${!selectedSpaceId ? 'bg-[#3BC492]/10 text-[#3BC492]' : 'text-gray-300 hover:bg-white/5'}`}
+                                  >
+                                    Public Feed
+                                    {!selectedSpaceId && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                                  </button>
+                                  {spaces.map(s => (
+                                    <button
+                                      key={s.id}
+                                      type="button"
+                                      onClick={() => { setSelectedSpaceId(s.id); setIsSpaceDropdownOpen(false); }}
+                                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${selectedSpaceId === s.id ? 'bg-[#3BC492]/10 text-[#3BC492]' : 'text-gray-300 hover:bg-white/5'}`}
+                                    >
+                                      <span className="truncate pr-2">{s.name}</span>
+                                      {selectedSpaceId === s.id && <svg className="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     
                     {/* Drafts Button */}
                     <button className="text-[14px] font-medium text-white hover:text-gray-300 transition-colors absolute right-0 top-0">
@@ -236,19 +344,23 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
                   )}
 
                   {/* MEDIA PREVIEW UI */}
-                  {mediaPreview && (
-                    <div className="mt-3 relative rounded-xl overflow-hidden max-h-[300px] bg-black/20 flex justify-center border border-white/10">
-                      <button 
-                        onClick={removeMedia}
-                        className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80 backdrop-blur-md transition z-10"
-                      >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
-                      </button>
-                      {mediaFile?.type.startsWith('video/') ? (
-                        <video src={mediaPreview} controls className="max-h-[300px] object-contain" />
-                      ) : (
-                        <img src={mediaPreview} className="max-h-[300px] object-contain" alt="Upload preview" />
-                      )}
+                  {mediaPreviews.length > 0 && (
+                    <div className="mt-3 flex overflow-x-auto snap-x snap-mandatory gap-0.5 pb-1 no-scrollbar">
+                      {mediaPreviews.map((preview, index) => (
+                        <div key={preview} className={`relative shrink-0 ${mediaPreviews.length > 1 ? 'w-[85%]' : 'w-full'} snap-center rounded-lg overflow-hidden bg-black/20 flex justify-center border border-white/10 group`}>
+                          <button 
+                            onClick={() => removeMedia(index)}
+                            className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80 backdrop-blur-md transition opacity-0 group-hover:opacity-100 z-10"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+                          </button>
+                          {mediaFiles[index]?.type.startsWith('video/') ? (
+                            <video src={preview} controls className="max-h-[300px] w-full object-cover" />
+                          ) : (
+                            <img src={preview} className="max-h-[300px] w-full object-cover" alt={`Upload preview ${index + 1}`} />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -262,7 +374,7 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
                 <div className="flex items-center gap-1">
                   <input 
                     type="file" 
-                    accept="image/*,video/mp4,video/webm,video/quicktime" 
+                    accept="image/*,video/mp4,video/webm,video/quicktime" multiple
                     className="hidden" 
                     ref={fileInputRef} 
                     onChange={handleFileChange} 
@@ -291,9 +403,9 @@ export default function CreatePost({ onPostCreated, hideInline = false }: { onPo
                   <button
                     type="button"
                     onClick={() => handleSubmit()}
-                    disabled={loading || (!content.trim() && !mediaFile)}
+                    disabled={loading || (!content.trim() && mediaFiles.length === 0)}
                     className={`px-6 py-2 rounded-full font-bold transition-colors flex items-center gap-2 ${
-                      loading || (!content.trim() && !mediaFile) 
+                      loading || (!content.trim() && mediaFiles.length === 0) 
                         ? "bg-[#262626] text-gray-500 cursor-not-allowed" 
                         : "bg-[#3BC492] hover:bg-[#2fa076] text-black"
                     }`}

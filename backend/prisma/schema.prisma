@@ -46,6 +46,8 @@ model User {
   isShadowBanned Boolean     @default(false)
   isSpaceMod    Boolean      @default(false)
   
+  spaces        SpaceMember[]
+  
   posts         Post[]
   engagements   Engagement[]
   transactions  Transaction[]
@@ -82,11 +84,16 @@ model Post {
   viewsCount     Int          @default(0)
   // Media Fields
   mediaUrl       String?
+  mediaUrls      String[]     @default([])
   thumbnailUrl   String?
   mediaType      String?      // "IMAGE", "VIDEO"
   videoWidth     Int?
   videoHeight    Int?
   videoDuration  Int?
+  
+  // Space
+  spaceId        String?
+  space          Space?       @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   
   // Monetization Flags
   isEligible     Boolean      @default(true)
@@ -134,6 +141,9 @@ model Notification {
   recipient   User     @relation("ReceivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
   actor       User     @relation("SentNotifications", fields: [actorId], references: [id], onDelete: Cascade)
   post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  spaceId     String?
+  space       Space?   @relation(fields: [spaceId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt])
 }
@@ -150,6 +160,40 @@ model Transaction {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+// -----------------------------------------------------------------------------
+// SPACE MODELS
+// -----------------------------------------------------------------------------
+
+model Space {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?  @db.Text
+  coverUrl    String?
+  type        String   @default("PUBLIC") // "PUBLIC" or "PRIVATE"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  members     SpaceMember[]
+  posts       Post[]
+  notifications Notification[]
+}
+
+model SpaceMember {
+  id            String   @id @default(uuid())
+  spaceId       String
+  userId        String
+  role          String   @default("MEMBER") // "MEMBER", "MODERATOR", "ADMIN"
+  status        String   @default("ACTIVE") // "ACTIVE", "PENDING", "SUSPENDED", "APPEALED"
+  suspendReason String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([spaceId, userId])
 }
 
 // -----------------------------------------------------------------------------

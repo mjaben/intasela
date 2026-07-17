@@ -15,6 +15,7 @@ import { MonetizationModule } from './monetization/monetization.module';
 import { AuditLogInterceptor } from './security/audit.interceptor';
 import { BullModule } from '@nestjs/bullmq';
 import { AdsModule } from './ads/ads.module';
+import { SpacesModule } from './spaces/spaces.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AdsModule } from './ads/ads.module';
     UploadsModule,
     NotificationsModule,
     AdsModule,
+    SpacesModule,
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST || 'localhost',

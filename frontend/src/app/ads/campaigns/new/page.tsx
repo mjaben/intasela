@@ -718,6 +718,8 @@ function CreateCampaignForm() {
                   stats={selectedPost.stats}
                   earned={selectedPost.earned || 0}
                   mediaUrl={selectedPost.mediaUrl}
+                  mediaUrls={selectedPost.mediaUrls}
+                  thumbnailUrl={selectedPost.thumbnailUrl}
                   mediaType={selectedPost.mediaType}
                   isBoosted={true}
                 />

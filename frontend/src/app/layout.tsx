@@ -9,6 +9,7 @@ import ToastProvider from "@/components/ToastProvider";
 import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileFAB from "@/components/MobileFAB";
+import MediaViewerModal from "@/components/MediaViewerModal";
 import { GoogleAdSense } from "next-google-adsense";
 import { useEffect } from "react";
 import { useUserStore } from "@/store/useUserStore";
@@ -50,6 +51,7 @@ export default function RootLayout({
         <MobileFAB />
         <MobileBottomNav />
         <ToastProvider />
+        <MediaViewerModal />
       </body>
     </html>
   );

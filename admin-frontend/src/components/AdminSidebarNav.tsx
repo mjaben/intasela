@@ -41,6 +41,12 @@ const navGroups: {
     ]
   },
   {
+    title: "Spaces",
+    items: [
+      { name: "Manage Spaces", href: "/spaces", icon: Users, permission: "MODERATE_CONTENT" },
+    ]
+  },
+  {
     title: "Creator Studio",
     items: [
       { name: "Sela Earnings", href: "/creator/selas", icon: BadgeDollarSign, permission: "MANAGE_FINANCE" },

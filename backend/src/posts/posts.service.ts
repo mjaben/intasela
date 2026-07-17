@@ -28,8 +28,35 @@ export class PostsService {
     };
   }
 
-  async getFeed(currentUserId?: string, type?: string) {
+  async getFeed(currentUserId?: string, type?: string, spaceId?: string) {
     let whereClause: any = { parentId: null };
+
+    if (spaceId) {
+      // If a specific spaceId is requested, filter exactly by it.
+      // (Authorization should ensure user can view it, but since private spaces
+      // aren't visible otherwise, we can rely on standard Feed logic or the frontend 
+      // preventing requests if they aren't members. But let's be safe and check visibility)
+      if (!currentUserId) {
+         // unauthenticated can only see public spaces
+         whereClause.spaceId = spaceId;
+         whereClause.space = { type: 'PUBLIC' };
+      } else {
+         whereClause.spaceId = spaceId;
+         whereClause.OR = [
+            { space: { type: 'PUBLIC' } },
+            { space: { members: { some: { userId: currentUserId, status: 'ACTIVE' } } } }
+         ];
+      }
+    } else {
+      if (!currentUserId) {
+        whereClause.spaceId = null;
+      } else {
+        whereClause.OR = [
+          { spaceId: null },
+          { space: { members: { some: { userId: currentUserId, status: 'ACTIVE' } } } }
+        ];
+      }
+    }
 
     if (type === 'following' && currentUserId) {
       whereClause = {
@@ -54,6 +81,7 @@ export class PostsService {
         _count: {
           select: { replies: true, engagements: true }
         },
+        space: { select: { id: true, name: true, type: true } },
         engagements: true,
         quotedPost: {
           include: {
@@ -258,12 +286,13 @@ export class PostsService {
     const isFollowing = currentUserId && post.author?.followers && post.author.followers.length > 0;
     const isFollower = currentUserId && post.author?.following && post.author.following.length > 0;
 
-    const { engagements, parent, author, ...rest } = post;
+    const { engagements, parent, author, space, ...rest } = post;
 
     return {
       ...rest,
       author: author ? { ...author, isFollowing, isFollower } : undefined,
       parent: parent ? this.formatPost(parent, currentUserId) : undefined,
+      space: space || undefined,
       stats: {
         likes: likes.length,
         reselas: reselas.length,
@@ -350,8 +379,18 @@ export class PostsService {
     content: string, 
     parentId?: number, 
     quotedPostId?: number,
-    mediaOptions?: { mediaUrl?: string, thumbnailUrl?: string, mediaType?: string, videoWidth?: number, videoHeight?: number, videoDuration?: number }
+    mediaOptions?: { mediaUrl?: string, mediaUrls?: string[], thumbnailUrl?: string, mediaType?: string, videoWidth?: number, videoHeight?: number, videoDuration?: number },
+    spaceId?: string
   ) {
+    if (spaceId) {
+      const member = await this.prisma.spaceMember.findUnique({
+        where: { spaceId_userId: { spaceId, userId } }
+      });
+      if (!member || member.status !== 'ACTIVE') {
+        throw new Error("Not authorized to post in this space");
+      }
+    }
+
     const post = await this.prisma.post.create({
       data: {
         content,
@@ -359,6 +398,7 @@ export class PostsService {
         parentId: parentId || null,
         conversationId: parentId || null,
         quotedPostId: quotedPostId || null,
+        spaceId: spaceId || null,
         ...(mediaOptions || {})
       },
       include: {

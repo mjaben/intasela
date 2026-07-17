@@ -145,7 +145,9 @@ export default function Home() {
                 quotedPost={post.quotedPost}
                 mediaType={post.mediaType}
                 mediaUrl={post.mediaUrl}
+                mediaUrls={post.mediaUrls}
                 thumbnailUrl={post.thumbnailUrl}
+                space={post.space}
                 onDelete={(id) => setPosts((prev) => prev.filter(p => p.id !== id))}
               />
               

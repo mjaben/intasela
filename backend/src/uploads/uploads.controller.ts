@@ -78,7 +78,59 @@ export class UploadsController {
       };
     } catch (err) {
       console.error('R2 Upload Error:', err);
-      // Fallback or just throw error
+      throw new BadRequestException('Failed to upload image to cloud storage');
+    }
+  }
+
+  @Post('admin/image')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+      }
+    }),
+    fileFilter: (req, file, cb) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+        return cb(new BadRequestException('Only image files are allowed!'), false);
+      }
+      cb(null, true);
+    },
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    }
+  }))
+  async uploadAdminImage(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+    if (!req.headers['x-admin-id']) {
+      throw new BadRequestException('Admin authentication required');
+    }
+
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    try {
+      const fileBuffer = fs.readFileSync(file.path);
+      
+      const command = new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME || 'intasela',
+        Key: file.filename,
+        Body: fileBuffer,
+        ContentType: file.mimetype,
+      });
+
+      await this.s3Client.send(command);
+
+      try { fs.unlinkSync(file.path); } catch (e) {}
+
+      const baseUrl = process.env.R2_PUBLIC_URL || 'https://media.naijanews360.com.ng';
+      return {
+        url: `${baseUrl}/${file.filename}`
+      };
+    } catch (err) {
+      console.error('R2 Upload Error:', err);
       throw new BadRequestException('Failed to upload image to cloud storage');
     }
   }
