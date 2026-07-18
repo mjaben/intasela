@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { updateSetting } from "./actions";
 import ReasonModal from "@/components/ReasonModal";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function SettingsForm({ initialSettings }: { initialSettings: Record<string, any> }) {
   const [settings, setSettings] = useState(initialSettings);
@@ -13,6 +14,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: Rec
     value: null,
     title: ""
   });
+  const addToast = useToastStore(state => state.addToast);
 
   const requestUpdate = (key: string, value: any) => {
     setModalState({
@@ -43,7 +45,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: Rec
         const data = await response.json();
         finalValue = data.url;
       } catch (error: any) {
-        alert(error.message);
+        addToast(error.message, "error");
         return;
       }
     }
@@ -52,8 +54,9 @@ export default function SettingsForm({ initialSettings }: { initialSettings: Rec
       const result = await updateSetting(key, finalValue, reason);
       if (result.success) {
         setSettings(prev => ({ ...prev, [key]: finalValue }));
+        addToast(`Updated ${key} successfully`, "success");
       } else {
-        alert(result.error);
+        addToast(result.error, "error");
       }
     });
   };

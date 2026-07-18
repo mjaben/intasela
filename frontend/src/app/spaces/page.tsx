@@ -99,6 +99,7 @@ export default function SpacesPage() {
                 type={space.type}
                 membersCount={space._count?.members || 0}
                 isMember={space.members?.some((m: any) => m.userId === user?.id && m.status === 'ACTIVE')}
+                sampleMembers={space.sampleMembers}
               />
             ))}
           </div>

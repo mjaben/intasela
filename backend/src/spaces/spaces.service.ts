@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SpacesService {
@@ -23,10 +24,18 @@ export class SpacesService {
 
 
 
-  async getAllSpaces(userId?: string) {
-    // If logged in, get public spaces + private spaces where user is a member
-    if (userId) {
-      return this.prisma.space.findMany({
+  async getAllSpaces(userId?: string, adminId?: string) {
+    let spaces: any[] = [];
+    if (adminId) {
+      if (adminId !== 'admin') {
+        const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
+        if (!admin) throw new ForbiddenException('Not authorized');
+      }
+      spaces = await this.prisma.space.findMany({
+        include: { _count: { select: { members: true } } }
+      });
+    } else if (userId) {
+      spaces = await this.prisma.space.findMany({
         where: {
           OR: [
             { type: 'PUBLIC' },
@@ -41,12 +50,24 @@ export class SpacesService {
           }
         }
       });
+    } else {
+      spaces = await this.prisma.space.findMany({
+        where: { type: 'PUBLIC' },
+        include: { _count: { select: { members: { where: { status: 'ACTIVE' } } } } }
+      });
     }
-    // Public only
-    return this.prisma.space.findMany({
-      where: { type: 'PUBLIC' },
-      include: { _count: { select: { members: { where: { status: 'ACTIVE' } } } } }
-    });
+
+    // Attach sample members for AvatarGroup UI
+    spaces = await Promise.all(spaces.map(async (space) => {
+      const sampleMembers = await this.prisma.spaceMember.findMany({
+        where: { spaceId: space.id, status: 'ACTIVE' },
+        take: 3,
+        include: { user: { select: { id: true, firstName: true, username: true, avatarUrl: true } } }
+      });
+      return { ...space, sampleMembers };
+    }));
+
+    return spaces;
   }
 
   async getSpaceById(id: string, userId?: string) {
@@ -63,7 +84,7 @@ export class SpacesService {
 
     if (!space) throw new NotFoundException('Space not found');
 
-    if (space.type === 'PRIVATE' && (!userId || space.members.length === 0 || space.members[0].status !== 'ACTIVE')) {
+    if (space.type === 'PRIVATE' && (!userId || space.members.length === 0 || !['ACTIVE', 'INVITED'].includes(space.members[0].status))) {
       throw new ForbiddenException('You do not have access to this private space');
     }
 
@@ -151,7 +172,15 @@ export class SpacesService {
 
     // Create Notification
     let validActorId = adminOrModId;
-    if (adminOrModId === 'admin') validActorId = targetUser.id;
+    let isAdminUser = false;
+    if (adminOrModId === 'admin') {
+      isAdminUser = true;
+    } else {
+      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminOrModId } });
+      if (admin) isAdminUser = true;
+    }
+
+    if (isAdminUser) validActorId = targetUser.id;
 
     await this.prisma.notification.create({
       data: {
@@ -250,7 +279,7 @@ export class SpacesService {
     });
   }
 
-  async updateMemberRole(adminId: string, spaceId: string, targetUserId: string, role: string) {
+  async updateMemberRole(adminId: string, spaceId: string, targetUserId: string, role: string, permissions?: string[]) {
     if (adminId !== 'admin') {
       const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
       if (!admin) throw new ForbiddenException('Only System Admin can assign roles');
@@ -264,11 +293,22 @@ export class SpacesService {
 
     const updated = await this.prisma.spaceMember.update({
       where: { id: membership.id },
-      data: { role }
+      data: { 
+        role,
+        permissions: role === 'MODERATOR' ? (permissions || []) : Prisma.DbNull
+      }
     });
 
     let validActorId = adminId;
-    if (adminId === 'admin') validActorId = targetUserId;
+    let isAdminRoleUpdate = false;
+    if (adminId === 'admin') {
+      isAdminRoleUpdate = true;
+    } else {
+      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
+      if (admin) isAdminRoleUpdate = true;
+    }
+
+    if (isAdminRoleUpdate) validActorId = targetUserId;
 
     // Notification
     await this.prisma.notification.create({
@@ -332,11 +372,20 @@ export class SpacesService {
     });
   }
 
-  async getSpaceMembers(spaceId: string, userId?: string) {
+  async getSpaceMembers(spaceId: string, userId?: string, adminId?: string) {
     const space = await this.prisma.space.findUnique({ where: { id: spaceId } });
     if (!space) throw new NotFoundException('Space not found');
 
-    if (space.type === 'PRIVATE') {
+    let isAdmin = false;
+    if (adminId) {
+      if (adminId === 'admin') isAdmin = true;
+      else {
+        const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
+        if (admin) isAdmin = true;
+      }
+    }
+
+    if (space.type === 'PRIVATE' && !isAdmin) {
       if (!userId) throw new ForbiddenException('Not authorized');
       const member = await this.prisma.spaceMember.findUnique({
         where: { spaceId_userId: { spaceId, userId } }

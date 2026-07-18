@@ -21,6 +21,24 @@ export default function SidebarNav() {
   const fetchSettings = useSystemSettingsStore((state) => state.fetchSettings);
   const addToast = useToastStore((state) => state.addToast);
   const [businessExpanded, setBusinessExpanded] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar_collapsed');
+    if (saved !== null) {
+      setIsCollapsed(saved === 'true');
+    } else {
+      // Default: collapsed on smaller desktop, open on larger screens
+      const mql = window.matchMedia('(min-width: 1280px)');
+      setIsCollapsed(!mql.matches);
+    }
+  }, []);
+
+  const toggleCollapse = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('sidebar_collapsed', String(newState));
+  };
 
   useEffect(() => {
     fetchSettings();
@@ -108,19 +126,30 @@ export default function SidebarNav() {
   };
 
   return (
-    <aside className="hidden sm:flex w-[250px] h-screen sticky top-0 flex-col pt-4 pr-6 pb-6">
-      {/* Brand Logo */}
-      <div className="px-4 mb-8">
-        <Link href="/" className="flex items-center gap-1">
-          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-bold text-primary-foreground">
+    <aside className={`hidden sm:flex h-screen sticky top-0 flex-col pt-4 pb-6 transition-all duration-300 flex-shrink-0 border-r border-border/10 ${isCollapsed ? 'w-[80px] px-2' : 'w-[250px] pr-6'}`}>
+      {/* Brand Logo & Toggle */}
+      <div className={`mb-8 flex items-center ${isCollapsed ? 'flex-col gap-4 mt-2' : 'justify-between px-4'}`}>
+        <Link href="/" className="flex items-center gap-1" title={isCollapsed ? "Intasela" : undefined}>
+          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-bold text-primary-foreground flex-shrink-0">
             In
           </div>
-          <span className="text-xl font-bold tracking-tight">tasela</span>
+          {!isCollapsed && <span className="text-xl font-bold tracking-tight">tasela</span>}
         </Link>
+        <button 
+          onClick={toggleCollapse} 
+          className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-accent transition-colors"
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+          )}
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-2">
+      <nav className="flex-1 space-y-1">
         {navItems
           .filter(item => isAuthenticated || item.name === "Home" || item.name === "Orbit" || item.name === "Spaces")
           .map((item) => (
@@ -132,15 +161,22 @@ export default function SidebarNav() {
                     addToast("Not Available at the moment, check back.");
                     return;
                   }
-                  setBusinessExpanded(!businessExpanded);
+                  if (isCollapsed) {
+                    setIsCollapsed(false);
+                    localStorage.setItem('sidebar_collapsed', 'false');
+                    setBusinessExpanded(true);
+                  } else {
+                    setBusinessExpanded(!businessExpanded);
+                  }
                 } else {
                   router.push(getNavHref(item));
                 }
               }}
-              className={`flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-[14px] relative cursor-pointer ${pathname.startsWith("/ads") && item.name === "Business" ? 'bg-accent/30' : ''}`}
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-4 py-2.5 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors font-medium text-[14px] relative cursor-pointer ${pathname.startsWith("/ads") && item.name === "Business" ? 'bg-accent/30' : ''}`}
+              title={isCollapsed ? item.name : undefined}
             >
               <div className="flex items-center gap-3">
-                <div className="w-[20px] h-[20px] flex items-center justify-center relative">
+                <div className="w-[20px] h-[20px] flex items-center justify-center relative flex-shrink-0">
                   <img src={item.icon} alt={item.name} className="w-full h-full object-contain invert" />
                   {item.name === "Activity" && unreadCount > 0 && (
                     <div className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 border border-background">
@@ -148,14 +184,14 @@ export default function SidebarNav() {
                     </div>
                   )}
                 </div>
-                {item.name}
+                {!isCollapsed && item.name}
               </div>
-              {item.name === "Business" && (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${businessExpanded ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"></polyline></svg>
+              {!isCollapsed && item.name === "Business" && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform flex-shrink-0 ${businessExpanded ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"></polyline></svg>
               )}
             </div>
             
-            {item.name === "Business" && businessExpanded && (
+            {!isCollapsed && item.name === "Business" && businessExpanded && (
               <div className="ml-10 mt-1 mb-2 space-y-1 border-l-2 border-border/50 pl-3">
                 <div 
                   onClick={() => router.push('/ads')}
@@ -182,24 +218,30 @@ export default function SidebarNav() {
       </nav>
 
       {/* Actions */}
-      <div className="mt-auto flex flex-col gap-3">
+      <div className={`mt-auto flex flex-col gap-3 ${isCollapsed ? 'items-center' : ''}`}>
         <button
           onClick={() => {
             if (!isAuthenticated) return router.push("/login");
             openComposer('CREATE');
           }}
-          className="w-full bg-[#3BC492]/5 backdrop-blur-md border border-[#3BC492]/10 text-[#3BC492] py-2.5 rounded-full font-bold shadow-lg hover:bg-[#3BC492]/20 transition-all transform hover:scale-[1.02] text-[13px]"
+          title={isCollapsed ? "Create Post" : undefined}
+          className={`bg-[#3BC492]/5 backdrop-blur-md border border-[#3BC492]/10 text-[#3BC492] py-2.5 rounded-full font-bold shadow-lg hover:bg-[#3BC492]/20 transition-all transform hover:scale-[1.02] ${isCollapsed ? 'w-10 h-10 flex flex-col justify-center items-center px-0' : 'w-full text-[13px]'}`}
         >
-          Create Post
+          {isCollapsed ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          ) : (
+            "Create Post"
+          )}
         </button>
 
         {isAuthenticated && (
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors text-[13px] font-bold"
+            title={isCollapsed ? "Logout" : undefined}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-full text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors font-bold ${isCollapsed ? 'w-10 h-10 px-0' : 'w-full text-[13px]'}`}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-            Logout
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+            {!isCollapsed && "Logout"}
           </button>
         )}
       </div>

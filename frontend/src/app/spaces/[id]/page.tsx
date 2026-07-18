@@ -7,6 +7,26 @@ import PostCard from "@/components/PostCard";
 import CreatePost from "@/components/CreatePost";
 import { useUserStore } from "@/store/useUserStore";
 import { useToastStore } from "@/store/useToastStore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { AlertTriangle } from "lucide-react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+  AvatarImage,
+} from "@/components/ui/avatar";
 
 export default function SpacePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -14,6 +34,7 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
   const [space, setSpace] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<any[]>([]);
+  const [spaceMembers, setSpaceMembers] = useState<any[]>([]);
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const addToast = useToastStore((state) => state.addToast);
@@ -29,8 +50,9 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
       });
       if (!res.ok) {
         if (res.status === 403) {
-          alert("You do not have access to this private space.");
+          addToast("You do not have access to this private space.", "error");
           router.push('/spaces');
+          return;
         }
         throw new Error("Failed to fetch space");
       }
@@ -60,9 +82,23 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
     }
   };
 
+  const fetchSpaceMembers = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces/${resolvedParams.id}/members`, { headers });
+      if (!res.ok) return;
+      const data = await res.json();
+      setSpaceMembers(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchSpace();
     fetchPosts();
+    fetchSpaceMembers();
   }, [resolvedParams.id]);
 
   const handleJoinRequest = async () => {
@@ -93,7 +129,6 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
 
   const handleLeaveSpace = async () => {
     if (!isAuthenticated) return router.push("/login");
-    if (!confirm("Are you sure you want to leave this space?")) return;
     try {
       const token = localStorage.getItem("access_token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces/${resolvedParams.id}/leave`, {
@@ -158,10 +193,29 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
           <div>
             <h1 className="text-3xl font-bold text-white drop-shadow-md font-geistMono">{space.name}</h1>
-            <p className="text-white/80 font-medium drop-shadow-sm flex items-center gap-1.5 font-geistMono text-xs tracking-wide">
-              {space._count?.members || 0} Members • 
-              <span className="capitalize text-white/70">{space.type.toLowerCase()}</span>
-            </p>
+            <div className="flex items-center gap-3 mt-1">
+              <AvatarGroup>
+                {spaceMembers.slice(0, 3).map((member) => (
+                  <Avatar key={member.id} className="border-2 border-black">
+                    <AvatarImage src={member.user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user.username}`} alt={`@${member.user.username}`} />
+                    <AvatarFallback>{(member.user.firstName?.[0] || member.user.username?.[0] || '?').toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                ))}
+                {(space._count?.members || 0) > 3 && (
+                  <AvatarGroupCount className="border-2 border-black bg-black/60 text-white backdrop-blur-md">
+                    +{(space._count?.members || 0) - 3}
+                  </AvatarGroupCount>
+                )}
+                {(space._count?.members || 0) <= 3 && (space._count?.members || 0) > 0 && (
+                  <AvatarGroupCount className="border-2 border-black bg-black/60 text-white backdrop-blur-md">
+                    {space._count?.members}
+                  </AvatarGroupCount>
+                )}
+              </AvatarGroup>
+              <p className="text-white/80 font-medium drop-shadow-sm flex items-center gap-1.5 font-geistMono text-xs tracking-wide">
+                • <span className="capitalize text-white/70">{space.type.toLowerCase()}</span>
+              </p>
+            </div>
           </div>
           <div>
             {!isMember ? (
@@ -197,12 +251,30 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
               )
             ) : (
               <div className="flex gap-2">
-                <button 
-                  onClick={handleLeaveSpace}
-                  className="bg-black/40 text-red-400 border border-red-500/30 font-bold px-4 py-2 rounded-full hover:bg-red-500/20 backdrop-blur-md transition-colors"
-                >
-                  Leave Space
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="bg-black/40 text-red-400 border border-red-500/30 font-bold px-4 py-2 rounded-full hover:bg-red-500/20 backdrop-blur-md transition-colors">
+                      Leave Space
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogMedia className="bg-red-500/10 text-red-500">
+                        <AlertTriangle />
+                      </AlertDialogMedia>
+                      <AlertDialogTitle>Leave this space?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to leave this space? If it is a private space, you will need an invitation to rejoin.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction variant="destructive" onClick={(e) => { e.preventDefault(); handleLeaveSpace(); }}>
+                        Leave Space
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 {space.members[0].role === 'MODERATOR' && (
                   <button onClick={() => router.push(`/spaces/${space.id}/members`)} className="bg-secondary text-secondary-foreground font-bold px-4 py-2 rounded-full hover:bg-secondary/80 backdrop-blur-md">
                     Manage

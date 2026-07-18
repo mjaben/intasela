@@ -27,13 +27,13 @@ export class MonetizationService {
   async getSettings() {
     try {
       const [ratesSetting, rulesSetting] = await Promise.all([
-        this.prisma.$queryRaw<any[]>`SELECT \`value\` FROM SystemSetting WHERE \`key\` = 'monetization_rates'`,
-        this.prisma.$queryRaw<any[]>`SELECT \`value\` FROM SystemSetting WHERE \`key\` = 'monetization_rules'`,
+        this.prisma.systemSetting.findUnique({ where: { key: 'monetization_rates' } }),
+        this.prisma.systemSetting.findUnique({ where: { key: 'monetization_rules' } }),
       ]);
 
       let rates: MonetizationRates = { sela: 0, resela: 0, reply: 0, viewRpm: 0 };
-      if (ratesSetting && ratesSetting.length > 0) {
-        rates = typeof ratesSetting[0].value === 'string' ? JSON.parse(ratesSetting[0].value) : ratesSetting[0].value;
+      if (ratesSetting && ratesSetting.value) {
+        rates = typeof ratesSetting.value === 'string' ? JSON.parse(ratesSetting.value as string) : ratesSetting.value as unknown as MonetizationRates;
       }
 
       let rules: MonetizationRules = {
@@ -45,8 +45,8 @@ export class MonetizationService {
         hourlyRewardLimit: 10,
         minWithdrawalThreshold: 5000,
       };
-      if (rulesSetting && rulesSetting.length > 0) {
-        const dbRules = typeof rulesSetting[0].value === 'string' ? JSON.parse(rulesSetting[0].value) : rulesSetting[0].value;
+      if (rulesSetting && rulesSetting.value) {
+        const dbRules = typeof rulesSetting.value === 'string' ? JSON.parse(rulesSetting.value as string) : rulesSetting.value as unknown as MonetizationRules;
         rules = { ...rules, ...dbRules };
       }
 

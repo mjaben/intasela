@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
+import { useToastStore } from "@/store/useToastStore";
 import PostCard from "@/components/PostCard";
 
 const TagInput = ({ label, placeholder, tags, setTags, description }: { label: string, placeholder: string, tags: string[], setTags: (tags: string[]) => void, description?: string }) => {
@@ -124,6 +125,7 @@ function CreateCampaignForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useUserStore((state) => state.user);
+  const addToast = useToastStore((state) => state.addToast);
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -252,7 +254,7 @@ function CreateCampaignForm() {
   const handleNext = () => {
     if (step === 1) {
       if (Number(formData.dailyBudget) < minBudget || Number(formData.dailyBudget) > maxBudget) {
-        alert(`Daily Budget must be between ₦${minBudget.toLocaleString()} and ₦${maxBudget.toLocaleString()}.`);
+        addToast(`Daily Budget must be between ₦${minBudget.toLocaleString()} and ₦${maxBudget.toLocaleString()}.`, "error");
         return;
       }
     }
@@ -288,13 +290,15 @@ function CreateCampaignForm() {
       });
 
       if (res.ok) {
+        addToast("Campaign created successfully!", "success");
         router.push("/ads");
       } else {
         const err = await res.json();
-        alert(err.message || "Failed to create campaign. Check wallet balance.");
+        addToast(err.message || "Failed to create campaign. Check wallet balance.", "error");
       }
     } catch (error) {
       console.error(error);
+      addToast("An error occurred during submission", "error");
     } finally {
       setLoading(false);
     }

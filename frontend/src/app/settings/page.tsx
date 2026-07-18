@@ -178,11 +178,11 @@ export default function SettingsPage() {
         closeModal();
         addToast("All posts deleted successfully");
       } else {
-        alert("Failed to delete posts.");
+        addToast("Failed to delete posts.", "error");
       }
     } catch (e) {
       console.error(e);
-      alert("An error occurred.");
+      addToast("An error occurred.", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -200,11 +200,11 @@ export default function SettingsPage() {
         useUserStore.getState().logout();
         router.push("/login");
       } else {
-        alert("Failed to delete account.");
+        addToast("Failed to delete account.", "error");
       }
     } catch (e) {
       console.error(e);
-      alert("An error occurred.");
+      addToast("An error occurred.", "error");
     } finally {
       setIsSubmitting(false);
     }

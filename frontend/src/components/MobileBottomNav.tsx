@@ -11,7 +11,7 @@ export default function MobileBottomNav() {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const { unreadCount } = useNotificationStore();
 
-  const navItems = [
+  const navItems: { name: string; href: string; icon?: string; svg?: React.ReactNode }[] = [
     {
       name: "Home",
       href: "/",

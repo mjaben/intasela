@@ -4,8 +4,19 @@ import { useEffect, useState } from "react";
 import { Users, MoreVertical, Edit, Trash2, Plus } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-import ConfirmModal from "@/components/ConfirmModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShieldAlert, CheckCircle2 } from "lucide-react";
+import { useToastStore } from "@/store/useToastStore";
 
 export default function SpacesPage() {
   const [spaces, setSpaces] = useState<any[]>([]);
@@ -18,13 +29,7 @@ export default function SpacesPage() {
   
   const [formData, setFormData] = useState({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "" });
   
-  // Toast state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | null }>({ message: '', type: null });
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast({ message: '', type: null }), 4000);
-  };
+  const addToast = useToastStore((state) => state.addToast);
 
   const fetchSpaces = async () => {
     try {
@@ -60,15 +65,15 @@ export default function SpacesPage() {
       if (res.ok) {
         setIsCreateModalOpen(false);
         setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "" });
-        showToast("Space created successfully", "success");
+        addToast("Space created successfully", "success");
         fetchSpaces();
       } else {
         const err = await res.json();
-        showToast(err.message || "Failed to create space", "error");
+        addToast(err.message || "Failed to create space", "error");
       }
     } catch (err) {
       console.error(err);
-      showToast("An error occurred", "error");
+      addToast("An error occurred", "error");
     }
   };
 
@@ -84,15 +89,15 @@ export default function SpacesPage() {
       if (res.ok) {
         setIsEditModalOpen(false);
         setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "" });
-        showToast("Space updated successfully", "success");
+        addToast("Space updated successfully", "success");
         fetchSpaces();
       } else {
         const err = await res.json();
-        showToast(err.message || "Failed to update space", "error");
+        addToast(err.message || "Failed to update space", "error");
       }
     } catch (err) {
       console.error(err);
-      showToast("An error occurred", "error");
+      addToast("An error occurred", "error");
     }
   };
 
@@ -105,15 +110,15 @@ export default function SpacesPage() {
         headers: { "x-admin-id": adminId }
       });
       if (res.ok) {
-        showToast("Space deleted", "success");
+        addToast("Space deleted", "success");
         fetchSpaces();
       } else {
         const err = await res.json();
-        showToast(err.message || "Failed to delete space", "error");
+        addToast(err.message || "Failed to delete space", "error");
       }
     } catch (err) {
       console.error(err);
-      showToast("An error occurred", "error");
+      addToast("An error occurred", "error");
     } finally {
       setDeleteSpaceId(null);
     }
@@ -149,13 +154,13 @@ export default function SpacesPage() {
       if (res.ok) {
         const data = await res.json();
         setFormData(prev => ({ ...prev, coverUrl: data.url }));
-        showToast("Image uploaded", "success");
+        addToast("Image uploaded", "success");
       } else {
-        showToast("Failed to upload image", "error");
+        addToast("Failed to upload image", "error");
       }
     } catch (err) {
       console.error(err);
-      showToast("Error uploading image", "error");
+      addToast("Error uploading image", "error");
     } finally {
       setUploading(false);
     }
@@ -165,27 +170,22 @@ export default function SpacesPage() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto relative">
-      {/* Toast Notification */}
-      {toast.type && (
-        <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl animate-in slide-in-from-top-5 fade-in duration-300 text-white font-medium border ${
-          toast.type === 'success' ? 'bg-green-500/20 border-green-500/50' : 'bg-red-500/20 border-red-500/50'
-        }`}>
-          {toast.type === 'success' ? <CheckCircle2 size={20} className="text-green-400" /> : <ShieldAlert size={20} className="text-red-400" />}
-          {toast.message}
-        </div>
-      )}
 
       {/* Modals */}
-      <ConfirmModal
-        isOpen={!!deleteSpaceId}
-        title="Delete Space"
-        description="Are you sure you want to delete this space? All members and associated data will be permanently removed."
-        confirmLabel="Delete Space"
-        cancelLabel="Cancel"
-        destructive={true}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteSpaceId(null)}
-      />
+      <AlertDialog open={!!deleteSpaceId} onOpenChange={(open) => { if (!open) setDeleteSpaceId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Space</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this space? All members and associated data will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600 text-white">Delete Space</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -294,13 +294,14 @@ export default function SpacesPage() {
       {/* Modals */}
       {(isCreateModalOpen || isEditModalOpen) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-brand-card w-full max-w-md rounded-xl border border-brand-border p-6 shadow-2xl">
-            <h2 className="text-xl font-bold text-white mb-6">
+          <div className="bg-brand-card w-full max-w-md rounded-xl border border-brand-border p-6 shadow-2xl flex flex-col max-h-[90vh]">
+            <h2 className="text-xl font-bold text-white mb-6 flex-shrink-0">
               {isEditModalOpen ? "Edit Space" : "Create New Space"}
             </h2>
-            <form onSubmit={isEditModalOpen ? handleEdit : handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Name</label>
+            <form onSubmit={isEditModalOpen ? handleEdit : handleCreate} className="flex flex-col flex-1 overflow-hidden">
+              <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Name</label>
                 <input 
                   type="text" 
                   value={formData.name}
@@ -319,14 +320,18 @@ export default function SpacesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Type</label>
-                <select 
+                <Select 
                   value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value})}
-                  className="w-full bg-black/40 border border-brand-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-brand transition-colors"
+                  onValueChange={(val) => setFormData({...formData, type: val})}
                 >
-                  <option value="PUBLIC">Public</option>
-                  <option value="PRIVATE">Private</option>
-                </select>
+                  <SelectTrigger className="w-full bg-black/40 border border-brand-border rounded-lg px-4 h-[42px] text-white focus:ring-1 focus:ring-brand focus:ring-offset-0 focus:outline-none transition-colors">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/60 backdrop-blur-xl border-white/10 text-white shadow-xl">
+                    <SelectItem value="PUBLIC" className="focus:bg-brand/20 focus:text-brand cursor-pointer">Public</SelectItem>
+                    <SelectItem value="PRIVATE" className="focus:bg-brand/20 focus:text-brand cursor-pointer">Private</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-400 mb-1">Cover Image</label>
@@ -344,8 +349,9 @@ export default function SpacesPage() {
                 />
                 {uploading && <p className="text-xs text-brand mt-1">Uploading...</p>}
               </div>
+              </div>
               
-              <div className="flex items-center justify-end gap-3 pt-4 mt-6 border-t border-brand-border">
+              <div className="flex items-center justify-end gap-3 pt-4 mt-6 border-t border-brand-border flex-shrink-0">
                 <button 
                   type="button"
                   onClick={() => {
@@ -360,7 +366,7 @@ export default function SpacesPage() {
                   type="submit"
                   className="px-6 py-2 bg-brand text-white font-bold rounded-lg hover:bg-brand/90 transition-colors"
                 >
-                  {isEditModalOpen ? "Save Changes" : "Create"}
+                  {isEditModalOpen ? "Save Changes" : "Save Space"}
                 </button>
               </div>
             </form>

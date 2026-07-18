@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 
 export async function getMonetizationRates() {
   try {
-    const settings: any[] = await prisma.$queryRaw`SELECT \`value\` FROM SystemSetting WHERE \`key\` = 'monetization_rates'`;
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: 'monetization_rates' }
+    });
 
-    if (settings && settings.length > 0) {
-      const value = typeof settings[0].value === 'string' ? JSON.parse(settings[0].value) : settings[0].value;
+    if (setting && setting.value) {
+      const value = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
       return value as { sela: number, resela: number, reply: number, viewRpm: number };
     }
 
@@ -21,13 +23,11 @@ export async function getMonetizationRates() {
 
 export async function updateMonetizationRates(rates: { sela: number, resela: number, reply: number, viewRpm: number }) {
   try {
-    const jsonStr = JSON.stringify(rates);
-    
-    await prisma.$executeRaw`
-      INSERT INTO SystemSetting (\`key\`, \`value\`, \`updatedAt\`) 
-      VALUES ('monetization_rates', ${jsonStr}, NOW(3))
-      ON DUPLICATE KEY UPDATE \`value\` = ${jsonStr}, \`updatedAt\` = NOW(3)
-    `;
+    await prisma.systemSetting.upsert({
+      where: { key: 'monetization_rates' },
+      update: { value: rates as any },
+      create: { key: 'monetization_rates', value: rates as any },
+    });
 
     revalidatePath("/creator/settings");
     return { success: true };
@@ -59,10 +59,12 @@ const defaultRules: MonetizationRules = {
 
 export async function getMonetizationRules() {
   try {
-    const settings: any[] = await prisma.$queryRaw`SELECT \`value\` FROM SystemSetting WHERE \`key\` = 'monetization_rules'`;
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: 'monetization_rules' }
+    });
 
-    if (settings && settings.length > 0) {
-      const value = typeof settings[0].value === 'string' ? JSON.parse(settings[0].value) : settings[0].value;
+    if (setting && setting.value) {
+      const value = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
       return { ...defaultRules, ...value } as MonetizationRules;
     }
 
@@ -75,13 +77,11 @@ export async function getMonetizationRules() {
 
 export async function updateMonetizationRules(rules: MonetizationRules) {
   try {
-    const jsonStr = JSON.stringify(rules);
-    
-    await prisma.$executeRaw`
-      INSERT INTO SystemSetting (\`key\`, \`value\`, \`updatedAt\`) 
-      VALUES ('monetization_rules', ${jsonStr}, NOW(3))
-      ON DUPLICATE KEY UPDATE \`value\` = ${jsonStr}, \`updatedAt\` = NOW(3)
-    `;
+    await prisma.systemSetting.upsert({
+      where: { key: 'monetization_rules' },
+      update: { value: rules as any },
+      create: { key: 'monetization_rules', value: rules as any },
+    });
 
     revalidatePath("/creator/settings");
     return { success: true };

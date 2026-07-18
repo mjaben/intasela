@@ -185,6 +185,7 @@ model SpaceMember {
   spaceId       String
   userId        String
   role          String   @default("MEMBER") // "MEMBER", "MODERATOR", "ADMIN"
+  permissions   Json?    // Array of permission strings e.g. ["MANAGE_MEMBERS", "MANAGE_POSTS", "EDIT_SPACE"]
   status        String   @default("ACTIVE") // "ACTIVE", "PENDING", "SUSPENDED", "APPEALED"
   suspendReason String?
   createdAt     DateTime @default(now())

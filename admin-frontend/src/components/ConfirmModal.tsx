@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Trash2Icon } from "lucide-react";
+
 export default function ConfirmModal({ 
   isOpen, 
   title, 
@@ -19,33 +32,35 @@ export default function ConfirmModal({
   cancelLabel?: string,
   destructive?: boolean
 }) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#18181b] border border-white/10 rounded-xl p-6 shadow-2xl w-full max-w-sm">
-        <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
-        <p className="text-sm text-gray-400 mb-6">{description}</p>
-        
-        <div className="flex justify-end gap-3">
-          <button 
-            onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
-          >
-            {cancelLabel}
-          </button>
-          <button 
-            onClick={onConfirm}
-            className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
-              destructive 
-                ? "bg-red-500/10 text-red-500 hover:bg-red-500/20" 
-                : "bg-brand text-white hover:bg-brand/90"
-            }`}
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          {destructive && (
+            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+              <Trash2Icon />
+            </AlertDialogMedia>
+          )}
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel}>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogAction 
+            variant={destructive ? "destructive" : "default"} 
+            onClick={(e) => {
+              e.preventDefault(); // Prevent Dialog from auto-closing if onConfirm is async
+              onConfirm();
+              onCancel(); // Actually close it after confirming
+            }}
           >
             {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
+

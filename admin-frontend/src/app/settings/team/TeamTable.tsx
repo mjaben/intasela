@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { inviteAdmin } from "./actions";
+import { useToastStore } from "@/store/useToastStore";
 
 type Role = { id: string; name: string; permissions: any };
 type SystemAdmin = {
@@ -24,11 +25,12 @@ export default function TeamTable({ initialAdmins, roles }: { initialAdmins: Sys
     lastName: "",
     roleId: ""
   });
+  const addToast = useToastStore(state => state.addToast);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !formData.password || !formData.firstName || !formData.lastName || !formData.roleId) {
-      alert("Please fill all fields.");
+      addToast("Please fill all fields.", "error");
       return;
     }
     
@@ -37,8 +39,9 @@ export default function TeamTable({ initialAdmins, roles }: { initialAdmins: Sys
       if (result.success) {
         setIsInviteModalOpen(false);
         setFormData({ email: "", password: "", firstName: "", lastName: "", roleId: "" });
+        addToast("Admin invited successfully", "success");
       } else {
-        alert(result.error);
+        addToast(result.error || "Failed to invite admin", "error");
       }
     });
   };

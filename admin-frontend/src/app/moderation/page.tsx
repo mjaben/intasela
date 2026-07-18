@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { useToastStore } from "@/store/useToastStore";
+import ReasonModal from "@/components/ReasonModal";
 
 export default function ModerationModule() {
   const [appeals, setAppeals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const addToast = useToastStore(state => state.addToast);
+  const [modalState, setModalState] = useState<{isOpen: boolean, spaceId: string, userId: string, newStatus: string} | null>(null);
 
   const fetchAppeals = async () => {
     try {
@@ -27,14 +31,15 @@ export default function ModerationModule() {
     fetchAppeals();
   }, []);
 
-  const handleUpdateStatus = async (spaceId: string, userId: string, newStatus: string) => {
-    let reason = "";
+  const handleUpdateStatusClick = (spaceId: string, userId: string, newStatus: string) => {
     if (newStatus === 'SUSPENDED') {
-      const input = window.prompt("Reason for rejecting appeal:");
-      if (input === null) return;
-      reason = input.trim() || "Appeal Rejected";
+      setModalState({ isOpen: true, spaceId, userId, newStatus });
+    } else {
+      executeStatusUpdate(spaceId, userId, newStatus, "");
     }
+  };
 
+  const executeStatusUpdate = async (spaceId: string, userId: string, newStatus: string, reason: string) => {
     try {
       const adminId = localStorage.getItem("admin_id") || "admin";
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces/${spaceId}/members/${userId}/suspend`, {
@@ -44,14 +49,17 @@ export default function ModerationModule() {
       });
       
       if (res.ok) {
+        addToast("Status updated successfully", "success");
         fetchAppeals();
       } else {
         const error = await res.json();
-        alert(error.message || "Failed to update status");
+        addToast(error.message || "Failed to update status", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("An error occurred");
+      addToast("An error occurred", "error");
+    } finally {
+      setModalState(null);
     }
   };
 
@@ -122,13 +130,13 @@ export default function ModerationModule() {
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
                         <button 
-                          onClick={() => handleUpdateStatus(appeal.spaceId, appeal.userId, 'ACTIVE')}
+                          onClick={() => handleUpdateStatusClick(appeal.spaceId, appeal.userId, 'ACTIVE')}
                           className="bg-green-500/10 text-green-500 hover:bg-green-500/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-green-500/20"
                         >
                           Approve
                         </button>
                         <button 
-                          onClick={() => handleUpdateStatus(appeal.spaceId, appeal.userId, 'SUSPENDED')}
+                          onClick={() => handleUpdateStatusClick(appeal.spaceId, appeal.userId, 'SUSPENDED')}
                           className="bg-red-500/10 text-red-500 hover:bg-red-500/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-red-500/20"
                         >
                           Reject
@@ -142,6 +150,18 @@ export default function ModerationModule() {
           </div>
         )}
       </div>
+
+      <ReasonModal 
+        isOpen={!!modalState?.isOpen}
+        title="Reason for Rejection"
+        placeholder="Provide a reason for rejecting this appeal..."
+        onConfirm={(reason) => {
+          if (modalState) {
+            executeStatusUpdate(modalState.spaceId, modalState.userId, modalState.newStatus, reason);
+          }
+        }}
+        onCancel={() => setModalState(null)}
+      />
     </div>
   );
 }

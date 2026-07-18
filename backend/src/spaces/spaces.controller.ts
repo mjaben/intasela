@@ -17,7 +17,7 @@ export class SpacesController {
   }
 
   @Get()
-  async getAllSpaces(@Headers('authorization') authHeader: string) {
+  async getAllSpaces(@Headers('authorization') authHeader: string, @Headers('x-admin-id') adminId?: string) {
     let currentUserId: string | undefined;
     if (authHeader) {
       try {
@@ -26,7 +26,7 @@ export class SpacesController {
         currentUserId = decoded.sub;
       } catch (e) {}
     }
-    return this.spacesService.getAllSpaces(currentUserId);
+    return this.spacesService.getAllSpaces(currentUserId, adminId);
   }
 
   @Get(':id')
@@ -49,7 +49,7 @@ export class SpacesController {
   }
 
   @Get(':id/members')
-  async getSpaceMembers(@Param('id') id: string, @Headers('authorization') authHeader: string) {
+  async getSpaceMembers(@Param('id') id: string, @Headers('authorization') authHeader: string, @Headers('x-admin-id') adminId?: string) {
     let currentUserId: string | undefined;
     if (authHeader) {
       try {
@@ -58,7 +58,7 @@ export class SpacesController {
         currentUserId = decoded.sub;
       } catch (e) {}
     }
-    return this.spacesService.getSpaceMembers(id, currentUserId);
+    return this.spacesService.getSpaceMembers(id, currentUserId, adminId);
   }
 
   @Post(':id')
@@ -147,10 +147,11 @@ export class SpacesController {
     @Headers('x-admin-id') adminId: string,
     @Param('id') id: string,
     @Param('userId') userId: string,
-    @Body('role') role: string
+    @Body('role') role: string,
+    @Body('permissions') permissions?: string[]
   ) {
     if (!adminId) throw new UnauthorizedException('Admin ID required');
-    return this.spacesService.updateMemberRole(adminId, id, userId, role);
+    return this.spacesService.updateMemberRole(adminId, id, userId, role, permissions);
   }
 
   @Patch(':id/members/:userId/suspend')

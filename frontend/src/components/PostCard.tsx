@@ -276,7 +276,7 @@ export default function PostCard({
       if (onDelete) onDelete(id);
     } catch (err) {
       console.error(err);
-      alert("Failed to delete post. It might have active replies or quotes.");
+      addToast("Failed to delete post. It might have active replies or quotes.", "error");
     } finally {
       setIsDeleting(false);
       setShowOptionsMenu(false);

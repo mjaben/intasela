@@ -4,7 +4,19 @@ import { useEffect, useState, use } from "react";
 import { Users, MoreVertical, ArrowLeft, ShieldAlert, Ban, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-import ConfirmModal from "@/components/ConfirmModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToastStore } from "@/store/useToastStore";
+import ReasonModal from "@/components/ReasonModal";
 
 export default function SpaceMembersPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -17,17 +29,18 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [inviting, setInviting] = useState(false);
-  
-  // Toast state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | null }>({ message: '', type: null });
+  const addToast = useToastStore((state) => state.addToast);
   
   // Modal state
   const [revokeUserId, setRevokeUserId] = useState<string | null>(null);
+  const [editingPermissions, setEditingPermissions] = useState<{userId: string, role: string, permissions: string[]} | null>(null);
+  const [reasonModalState, setReasonModalState] = useState<{isOpen: boolean, userId: string, newStatus: string} | null>(null);
 
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast({ message: '', type: null }), 4000);
-  };
+  const AVAILABLE_PERMISSIONS = [
+    { id: "MANAGE_MEMBERS", label: "Manage Members" },
+    { id: "MANAGE_POSTS", label: "Manage Posts" },
+    { id: "EDIT_SPACE", label: "Edit Space Info" },
+  ];
 
   const fetchSpaceAndMembers = async () => {
     try {
@@ -76,34 +89,36 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
     return () => clearTimeout(delayDebounceFn);
   }, [inviteUsername]);
 
-  const handleUpdateRole = async (userId: string, newRole: string) => {
+  const handleUpdateRole = async (userId: string, newRole: string, permissions?: string[]) => {
     try {
       const adminId = localStorage.getItem("admin_id") || "admin";
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces/${resolvedParams.id}/members/${userId}/role`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-id": adminId },
-        body: JSON.stringify({ role: newRole })
+        body: JSON.stringify({ role: newRole, permissions })
       });
       if (res.ok) {
-        showToast("Role updated successfully", "success");
+        addToast("Role updated successfully", "success");
+        setEditingPermissions(null);
         fetchSpaceAndMembers();
       } else {
-        showToast("Failed to update role", "error");
+        addToast("Failed to update role", "error");
       }
     } catch (err) {
       console.error(err);
-      showToast("An error occurred", "error");
+      addToast("An error occurred", "error");
     }
   };
 
-  const handleUpdateStatus = async (userId: string, newStatus: string) => {
-    let reason = "";
+  const handleUpdateStatusClick = (userId: string, newStatus: string) => {
     if (newStatus === 'SUSPENDED') {
-      const input = window.prompt("Reason for suspension/rejection:");
-      if (input === null) return;
-      reason = input.trim();
+      setReasonModalState({ isOpen: true, userId, newStatus });
+    } else {
+      executeStatusUpdate(userId, newStatus, "");
     }
+  };
 
+  const executeStatusUpdate = async (userId: string, newStatus: string, reason: string) => {
     try {
       const adminId = localStorage.getItem("admin_id") || "admin";
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces/${resolvedParams.id}/members/${userId}/suspend`, {
@@ -112,14 +127,16 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
         body: JSON.stringify({ status: newStatus, reason })
       });
       if (res.ok) {
-        showToast("Status updated successfully", "success");
+        addToast("Status updated successfully", "success");
         fetchSpaceAndMembers();
       } else {
-        showToast("Failed to update status", "error");
+        addToast("Failed to update status", "error");
       }
     } catch (err) {
       console.error(err);
-      showToast("An error occurred", "error");
+      addToast("An error occurred", "error");
+    } finally {
+      setReasonModalState(null);
     }
   };
 
@@ -132,14 +149,14 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
         headers: { "x-admin-id": adminId }
       });
       if (res.ok) {
-        showToast("Invitation revoked", "success");
+        addToast("Invitation revoked", "success");
         fetchSpaceAndMembers();
       } else {
-        showToast("Failed to revoke invitation", "error");
+        addToast("Failed to revoke invitation", "error");
       }
     } catch (err) {
       console.error(err);
-      showToast("An error occurred", "error");
+      addToast("An error occurred", "error");
     } finally {
       setRevokeUserId(null);
     }
@@ -169,9 +186,9 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
       
       const failures = results.filter(r => r.status === 'rejected');
       if (failures.length > 0) {
-        showToast(`Failed to invite ${failures.length} user(s).`, "error");
+        addToast(`Failed to invite ${failures.length} user(s).`, "error");
       } else {
-        showToast(`Successfully invited ${selectedUsers.length} user(s)!`, "success");
+        addToast(`Successfully invited ${selectedUsers.length} user(s)!`, "success");
       }
       
       setSelectedUsers([]);
@@ -179,7 +196,7 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
       fetchSpaceAndMembers();
     } catch (err) {
       console.error(err);
-      showToast("An error occurred during invite", "error");
+      addToast("An error occurred during invite", "error");
     } finally {
       setInviting(false);
     }
@@ -193,26 +210,21 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="p-8 max-w-6xl mx-auto relative">
-      {/* Toast Notification */}
-      {toast.type && (
-        <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl animate-in slide-in-from-top-5 fade-in duration-300 text-white font-medium border ${
-          toast.type === 'success' ? 'bg-green-500/20 border-green-500/50' : 'bg-red-500/20 border-red-500/50'
-        }`}>
-          {toast.type === 'success' ? <CheckCircle2 size={20} className="text-green-400" /> : <ShieldAlert size={20} className="text-red-400" />}
-          {toast.message}
-        </div>
-      )}
 
-      <ConfirmModal
-        isOpen={!!revokeUserId}
-        title="Revoke Invitation"
-        description="Are you sure you want to revoke this user's invitation? They will no longer be able to join the space unless re-invited."
-        confirmLabel="Revoke"
-        cancelLabel="Cancel"
-        destructive={true}
-        onConfirm={confirmRevoke}
-        onCancel={() => setRevokeUserId(null)}
-      />
+      <AlertDialog open={!!revokeUserId} onOpenChange={(open) => { if (!open) setRevokeUserId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke Invitation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revoke this user's invitation? They will no longer be able to join the space unless re-invited.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRevoke} className="bg-red-500 hover:bg-red-600 text-white border-0">Revoke</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Link href="/spaces" className="inline-flex items-center gap-2 text-brand hover:text-brand/80 mb-6 font-medium transition-colors">
         <ArrowLeft size={16} /> Back to Spaces
@@ -347,18 +359,38 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                     </div>
                   </td>
                   <td className="p-4">
-                    <select 
-                      value={member.role}
-                      onChange={(e) => handleUpdateRole(member.userId, e.target.value)}
-                      className={`px-3 py-1 rounded-full text-xs font-bold border appearance-none cursor-pointer ${
-                        member.role === 'MODERATOR' 
-                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
-                          : 'bg-black/40 text-gray-300 border-brand-border'
-                      }`}
-                    >
-                      <option value="MEMBER">Member</option>
-                      <option value="MODERATOR">Moderator</option>
-                    </select>
+                    <div className="relative inline-block group w-32">
+                      <Select 
+                        value={member.role}
+                        onValueChange={(newRole) => {
+                          if (newRole === 'MODERATOR') {
+                            setEditingPermissions({ userId: member.userId, role: newRole, permissions: member.permissions || [] });
+                          } else {
+                            handleUpdateRole(member.userId, newRole);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className={`border-none rounded-full h-8 text-xs font-bold transition-colors ${
+                          member.role === 'MODERATOR' 
+                            ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' 
+                            : 'bg-black/40 text-gray-300 hover:bg-white/5'
+                        }`}>
+                          <SelectValue placeholder="Role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="MEMBER">Member</SelectItem>
+                          <SelectItem value="MODERATOR">Moderator</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {member.role === 'MODERATOR' && (
+                      <button 
+                        onClick={() => setEditingPermissions({ userId: member.userId, role: member.role, permissions: member.permissions || [] })}
+                        className="block mt-2 text-[10px] text-brand hover:text-white hover:underline transition-colors w-full text-center"
+                      >
+                        Edit Permissions
+                      </button>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
@@ -375,7 +407,7 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                   <td className="p-4 text-right">
                     {member.status !== 'SUSPENDED' && member.status !== 'INVITED' && member.status !== 'APPEALED' && (
                       <button 
-                        onClick={() => handleUpdateStatus(member.userId, 'SUSPENDED')}
+                        onClick={() => handleUpdateStatusClick(member.userId, 'SUSPENDED')}
                         className="p-1.5 text-gray-400 hover:text-red-400 bg-black/20 hover:bg-black/40 rounded transition-colors ml-2"
                         title="Suspend User"
                       >
@@ -393,13 +425,13 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                     {member.status === 'APPEALED' && (
                       <div className="flex justify-end gap-2">
                         <button 
-                          onClick={() => handleUpdateStatus(member.userId, 'ACTIVE')}
+                          onClick={() => handleUpdateStatusClick(member.userId, 'ACTIVE')}
                           className="bg-green-500/10 text-green-500 hover:bg-green-500/20 px-3 py-1 rounded text-xs font-medium transition-colors border border-green-500/20"
                         >
                           Approve
                         </button>
                         <button 
-                          onClick={() => handleUpdateStatus(member.userId, 'SUSPENDED')}
+                          onClick={() => handleUpdateStatusClick(member.userId, 'SUSPENDED')}
                           className="bg-red-500/10 text-red-500 hover:bg-red-500/20 px-3 py-1 rounded text-xs font-medium transition-colors border border-red-500/20"
                         >
                           Reject
@@ -420,6 +452,59 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
           </table>
         </div>
       </div>
+
+      {/* Permissions Modal */}
+      {editingPermissions && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-[#18181b] w-full max-w-sm rounded-3xl border border-white/10 p-6 shadow-2xl animate-in zoom-in-95 fade-in duration-200">
+            <h3 className="text-xl font-bold text-white mb-6 tracking-tight">Moderator Permissions</h3>
+            <div className="flex flex-col gap-3 mb-6">
+              {AVAILABLE_PERMISSIONS.map(perm => (
+                <label key={perm.id} className="flex items-center gap-2 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    checked={editingPermissions.permissions.includes(perm.id)}
+                    onChange={(e) => {
+                      const newPerms = e.target.checked 
+                        ? [...editingPermissions.permissions, perm.id]
+                        : editingPermissions.permissions.filter(p => p !== perm.id);
+                      setEditingPermissions({ ...editingPermissions, permissions: newPerms });
+                    }}
+                    className="w-5 h-5 rounded-md border-white/10 bg-white/5 text-brand focus:ring-brand focus:ring-offset-black transition-colors cursor-pointer"
+                  />
+                  <span className="text-[15px] font-medium text-gray-300 group-hover:text-white transition-colors ml-1">{perm.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button 
+                onClick={() => setEditingPermissions(null)}
+                className="px-6 py-2.5 rounded-full font-bold text-sm bg-white/5 text-gray-300 hover:bg-white/10 transition-all transform hover:scale-[1.02] active:scale-95"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => handleUpdateRole(editingPermissions.userId, editingPermissions.role, editingPermissions.permissions)}
+                className="px-6 py-2.5 rounded-full font-bold text-sm bg-brand text-black hover:bg-brand/90 transition-all transform hover:scale-[1.02] active:scale-95"
+              >
+                Save Permissions
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ReasonModal 
+        isOpen={!!reasonModalState?.isOpen}
+        title="Reason for Suspension/Rejection"
+        placeholder="Provide a reason..."
+        onConfirm={(reason) => {
+          if (reasonModalState) {
+            executeStatusUpdate(reasonModalState.userId, reasonModalState.newStatus, reason);
+          }
+        }}
+        onCancel={() => setReasonModalState(null)}
+      />
     </div>
   );
 }

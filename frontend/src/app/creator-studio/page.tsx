@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
+import { useToastStore } from "@/store/useToastStore";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from "framer-motion";
 
@@ -12,6 +13,7 @@ type PeriodType = "today" | "yesterday" | "7days" | "month" | "all";
 export default function CreatorStudioPage() {
   const router = useRouter();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const addToast = useToastStore((state) => state.addToast);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [data, setData] = useState<any>(null);
@@ -165,7 +167,7 @@ export default function CreatorStudioPage() {
                 
                 <button 
                   disabled={balance < threshold}
-                  onClick={() => alert("Withdrawals coming soon!")}
+                  onClick={() => addToast("Withdrawals coming soon!", "success")}
                   className={`text-sm font-medium py-2.5 px-6 rounded-full transition-colors flex items-center gap-2 ${
                     balance >= threshold 
                       ? "bg-white/10 hover:bg-white/20 text-white cursor-pointer border border-white/10" 
@@ -400,7 +402,7 @@ export default function CreatorStudioPage() {
              <div className="bg-card border border-border rounded-2xl p-6">
                <h2 className="text-xl font-bold mb-6">Payment Configuration</h2>
                
-               <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); alert("Settings saved!"); }}>
+               <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); addToast("Settings saved!", "success"); }}>
                  <div>
                    <label className="block text-sm font-medium mb-2">Preferred Payout Method</label>
                    <div className="relative">
