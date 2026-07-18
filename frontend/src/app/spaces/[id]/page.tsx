@@ -474,6 +474,7 @@ createdAt={post.createdAt}
                     avatarUrl: post.author.avatarUrl
                   }}
                   content={post.content}
+                  earned={post.earned || 0}
                   stats={{ likes: 0, reselas: 0, replies: 0, views: 0 }}
                   approvalStatus={post.approvalStatus}
                   authorRole={postAuthorRole}
