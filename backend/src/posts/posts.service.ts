@@ -110,7 +110,7 @@ export class PostsService {
     return posts.map(post => this.formatPost(post, currentUserId));
   }
 
-  async getOrbitFeed(currentUserId?: string, type?: string) {
+  async getOrbitFeed(currentUserId?: string, type?: string, videoId?: string) {
     let whereClause: any = { mediaType: 'VIDEO', parentId: null };
 
     if (type === 'following' && currentUserId) {
@@ -119,6 +119,29 @@ export class PostsService {
           some: { followerId: currentUserId }
         }
       };
+    }
+
+    let initialPost = null;
+    if (videoId) {
+      const vId = parseInt(videoId, 10);
+      if (!isNaN(vId)) {
+        // Exclude the requested video from the main query
+        whereClause.id = { not: vId };
+        
+        // Fetch the specific post
+        initialPost = await this.prisma.post.findUnique({
+          where: { id: vId },
+          include: {
+            author: {
+              select: this.getAuthorSelect(currentUserId)
+            },
+            _count: {
+              select: { replies: true, engagements: true }
+            },
+            engagements: true,
+          },
+        });
+      }
     }
 
     const posts = await this.prisma.post.findMany({
@@ -136,7 +159,8 @@ export class PostsService {
       take: 20,
     });
 
-    return posts.map(post => this.formatPost(post, currentUserId));
+    const finalPosts = initialPost && initialPost.mediaType === 'VIDEO' ? [initialPost, ...posts] : posts;
+    return finalPosts.map(post => this.formatPost(post, currentUserId));
   }
 
   async getPostsByUsername(username: string, currentUserId?: string) {

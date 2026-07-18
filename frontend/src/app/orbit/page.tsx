@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import { useToastStore } from "@/store/useToastStore";
 
-export default function OrbitFeed() {
+function OrbitContent() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [feedType, setFeedType] = useState<'for_you' | 'following'>('for_you');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const videoId = searchParams.get('videoId');
 
   useEffect(() => {
     const fetchOrbitPosts = async () => {
@@ -21,7 +23,12 @@ export default function OrbitFeed() {
         const headers: any = {};
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/orbit?type=${feedType}`, { headers });
+        let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/orbit?type=${feedType}`;
+        if (videoId) {
+          url += `&videoId=${videoId}`;
+        }
+
+        const res = await fetch(url, { headers });
         if (res.ok) {
           const data = await res.json();
           setPosts(data);
@@ -33,7 +40,7 @@ export default function OrbitFeed() {
       }
     };
     fetchOrbitPosts();
-  }, [feedType]);
+  }, [feedType, videoId]);
 
   return (
     <div className="w-full h-screen bg-background overflow-y-scroll snap-y snap-mandatory relative no-scrollbar" style={{ height: '100dvh' }}>
@@ -657,5 +664,17 @@ function OrbitPlayer({ post }: { post: any }) {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrbitFeed() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+      </div>
+    }>
+      <OrbitContent />
+    </Suspense>
   );
 }

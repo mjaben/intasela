@@ -26,7 +26,11 @@ export class PostsController {
   }
 
   @Get('orbit')
-  async getOrbitFeed(@Query('type') type?: string, @Headers('authorization') authHeader?: string) {
+  async getOrbitFeed(
+    @Query('type') type?: string, 
+    @Query('videoId') videoId?: string,
+    @Headers('authorization') authHeader?: string
+  ) {
     let currentUserId: string | undefined;
     if (authHeader) {
       try {
@@ -35,7 +39,7 @@ export class PostsController {
         currentUserId = decoded.sub;
       } catch (e) {}
     }
-    return this.postsService.getOrbitFeed(currentUserId, type);
+    return this.postsService.getOrbitFeed(currentUserId, type, videoId);
   }
 
   @UseGuards(JwtAuthGuard)

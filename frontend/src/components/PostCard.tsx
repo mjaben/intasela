@@ -119,9 +119,13 @@ export default function PostCard({
 
   const handleMediaClick = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
-    openViewer({
-      id, content, author, earned, stats, userInteractions, quotedPost, mediaType, mediaUrl, mediaUrls, thumbnailUrl, space
-    }, index);
+    if (mediaType === 'VIDEO') {
+      router.push(`/orbit?videoId=${id}`);
+    } else {
+      openViewer({
+        id, content, author, earned, stats, userInteractions, quotedPost, mediaType, mediaUrl, mediaUrls, thumbnailUrl, space
+      }, index);
+    }
   };
   
   const [showReselaMenu, setShowReselaMenu] = useState(false);
@@ -665,12 +669,12 @@ export default function PostCard({
             
             {/* Media Content */}
             {!hideMedia && (mediaUrl || (mediaUrls && mediaUrls.length > 0)) && mediaType === 'VIDEO' && (
-              <div className="mt-3 inline-block rounded-xl overflow-hidden border border-border max-w-[90%] sm:max-w-[80%]" onClick={(e) => handleMediaClick(e, 0)}>
+              <div className="mt-3 w-full rounded-xl overflow-hidden border border-border max-w-[95%] sm:max-w-[90%] bg-black/10" onClick={(e) => handleMediaClick(e, 0)}>
                 <video 
                   src={mediaUrl || mediaUrls?.[0]} 
                   poster={thumbnailUrl} 
                   controls 
-                  className="w-full max-h-[200px] sm:max-h-[280px] object-contain"
+                  className="w-full max-h-[260px] sm:max-h-[360px] object-contain"
                   preload="metadata"
                 />
               </div>
@@ -684,7 +688,7 @@ export default function PostCard({
                     onClick={(e) => e.stopPropagation()}
                   >
                     {mediaUrls.map((url, index) => (
-                      <div key={index} className="shrink-0 w-[75%] sm:w-[65%] snap-center rounded-xl overflow-hidden border border-border cursor-pointer" onClick={(e) => handleMediaClick(e, index)}>
+                      <div key={index} className="shrink-0 w-[49.5%] snap-center rounded-xl overflow-hidden border border-border cursor-pointer" onClick={(e) => handleMediaClick(e, index)}>
                         <img src={url} alt={`Sela media ${index}`} className="w-full h-[180px] sm:h-[240px] object-cover" />
                       </div>
                     ))}
