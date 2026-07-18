@@ -70,7 +70,7 @@ export default function SidebarNav() {
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push('/');
   };
 
   const navItems = [
@@ -128,7 +128,7 @@ export default function SidebarNav() {
   return (
     <aside className={`hidden sm:flex h-screen sticky top-0 flex-col pt-4 pb-6 transition-all duration-300 flex-shrink-0 border-r border-border/10 ${isCollapsed ? 'w-[80px] px-2' : 'w-[250px] pr-6'}`}>
       {/* Brand Logo & Toggle */}
-      <div className={`mb-8 flex items-center ${isCollapsed ? 'flex-col gap-4 mt-2' : 'justify-between px-4'}`}>
+      <div className={`flex items-center mb-4 ${isCollapsed ? 'flex-col gap-4 mt-2' : 'justify-between px-4 mt-2'}`}>
         <Link href="/" className="flex items-center gap-1" title={isCollapsed ? "Intasela" : undefined}>
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-bold text-primary-foreground flex-shrink-0">
             In
@@ -149,7 +149,7 @@ export default function SidebarNav() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1">
+      <nav className={`shrink min-h-0 overflow-y-auto no-scrollbar flex flex-col ${isCollapsed ? 'space-y-4' : 'space-y-1'}`}>
         {navItems
           .filter(item => isAuthenticated || item.name === "Home" || item.name === "Orbit" || item.name === "Spaces")
           .map((item) => (
@@ -218,19 +218,19 @@ export default function SidebarNav() {
       </nav>
 
       {/* Actions */}
-      <div className={`mt-auto flex flex-col gap-3 ${isCollapsed ? 'items-center' : ''}`}>
+      <div className={`flex flex-col mt-4 mb-4 ${isCollapsed ? 'gap-4 items-center' : 'gap-3 px-4'}`}>
         <button
           onClick={() => {
             if (!isAuthenticated) return router.push("/login");
             openComposer('CREATE');
           }}
-          title={isCollapsed ? "Create Post" : undefined}
+          title={isCollapsed ? "Create Sela" : undefined}
           className={`bg-[#3BC492]/5 backdrop-blur-md border border-[#3BC492]/10 text-[#3BC492] py-2.5 rounded-full font-bold shadow-lg hover:bg-[#3BC492]/20 transition-all transform hover:scale-[1.02] ${isCollapsed ? 'w-10 h-10 flex flex-col justify-center items-center px-0' : 'w-full text-[13px]'}`}
         >
           {isCollapsed ? (
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           ) : (
-            "Create Post"
+            "Create Sela"
           )}
         </button>
 

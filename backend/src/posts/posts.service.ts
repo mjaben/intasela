@@ -58,6 +58,13 @@ export class PostsService {
       }
     }
 
+    const approvalFilter = currentUserId 
+      ? { OR: [{ approvalStatus: 'APPROVED' }, { authorId: currentUserId }] }
+      : { approvalStatus: 'APPROVED' };
+
+    whereClause.AND = whereClause.AND ? [...whereClause.AND, approvalFilter] : [approvalFilter];
+
+
     if (type === 'following' && currentUserId) {
       whereClause = {
         ...whereClause,
@@ -391,6 +398,23 @@ export class PostsService {
       }
     }
 
+    let initialApprovalStatus = 'APPROVED';
+
+    if (spaceId) {
+      const space = await this.prisma.space.findUnique({ where: { id: spaceId } });
+      const member = await this.prisma.spaceMember.findUnique({
+        where: { spaceId_userId: { spaceId, userId } }
+      });
+      
+      if (space && member && member.role !== 'MODERATOR' && member.role !== 'ADMIN') {
+        if (space.postApprovalMode === 'ALL_POSTS') {
+          initialApprovalStatus = 'PENDING';
+        } else if (space.postApprovalMode === 'FIRST_POST_ONLY' && !member.hasApprovedPost) {
+          initialApprovalStatus = 'PENDING';
+        }
+      }
+    }
+
     const post = await this.prisma.post.create({
       data: {
         content,
@@ -399,6 +423,7 @@ export class PostsService {
         conversationId: parentId || null,
         quotedPostId: quotedPostId || null,
         spaceId: spaceId || null,
+        approvalStatus: initialApprovalStatus,
         ...(mediaOptions || {})
       },
       include: {
@@ -429,16 +454,107 @@ export class PostsService {
       });
     }
 
-    // Process Monetization Rewards
-    if (!post.parentId && !post.quotedPostId) {
-      // Top-level original post (Sela)
-      await this.monetizationService.processSelaReward(post);
-    } else if (post.parentId && post.parent) {
-      // Reply to a post
-      await this.monetizationService.processReplyReward(post, post.parent);
+    // Process Monetization Rewards (only if not pending)
+    if (initialApprovalStatus === 'APPROVED') {
+      if (!post.parentId && !post.quotedPostId) {
+        // Top-level original post (Sela)
+        await this.monetizationService.processSelaReward(post);
+      } else if (post.parentId && post.parent) {
+        // Reply to a post
+        await this.monetizationService.processReplyReward(post, post.parent);
+      }
     }
 
     return post;
+  }
+
+  async approvePost(postId: number, currentUserId: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { parent: true, quotedPost: true, space: true }
+    });
+
+    if (!post) throw new Error("Post not found");
+    if (!post.spaceId) throw new Error("This post is not in a space");
+    if (post.approvalStatus === 'APPROVED') throw new Error("Post is already approved");
+
+    // Check if currentUserId is a moderator or admin of the space
+    const member = await this.prisma.spaceMember.findUnique({
+      where: { spaceId_userId: { spaceId: post.spaceId, userId: currentUserId } }
+    });
+
+    let isAdmin = false;
+    const sysAdmin = await this.prisma.systemAdmin.findUnique({ where: { id: currentUserId } });
+    if (sysAdmin) isAdmin = true;
+
+    if (!isAdmin && (!member || (member.role !== 'MODERATOR' && member.role !== 'ADMIN'))) {
+      throw new Error("Not authorized to approve posts in this space");
+    }
+
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: { approvalStatus: 'APPROVED' }
+    });
+
+    if (post.space && post.space.postApprovalMode === 'FIRST_POST_ONLY') {
+      await this.prisma.spaceMember.updateMany({
+        where: { spaceId: post.spaceId, userId: post.authorId },
+        data: { hasApprovedPost: true }
+      });
+    }
+
+    try {
+      // Trigger deferred monetization
+      if (!post.parentId && !post.quotedPostId) {
+        await this.monetizationService.processSelaReward(post);
+      } else if (post.parentId && post.parent) {
+        await this.monetizationService.processReplyReward(post, post.parent);
+      }
+
+      // Optional: send notification to author
+      await this.prisma.notification.create({
+        data: {
+          recipientId: post.authorId,
+          actorId: currentUserId,
+          type: 'SYSTEM', // or custom type
+          postId: post.id,
+        }
+      });
+    } catch (e) {
+      console.error("Non-critical error during post approval side-effects:", e);
+    }
+
+    return { message: "Post approved successfully" };
+  }
+
+  async rejectPost(postId: number, currentUserId: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!post) throw new Error("Post not found");
+    if (!post.spaceId) throw new Error("This post is not in a space");
+    if (post.approvalStatus === 'APPROVED') throw new Error("Cannot reject an already approved post");
+
+    // Check authorization
+    const member = await this.prisma.spaceMember.findUnique({
+      where: { spaceId_userId: { spaceId: post.spaceId, userId: currentUserId } }
+    });
+
+    let isAdmin = false;
+    const sysAdmin = await this.prisma.systemAdmin.findUnique({ where: { id: currentUserId } });
+    if (sysAdmin) isAdmin = true;
+
+    if (!isAdmin && (!member || (member.role !== 'MODERATOR' && member.role !== 'ADMIN'))) {
+      throw new Error("Not authorized to reject posts in this space");
+    }
+
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: { approvalStatus: 'REJECTED' }
+    });
+
+    return { message: "Post rejected successfully" };
   }
 
   async toggleEngagement(userId: string, postId: number, type: string) {

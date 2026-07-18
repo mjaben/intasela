@@ -83,7 +83,7 @@ export default function MonetizationSettingsPage() {
             <h2 className="text-lg font-semibold text-white mb-6">Interaction Rates</h2>
             <div className="space-y-6">
               <div className="flex flex-col gap-2">
-                <label htmlFor="sela" className="text-sm font-medium text-gray-300">Sela Rate (NGN per post)</label>
+                <label htmlFor="sela" className="text-sm font-medium text-gray-300">Sela Rate (NGN per sela)</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-gray-500 font-medium">₦</span></div>
                   <input type="number" id="sela" min="0" step="0.01" value={rates.sela} onChange={(e) => handleRateChange("sela", e.target.value)} className="w-full bg-brand-bg border border-brand-border/50 text-white rounded-lg pl-8 pr-4 py-2.5 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors" />
@@ -153,13 +153,13 @@ export default function MonetizationSettingsPage() {
             <div className="flex flex-col gap-2">
               <label htmlFor="minCharacterCount" className="text-sm font-medium text-gray-300">Min. Character Count (excl. emojis)</label>
               <input type="number" id="minCharacterCount" min="0" value={rules.minCharacterCount} onChange={(e) => handleRuleChange("minCharacterCount", parseInt(e.target.value) || 0)} className="w-full bg-brand-bg border border-brand-border/50 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors" />
-              <p className="text-xs text-gray-500">Prevents low-effort posts (e.g. "lol") from being rewarded.</p>
+              <p className="text-xs text-gray-500">Prevents low-effort selas (e.g. "lol") from being rewarded.</p>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-brand-bg rounded-lg border border-brand-border/30">
               <div className="flex flex-col gap-1 pr-4">
                 <span className="text-sm font-medium text-gray-300">Prevent Duplicate Content</span>
-                <span className="text-xs text-gray-500">Disqualify content if it perfectly matches a previous post/reply from the same user.</span>
+                <span className="text-xs text-gray-500">Disqualify content if it perfectly matches a previous sela/reply from the same user.</span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
                 <input type="checkbox" className="sr-only peer" checked={rules.preventDuplicates} onChange={(e) => handleRuleChange("preventDuplicates", e.target.checked)} />
@@ -176,7 +176,7 @@ export default function MonetizationSettingsPage() {
             <div className="flex items-center justify-between p-4 bg-brand-bg rounded-lg border border-brand-border/30 md:col-span-2">
               <div className="flex flex-col gap-1 pr-4">
                 <span className="text-sm font-medium text-gray-300">Prevent Self-Reward (Critical)</span>
-                <span className="text-xs text-gray-500">Blocks users from earning by replying to themselves, reselaing their own posts, or viewing their own content.</span>
+                <span className="text-xs text-gray-500">Blocks users from earning by replying to themselves, reselaing their own selas, or viewing their own content.</span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
                 <input type="checkbox" className="sr-only peer" checked={rules.preventSelfReward} onChange={(e) => handleRuleChange("preventSelfReward", e.target.checked)} />

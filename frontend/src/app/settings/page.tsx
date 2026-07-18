@@ -502,7 +502,7 @@ export default function SettingsPage() {
                 { id: 'likes', label: 'Likes', desc: 'Notify me when someone likes my notes or comments.', hasEmail: true, hasPush: true },
                 { id: 'replies', label: 'Replies', desc: 'Notify me when someone replies to my notes and comments.', hasEmail: true, hasPush: true },
                 { id: 'reselas', label: 'Reselas', desc: 'Notify me when someone reselas my post, note or comment.', hasEmail: true, hasPush: true },
-                { id: 'mentions', label: 'Mentions', desc: 'Notify me when someone mentions me in a post, note or comment.', hasEmail: true, hasPush: true }
+                { id: 'mentions', label: 'Mentions', desc: 'Notify me when someone mentions me in a sela, note or comment.', hasEmail: true, hasPush: true }
               ].map(item => (
                 <div key={item.id} className="flex items-start justify-between mb-6 group">
                   <div className="pr-8">
@@ -869,8 +869,8 @@ export default function SettingsPage() {
         <div className="border border-border rounded-2xl overflow-hidden bg-card">
           <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="font-semibold text-[15px]">Delete all posts</div>
-              <div className="text-muted-foreground text-[14px] mt-1">Permanently delete all your posts, reselas, and reselas with notes.</div>
+              <div className="font-semibold text-[15px]">Delete all selas</div>
+              <div className="text-muted-foreground text-[14px] mt-1">Permanently delete all your selas, reselas, and reselas with notes.</div>
             </div>
             <button 
               className="shrink-0 bg-[#ED5F62] hover:bg-[#ED5F62]/90 text-white font-semibold py-2 px-5 rounded-lg transition-colors text-sm disabled:opacity-50"

@@ -85,7 +85,7 @@ export default function MediaViewerModal() {
       {/* Right Area - Post Context (hidden on mobile by default) */}
       <div className="w-full md:w-[350px] lg:w-[400px] h-full bg-background border-l border-border hidden md:flex flex-col overflow-y-auto">
         <div className="p-4 border-b border-border sticky top-0 bg-background/90 backdrop-blur z-10">
-          <h2 className="font-bold text-lg">Post</h2>
+          <h2 className="font-bold text-lg">Sela</h2>
         </div>
         <div className="p-0">
           <PostCard 
@@ -108,6 +108,7 @@ export default function MediaViewerModal() {
             thumbnailUrl={post.thumbnailUrl}
             space={post.space}
             hideMedia={true}
+            createdAt={post.createdAt}
           />
         </div>
       </div>

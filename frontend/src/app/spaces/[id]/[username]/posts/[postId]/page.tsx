@@ -7,11 +7,11 @@ import CreatePost from "@/components/CreatePost";
 import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
 
-export default function PostDetail() {
+export default function SpacePostDetail() {
   const params = useParams();
   const router = useRouter();
-  const postId = params.id as string;
-  // params.username is also available if needed
+  const spaceId = params.id as string;
+  const postId = params.postId as string;
   
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
@@ -30,7 +30,7 @@ export default function PostDetail() {
       }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${postId}`, { headers });
-      if (!res.ok) throw new Error("Failed to fetch post");
+      if (!res.ok) throw new Error("Failed to fetch sela");
       const data = await res.json();
       setPost(data);
     } catch (err: any) {
@@ -57,23 +57,23 @@ export default function PostDetail() {
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center gap-6 p-4 bg-background/80 backdrop-blur-md border-b border-border">
         <button 
-          onClick={() => router.back()} 
+          onClick={() => router.push(`/spaces/${spaceId}`)} 
           className="p-2 -ml-2 rounded-full hover:bg-accent transition-colors"
-          title="Back"
+          title="Back to Space"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
         </button>
-        <h1 className="text-xl font-bold">Sela</h1>
+        <h1 className="text-xl font-bold">Space Sela</h1>
       </div>
 
       {/* Main Post */}
       <div>
         <PostCard 
           id={post.id}
-createdAt={post.createdAt}
+          createdAt={post.createdAt}
           author={{
             name: post.author.firstName || post.author.username,
             username: post.author.username,
@@ -90,7 +90,8 @@ createdAt={post.createdAt}
           mediaUrl={post.mediaUrl}
           mediaUrls={post.mediaUrls}
           thumbnailUrl={post.thumbnailUrl}
-          onDelete={() => router.push("/")}
+          space={post.space}
+          onDelete={() => router.push(`/spaces/${spaceId}`)}
           parentPost={post.parent}
           isReplyContext={!!post.parent}
         />
@@ -129,6 +130,7 @@ createdAt={post.createdAt}
             <PostCard 
               key={reply.id}
               id={reply.id}
+              createdAt={reply.createdAt}
               author={{
                 name: reply.author.firstName || reply.author.username,
                 username: reply.author.username,
@@ -145,6 +147,7 @@ createdAt={post.createdAt}
               mediaUrl={reply.mediaUrl}
               mediaUrls={reply.mediaUrls}
               thumbnailUrl={reply.thumbnailUrl}
+              space={reply.space}
               onDelete={() => fetchPost()}
             />
           ))}

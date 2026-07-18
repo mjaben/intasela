@@ -370,7 +370,7 @@ export default function CreatorStudioPage() {
                       <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-4 text-brand">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                       </div>
-                      <h3 className="text-muted-foreground font-medium mb-1">Total Posts</h3>
+                      <h3 className="text-muted-foreground font-medium mb-1">Total Selas</h3>
                       <p className="text-3xl font-bold mb-4">{data.metrics.totalPosts.toLocaleString()}</p>
                       
                       <div className="space-y-2 text-sm">

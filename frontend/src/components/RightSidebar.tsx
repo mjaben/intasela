@@ -109,10 +109,10 @@ export default function RightSidebar() {
         <h3 className="font-bold mb-4 text-[15px] tracking-tight">Trending Topics</h3>
         <div className="space-y-4">
           {[
-            { topic: "#CreatorEconomy", posts: "12.5K posts" },
-            { topic: "Web3 Monetization", posts: "8,432 posts" },
-            { topic: "#TechTwitter", posts: "5,210 posts" },
-            { topic: "NextJS 15", posts: "3,100 posts" },
+            { topic: "#CreatorEconomy", posts: "12.5K selas" },
+            { topic: "Web3 Monetization", posts: "8,432 selas" },
+            { topic: "#TechTwitter", posts: "5,210 selas" },
+            { topic: "NextJS 15", posts: "3,100 selas" },
           ].map((item, i) => (
             <div key={i} className="cursor-pointer hover:bg-accent/50 -mx-2 px-2 py-1 rounded-lg transition-colors">
               <div className="font-bold text-[14px]">{item.topic}</div>

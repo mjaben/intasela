@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 export class SpacesService {
   constructor(private prisma: PrismaService) {}
 
-  async createSpace(adminId: string, data: { name: string; description?: string; coverUrl?: string; type?: string }) {
+  async createSpace(adminId: string, data: { name: string; description?: string; coverUrl?: string; type?: string; postApprovalMode?: string }) {
     if (adminId !== 'admin') {
       const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
       if (!admin) throw new ForbiddenException('Only System Admin can create spaces');
@@ -18,6 +18,7 @@ export class SpacesService {
         description: data.description,
         coverUrl: data.coverUrl,
         type: data.type || 'PUBLIC',
+        postApprovalMode: data.postApprovalMode || 'NONE',
       },
     });
   }
@@ -74,10 +75,10 @@ export class SpacesService {
     const space = await this.prisma.space.findUnique({
       where: { id },
       include: {
-        members: {
+        members: userId ? {
           where: { userId },
           take: 1
-        },
+        } : false,
         _count: { select: { members: { where: { status: 'ACTIVE' } } } }
       }
     });
@@ -89,6 +90,34 @@ export class SpacesService {
     }
 
     return space;
+  }
+
+  async getPendingPosts(spaceId: string, currentUserId: string) {
+    let isAdmin = false;
+    const admin = await this.prisma.systemAdmin.findUnique({ where: { id: currentUserId } });
+    if (admin) isAdmin = true;
+
+    if (!isAdmin) {
+      const member = await this.prisma.spaceMember.findUnique({
+        where: { spaceId_userId: { spaceId, userId: currentUserId } }
+      });
+      if (!member || (member.role !== 'MODERATOR' && member.role !== 'ADMIN')) {
+        throw new ForbiddenException('Not authorized to view pending posts');
+      }
+    }
+
+    return this.prisma.post.findMany({
+      where: {
+        spaceId,
+        approvalStatus: 'PENDING'
+      },
+      include: {
+        author: {
+          select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 
   async requestToJoin(spaceId: string, userId: string) {
@@ -126,6 +155,20 @@ export class SpacesService {
     });
 
     if (!existingMember) throw new BadRequestException('Not a member');
+
+    // Prevent the last moderator from leaving the space
+    if (existingMember.role === 'MODERATOR' || existingMember.role === 'ADMIN') {
+      const activeMods = await this.prisma.spaceMember.count({
+        where: { 
+          spaceId, 
+          role: { in: ['MODERATOR', 'ADMIN'] },
+          status: 'ACTIVE'
+        }
+      });
+      if (activeMods <= 1) {
+        throw new BadRequestException('You are the last active moderator. Please assign another moderator before leaving the space.');
+      }
+    }
 
     return this.prisma.spaceMember.delete({
       where: { spaceId_userId: { spaceId, userId } }
@@ -280,9 +323,18 @@ export class SpacesService {
   }
 
   async updateMemberRole(adminId: string, spaceId: string, targetUserId: string, role: string, permissions?: string[]) {
-    if (adminId !== 'admin') {
+    let isAdmin = adminId === 'admin';
+    if (!isAdmin) {
       const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (!admin) throw new ForbiddenException('Only System Admin can assign roles');
+      if (admin) isAdmin = true;
+    }
+
+    if (!isAdmin) {
+      throw new ForbiddenException('Only System Admin can assign roles');
+    }
+
+    if (adminId === targetUserId && !isAdmin) {
+      throw new ForbiddenException('You cannot change your own role');
     }
 
     const membership = await this.prisma.spaceMember.findUnique({
@@ -295,6 +347,7 @@ export class SpacesService {
       where: { id: membership.id },
       data: { 
         role,
+        status: role === 'MODERATOR' ? 'ACTIVE' : undefined, // Ensure mods are active
         permissions: role === 'MODERATOR' ? (permissions || []) : Prisma.DbNull
       }
     });
@@ -337,6 +390,10 @@ export class SpacesService {
         if (!mod || mod.role !== 'MODERATOR' || mod.status !== 'ACTIVE') {
             throw new ForbiddenException('Only Admin or Moderator can update user status');
         }
+    }
+
+    if (adminOrModId === targetUserId && !isAdmin) {
+        throw new ForbiddenException('You cannot modify your own status');
     }
 
     const membership = await this.prisma.spaceMember.findUnique({
@@ -404,10 +461,20 @@ export class SpacesService {
     });
   }
 
-  async updateSpace(adminId: string, spaceId: string, data: { name?: string; description?: string; coverUrl?: string; type?: string }) {
-    if (adminId !== 'admin') {
+  async updateSpace(adminId: string, spaceId: string, data: { name?: string; description?: string; coverUrl?: string; type?: string; postApprovalMode?: string }) {
+    let isAdmin = adminId === 'admin';
+    if (!isAdmin) {
       const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (!admin) throw new ForbiddenException('Only System Admin can update spaces');
+      if (admin) isAdmin = true;
+    }
+
+    if (!isAdmin) {
+      const mod = await this.prisma.spaceMember.findUnique({
+        where: { spaceId_userId: { spaceId, userId: adminId } }
+      });
+      if (!mod || mod.role !== 'MODERATOR' || !mod.permissions || !(mod.permissions as string[]).includes('EDIT_SPACE')) {
+        throw new ForbiddenException('You do not have permission to edit this space');
+      }
     }
 
     const space = await this.prisma.space.findUnique({ where: { id: spaceId } });
@@ -420,6 +487,7 @@ export class SpacesService {
         description: data.description !== undefined ? data.description : undefined,
         coverUrl: data.coverUrl !== undefined ? data.coverUrl : undefined,
         type: data.type !== undefined ? data.type : undefined,
+        postApprovalMode: data.postApprovalMode !== undefined ? data.postApprovalMode : undefined,
       }
     });
   }

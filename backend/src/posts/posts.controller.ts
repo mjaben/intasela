@@ -136,6 +136,18 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post(':id/approve')
+  async approvePost(@Param('id') id: string, @Request() req: any) {
+    return this.postsService.approvePost(parseInt(id), req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/reject')
+  async rejectPost(@Param('id') id: string, @Request() req: any) {
+    return this.postsService.rejectPost(parseInt(id), req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deletePost(@Request() req: any, @Param('id') id: string) {
     return this.postsService.deletePost(parseInt(id), req.user.id);

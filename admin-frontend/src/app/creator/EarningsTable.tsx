@@ -81,7 +81,7 @@ export default function EarningsTable({
                           <p className="text-sm text-gray-300 line-clamp-1 group-hover:text-brand transition-colors">
                             {tx.post.content || <span className="italic text-gray-500">Media only</span>}
                           </p>
-                          <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Post ID: #{tx.post.id}</p>
+                          <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Sela ID: #{tx.post.id}</p>
                         </Link>
                       ) : (
                         <span className="text-sm text-gray-500 italic">Content unavailable or deleted</span>

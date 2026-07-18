@@ -125,12 +125,13 @@ export default function Home() {
             onRetry={fetchPosts} 
           />
         ) : filteredPosts.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No posts yet. Be the first to post!</div>
+          <div className="p-8 text-center text-gray-500">No selas yet. Be the first to sela!</div>
         ) : (
           filteredPosts.map((post, index) => (
             <div key={post.id}>
               <PostCard 
                 id={post.id}
+createdAt={post.createdAt}
                 author={{
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,

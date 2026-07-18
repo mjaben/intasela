@@ -27,7 +27,7 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
   const handleLogout = () => {
     logout();
     onClose();
-    router.push("/login");
+    router.push("/");
   };
 
   const navItems = [

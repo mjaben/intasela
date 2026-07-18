@@ -65,10 +65,19 @@ export class SpacesController {
   async updateSpace(
     @Param('id') id: string,
     @Body() body: any,
-    @Headers('x-admin-id') adminId: string
+    @Headers('x-admin-id') adminId?: string,
+    @Headers('authorization') authHeader?: string
   ) {
-    if (!adminId) throw new UnauthorizedException('Admin ID required');
-    return this.spacesService.updateSpace(adminId, id, body);
+    let currentUserId: string | undefined = adminId;
+    if (!currentUserId && authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = this.jwtService.verify(token);
+        currentUserId = decoded.sub;
+      } catch (e) {}
+    }
+    if (!currentUserId) throw new UnauthorizedException('Authentication required');
+    return this.spacesService.updateSpace(currentUserId, id, body);
   }
 
   @Delete(':id')
@@ -78,6 +87,12 @@ export class SpacesController {
   ) {
     if (!adminId) throw new UnauthorizedException('Admin ID required');
     return this.spacesService.deleteSpace(adminId, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/pending-posts')
+  async getPendingPosts(@Param('id') id: string, @Request() req: any) {
+    return this.spacesService.getPendingPosts(id, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)

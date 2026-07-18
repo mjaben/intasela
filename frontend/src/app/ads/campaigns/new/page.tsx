@@ -343,7 +343,7 @@ function CreateCampaignForm() {
                   className="w-full bg-background border border-border rounded-lg py-2.5 px-4 focus:outline-none focus:border-primary font-medium appearance-none"
                 >
                   <option value="AWARENESS">Brand Awareness</option>
-                  <option value="ENGAGEMENT">Post Engagement</option>
+                  <option value="ENGAGEMENT">Sela Engagement</option>
                   <option value="CONVERSION">Website Conversions</option>
                 </select>
               </div>
@@ -562,15 +562,15 @@ function CreateCampaignForm() {
               <h2 className="text-xl font-bold border-b border-border pb-4">3. Creative Assets</h2>
               
               <div className="bg-muted/10 border border-border rounded-xl p-4">
-                <label className="block text-[11px] text-muted-foreground font-semibold mb-2 uppercase tracking-wider">Select Post to Promote</label>
+                <label className="block text-[11px] text-muted-foreground font-semibold mb-2 uppercase tracking-wider">Select Sela to Promote</label>
                 {loadingPosts ? (
                   <div className="animate-pulse bg-muted h-32 rounded-lg w-full"></div>
                 ) : userPosts.length === 0 ? (
-                  <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg">You have no posts to promote. Please create a post first.</div>
+                  <div className="text-sm text-muted-foreground bg-muted p-4 rounded-lg">You have no selas to promote. Please create a sela first.</div>
                 ) : !isSelectingPost && selectedPost ? (
                   <div className="border border-border rounded-lg p-4 bg-muted/30">
                     <p className="text-sm line-clamp-2 text-foreground/90 font-medium mb-3">"{selectedPost.content}"</p>
-                    <button onClick={() => setIsSelectingPost(true)} className="text-sm font-bold text-primary hover:underline">Change Post</button>
+                    <button onClick={() => setIsSelectingPost(true)} className="text-sm font-bold text-primary hover:underline">Change Sela</button>
                   </div>
                 ) : (
                   <div className="grid gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
@@ -748,8 +748,8 @@ function CreateCampaignForm() {
                 <div className="w-12 h-12 bg-muted rounded-full mb-3 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
                 </div>
-                <div className="text-sm font-semibold">No Post Selected</div>
-                <div className="text-xs text-muted-foreground mt-1">Select a post in Step 3 to view preview</div>
+                <div className="text-sm font-semibold">No Sela Selected</div>
+                <div className="text-xs text-muted-foreground mt-1">Select a sela in Step 3 to view preview</div>
               </div>
             )}
           </div>

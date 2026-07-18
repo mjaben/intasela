@@ -14,10 +14,15 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const user = useUserStore((state) => state.user);
   const [inviteUsername, setInviteUsername] = useState("");
   const [editingPermissions, setEditingPermissions] = useState<{userId: string, role: string, permissions: string[]} | null>(null);
   const [reasonModalState, setReasonModalState] = useState<{isOpen: boolean, userId: string, newStatus: string} | null>(null);
   const addToast = useToastStore(state => state.addToast);
+  
+  const [isEditSpaceModalOpen, setIsEditSpaceModalOpen] = useState(false);
+  const [editSpaceData, setEditSpaceData] = useState({ name: "", description: "", type: "PUBLIC", coverUrl: "", postApprovalMode: "NONE" });
+  const [uploading, setUploading] = useState(false);
 
   const AVAILABLE_PERMISSIONS = [
     { id: "MANAGE_MEMBERS", label: "Manage Members" },
@@ -140,14 +145,88 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/uploads/image`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Image upload failed");
+
+      const data = await res.json();
+      setEditSpaceData(prev => ({ ...prev, coverUrl: data.url }));
+      addToast("Image uploaded successfully", "success");
+    } catch (err: any) {
+      console.error(err);
+      addToast(err.message || "Failed to upload image", "error");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleEditSpace = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces/${resolvedParams.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(editSpaceData)
+      });
+      if (res.ok) {
+        addToast("Space updated successfully", "success");
+        setIsEditSpaceModalOpen(false);
+        fetchSpaceAndMembers();
+      } else {
+        const err = await res.json();
+        addToast(err.message || "Failed to update space", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("An error occurred", "error");
+    }
+  };
+
   if (loading) return <div className="p-8 text-center">Loading members...</div>;
   if (!space) return <div className="p-8 text-center">Space not found</div>;
 
+  const currentMember = members.find(m => m.userId === user?.id);
+  const canEditSpace = currentMember && currentMember.role === 'MODERATOR' && currentMember.permissions && currentMember.permissions.includes('EDIT_SPACE');
+
   return (
     <div className="w-full max-w-[650px] mx-auto min-h-screen p-4">
-      <button onClick={() => router.push(`/spaces/${space.id}`)} className="mb-4 text-primary hover:underline">
-        &larr; Back to Space
-      </button>
+      <div className="flex justify-between items-center mb-4">
+        <button onClick={() => router.push(`/spaces/${space.id}`)} className="text-primary hover:underline">
+          &larr; Back to Space
+        </button>
+        {canEditSpace && (
+          <button 
+            onClick={() => {
+              setEditSpaceData({
+                name: space.name,
+                description: space.description || "",
+                type: space.type,
+                coverUrl: space.coverUrl || "",
+                postApprovalMode: space.postApprovalMode || "NONE"
+              });
+              setIsEditSpaceModalOpen(true);
+            }}
+            className="text-xs bg-primary/10 text-primary font-bold px-3 py-1.5 rounded-full hover:bg-primary/20 transition-colors"
+          >
+            Edit Space Info
+          </button>
+        )}
+      </div>
       
       <h1 className="text-2xl font-bold mb-6">Manage Members: {space.name}</h1>
 
@@ -192,6 +271,7 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                     <div className="relative group">
                       <Select 
                         value={member.role}
+                        disabled={member.userId === user?.id}
                         onValueChange={(newRole) => {
                           if (newRole === 'MODERATOR') {
                             setEditingPermissions({ userId: member.userId, role: newRole, permissions: member.permissions || [] });
@@ -204,7 +284,7 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                           member.role === 'MODERATOR' 
                             ? 'bg-primary/10 text-primary hover:bg-primary/20' 
                             : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-                        }`}>
+                        } ${member.userId === user?.id ? 'opacity-50 cursor-not-allowed' : ''}`}>
                           <SelectValue placeholder="Role" />
                         </SelectTrigger>
                         <SelectContent>
@@ -213,7 +293,7 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                         </SelectContent>
                       </Select>
                     </div>
-                    {member.role === 'MODERATOR' && (
+                    {member.role === 'MODERATOR' && member.userId !== user?.id && (
                       <button 
                         onClick={() => setEditingPermissions({ userId: member.userId, role: member.role, permissions: member.permissions || [] })}
                         className="text-[10px] text-primary hover:underline"
@@ -226,13 +306,14 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                     <div className="relative group">
                       <Select 
                         value={member.status}
+                        disabled={member.userId === user?.id}
                         onValueChange={(newStatus) => handleUpdateStatusClick(member.userId, newStatus)}
                       >
                         <SelectTrigger className={`border-none rounded-full h-8 text-xs font-bold transition-colors ${
                           member.status === 'SUSPENDED' ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' 
                           : member.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20' 
                           : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                        }`}>
+                        } ${member.userId === user?.id ? 'opacity-50 cursor-not-allowed' : ''}`}>
                           <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -302,6 +383,94 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
         }}
         onCancel={() => setReasonModalState(null)}
       />
+
+      {isEditSpaceModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-[#18181b] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold mb-4 text-foreground tracking-tight">Edit Space Info</h3>
+            <form onSubmit={handleEditSpace} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Name</label>
+                <input 
+                  type="text" 
+                  value={editSpaceData.name}
+                  onChange={(e) => setEditSpaceData({...editSpaceData, name: e.target.value})}
+                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-brand transition-colors"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Description</label>
+                <textarea 
+                  value={editSpaceData.description}
+                  onChange={(e) => setEditSpaceData({...editSpaceData, description: e.target.value})}
+                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-brand transition-colors h-24 resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Sela Approval Mode</label>
+                <Select 
+                  value={editSpaceData.postApprovalMode}
+                  onValueChange={(val) => setEditSpaceData({...editSpaceData, postApprovalMode: val})}
+                >
+                  <SelectTrigger className="w-full bg-black/40 border border-white/10 rounded-lg px-4 h-[42px] text-white focus:outline-none focus:border-brand transition-colors">
+                    <SelectValue placeholder="Select approval mode" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#18181b] border-white/10 text-white">
+                    <SelectItem value="NONE" className="focus:bg-white/10 cursor-pointer">Auto-Approve All</SelectItem>
+                    <SelectItem value="FIRST_POST_ONLY" className="focus:bg-white/10 cursor-pointer">Require Approval for First Sela</SelectItem>
+                    <SelectItem value="ALL_POSTS" className="focus:bg-white/10 cursor-pointer">Require Approval for All Selas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Cover Image</label>
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1 h-12 relative rounded-lg border border-white/10 bg-black/40 flex items-center justify-center overflow-hidden group">
+                    {editSpaceData.coverUrl ? (
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center" 
+                        style={{ backgroundImage: `url(${editSpaceData.coverUrl})` }}
+                      >
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none text-xs font-bold text-white">
+                          Change Image
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-400">No cover selected</span>
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                  </div>
+                  {uploading && <span className="text-brand text-xs font-bold animate-pulse">Uploading...</span>}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setIsEditSpaceModalOpen(false)}
+                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                  disabled={uploading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={uploading}
+                  className="px-6 py-2 bg-brand text-white font-bold rounded-full hover:bg-brand/90 transition-colors transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

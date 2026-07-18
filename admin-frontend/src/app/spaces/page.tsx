@@ -27,7 +27,7 @@ export default function SpacesPage() {
   const [deleteSpaceId, setDeleteSpaceId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   
-  const [formData, setFormData] = useState({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "" });
+  const [formData, setFormData] = useState({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "", postApprovalMode: "NONE" });
   
   const addToast = useToastStore((state) => state.addToast);
 
@@ -63,10 +63,10 @@ export default function SpacesPage() {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
-        setIsCreateModalOpen(false);
-        setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "" });
-        addToast("Space created successfully", "success");
         fetchSpaces();
+        setIsCreateModalOpen(false);
+        setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "", postApprovalMode: "NONE" });
+        addToast("Space created successfully", "success");
       } else {
         const err = await res.json();
         addToast(err.message || "Failed to create space", "error");
@@ -87,10 +87,10 @@ export default function SpacesPage() {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
-        setIsEditModalOpen(false);
-        setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "" });
-        addToast("Space updated successfully", "success");
         fetchSpaces();
+        setIsEditModalOpen(false);
+        setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "", postApprovalMode: "NONE" });
+        addToast("Space updated successfully", "success");
       } else {
         const err = await res.json();
         addToast(err.message || "Failed to update space", "error");
@@ -130,7 +130,8 @@ export default function SpacesPage() {
       name: space.name,
       description: space.description || "",
       type: space.type,
-      coverUrl: space.coverUrl || ""
+      coverUrl: space.coverUrl || "",
+      postApprovalMode: space.postApprovalMode || "NONE"
     });
     setIsEditModalOpen(true);
   };
@@ -194,7 +195,7 @@ export default function SpacesPage() {
         </div>
         <button 
           onClick={() => {
-            setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "" });
+            setFormData({ id: "", name: "", description: "", type: "PUBLIC", coverUrl: "", postApprovalMode: "NONE" });
             setIsCreateModalOpen(true);
           }}
           className="flex items-center gap-2 px-4 py-2 bg-brand text-white font-bold rounded-lg hover:bg-brand/90 transition-colors"
@@ -211,6 +212,7 @@ export default function SpacesPage() {
               <tr className="border-b border-brand-border bg-black/20">
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Name</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Type</th>
+                <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Approval Mode</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Members</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Created</th>
                 <th className="p-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
@@ -241,6 +243,11 @@ export default function SpacesPage() {
                       space.type === 'PUBLIC' ? 'bg-green-500/10 text-green-500' : 'bg-orange-500/10 text-orange-500'
                     }`}>
                       {space.type}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <span className="text-xs font-medium text-gray-400 bg-white/5 px-2.5 py-1 rounded-full">
+                      {space.postApprovalMode === 'NONE' ? 'Auto-Approve' : space.postApprovalMode === 'FIRST_POST_ONLY' ? 'First Post' : 'All Posts'}
                     </span>
                   </td>
                   <td className="p-4">
@@ -281,7 +288,7 @@ export default function SpacesPage() {
               ))}
               {spaces.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">
+                  <td colSpan={6} className="p-8 text-center text-gray-500">
                     No spaces created yet.
                   </td>
                 </tr>
@@ -330,6 +337,22 @@ export default function SpacesPage() {
                   <SelectContent className="bg-black/60 backdrop-blur-xl border-white/10 text-white shadow-xl">
                     <SelectItem value="PUBLIC" className="focus:bg-brand/20 focus:text-brand cursor-pointer">Public</SelectItem>
                     <SelectItem value="PRIVATE" className="focus:bg-brand/20 focus:text-brand cursor-pointer">Private</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Sela Approval Mode</label>
+                <Select 
+                  value={formData.postApprovalMode}
+                  onValueChange={(val) => setFormData({...formData, postApprovalMode: val})}
+                >
+                  <SelectTrigger className="w-full bg-black/40 border border-brand-border rounded-lg px-4 h-[42px] text-white focus:ring-1 focus:ring-brand focus:ring-offset-0 focus:outline-none transition-colors">
+                    <SelectValue placeholder="Select approval mode" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/60 backdrop-blur-xl border-white/10 text-white shadow-xl">
+                    <SelectItem value="NONE" className="focus:bg-brand/20 focus:text-brand cursor-pointer">Auto-Approve All</SelectItem>
+                    <SelectItem value="FIRST_POST_ONLY" className="focus:bg-brand/20 focus:text-brand cursor-pointer">Require Approval for First Sela</SelectItem>
+                    <SelectItem value="ALL_POSTS" className="focus:bg-brand/20 focus:text-brand cursor-pointer">Require Approval for All Selas</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

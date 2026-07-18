@@ -98,6 +98,7 @@ model Post {
   // Monetization Flags
   isEligible     Boolean      @default(true)
   isFlagged      Boolean      @default(false)
+  approvalStatus String       @default("APPROVED") // "APPROVED", "PENDING", "REJECTED"
   
   // Reply System (Tree structure)
   parentId       Int?
@@ -172,6 +173,7 @@ model Space {
   description String?  @db.Text
   coverUrl    String?
   type        String   @default("PUBLIC") // "PUBLIC" or "PRIVATE"
+  postApprovalMode String @default("NONE") // "NONE", "ALL_POSTS", "FIRST_POST_ONLY"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -187,6 +189,7 @@ model SpaceMember {
   role          String   @default("MEMBER") // "MEMBER", "MODERATOR", "ADMIN"
   permissions   Json?    // Array of permission strings e.g. ["MANAGE_MEMBERS", "MANAGE_POSTS", "EDIT_SPACE"]
   status        String   @default("ACTIVE") // "ACTIVE", "PENDING", "SUSPENDED", "APPEALED"
+  hasApprovedPost Boolean @default(false)
   suspendReason String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

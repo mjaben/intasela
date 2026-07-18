@@ -43,7 +43,7 @@ export default function NotificationItem({ notification }: { notification: any }
 
   const getActorName = () => {
     if ((notification.type === 'SPACE_INVITE' || notification.type === 'SPACE_ROLE_UPDATE') && notification.actorId === notification.recipientId) {
-      return "Intasela Admin";
+      return "Intasela";
     }
     return notification.actor.firstName || notification.actor.username;
   };
@@ -65,10 +65,10 @@ export default function NotificationItem({ notification }: { notification: any }
   const getActionText = () => {
     const spaceContext = notification.post?.space ? ` in ${notification.post.space.name}` : '';
     switch (notification.type) {
-      case 'LIKE': return `liked your post${spaceContext}`;
-      case 'RESELA': return `resela'd your post${spaceContext}`;
-      case 'REPLY': return `replied to your post${spaceContext}`;
-      case 'QUOTE': return `quoted your post${spaceContext}`;
+      case 'LIKE': return `liked your sela${spaceContext}`;
+      case 'RESELA': return `resela'd your sela${spaceContext}`;
+      case 'REPLY': return `replied to your sela${spaceContext}`;
+      case 'QUOTE': return `quoted your sela${spaceContext}`;
       case 'FOLLOW': return 'followed you';
       case 'SPACE_INVITE': return `invited you to join ${notification.space?.name || 'a space'}`;
       case 'SPACE_ROLE_UPDATE': return `updated your role in ${notification.space?.name || 'a space'}`;
@@ -89,8 +89,8 @@ export default function NotificationItem({ notification }: { notification: any }
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-2">
           {((notification.type === 'SPACE_INVITE' || notification.type === 'SPACE_ROLE_UPDATE') && notification.actorId === notification.recipientId) ? (
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold text-white text-sm">
-              IA
+            <div className="w-8 h-8 rounded-full bg-[#3BC492] flex items-center justify-center font-bold text-black text-sm">
+              In
             </div>
           ) : notification.actor.avatarUrl ? (
             <img src={notification.actor.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />

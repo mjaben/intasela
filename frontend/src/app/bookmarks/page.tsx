@@ -104,14 +104,15 @@ export default function BookmarksPage() {
           />
         ) : filteredPosts.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
-            <h2 className="text-xl font-bold mb-2">Save posts for later</h2>
-            <p className="max-w-xs text-sm">Don't let the good ones fly away! Bookmark Posts to easily find them again in the future.</p>
+            <h2 className="text-xl font-bold mb-2">Save selas for later</h2>
+            <p className="max-w-xs text-sm">Don't let the good ones fly away! Bookmark Selas to easily find them again in the future.</p>
           </div>
         ) : (
           filteredPosts.map((post) => (
             <PostCard 
               key={post.id}
               id={post.id}
+createdAt={post.createdAt}
               author={{
                 name: post.author.firstName || post.author.username,
                 username: post.author.username,

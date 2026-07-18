@@ -246,16 +246,16 @@ export default function ProfilePage() {
 
       {/* Tabs */}
       <div className="flex border-b border-border">
-        {['posts', 'replies', 'likes'].map((tab) => (
+        {[{id: 'posts', label: 'Selas'}, {id: 'replies', label: 'Replies'}, {id: 'likes', label: 'Likes'}].map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
             className={`flex-1 py-4 text-center font-bold text-[15px] transition-colors hover:bg-muted/50 relative ${
-              activeTab === tab ? 'text-foreground' : 'text-muted-foreground'
+              activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground'
             }`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            {activeTab === tab && (
+            {tab.label}
+            {activeTab === tab.id && (
               <motion.div
                 layoutId="profileTabIndicator"
                 className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
@@ -273,6 +273,7 @@ export default function ProfilePage() {
               <PostCard 
                 key={post.id} 
                 id={post.id}
+createdAt={post.createdAt}
                 author={{
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,
@@ -300,7 +301,7 @@ export default function ProfilePage() {
             ))
           ) : (
             <div className="p-8 text-center text-muted-foreground">
-              @{profile.username} hasn't posted anything yet.
+              @{profile.username} hasn't dropped any selas yet.
             </div>
           )
         )}
@@ -311,6 +312,7 @@ export default function ProfilePage() {
               <PostCard 
                 key={post.id} 
                 id={post.id}
+createdAt={post.createdAt}
                 author={{
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,
@@ -345,6 +347,7 @@ export default function ProfilePage() {
               <PostCard 
                 key={post.id} 
                 id={post.id}
+createdAt={post.createdAt}
                 author={{
                   name: post.author.firstName || post.author.username,
                   username: post.author.username,
@@ -367,7 +370,7 @@ export default function ProfilePage() {
             ))
           ) : (
             <div className="p-8 text-center text-muted-foreground">
-              @{profile.username} hasn't liked any posts yet.
+              @{profile.username} hasn't liked any selas yet.
             </div>
           )
         )}

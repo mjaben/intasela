@@ -24,8 +24,6 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
   
   const modalRef = useRef<HTMLDivElement>(null);
 
-  if (!isAuthenticated) return null;
-
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -209,6 +207,8 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
     );
   };
 
+  if (!isAuthenticated) return null;
+
   return (
     <>
       {/* Inline Compact State for top of Feed */}
@@ -314,7 +314,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                   <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder={mode === 'REPLY' ? "Post your reply" : "Drop your thought..."}
+                    placeholder={mode === 'REPLY' ? "Drop your reply" : "Drop your thought..."}
                     className={`w-full bg-transparent text-white text-lg placeholder-gray-500 focus:outline-none resize-none ${mode === 'REPLY' ? 'min-h-[80px]' : mode === 'QUOTE' ? 'min-h-[40px] mt-2' : 'min-h-[150px] mt-1'}`}
                     autoFocus
                   />
@@ -416,7 +416,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                     )}
-                    {loading ? "Processing..." : (mode === 'REPLY' ? 'Reply' : 'Post')}
+                    {loading ? "Processing..." : (mode === 'REPLY' ? 'Reply' : 'Sela')}
                   </button>
                 </div>
               </div>

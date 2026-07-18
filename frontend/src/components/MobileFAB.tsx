@@ -20,7 +20,7 @@ export default function MobileFAB() {
     <button
       onClick={handleClick}
       className="sm:hidden fixed bottom-[80px] right-4 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-50"
-      aria-label="Create Post"
+      aria-label="Create Sela"
     >
       <svg 
         width="24" 

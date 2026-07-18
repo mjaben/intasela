@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Settings } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -34,7 +34,10 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
   const [space, setSpace] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<any[]>([]);
+  const [pendingPosts, setPendingPosts] = useState<any[]>([]);
   const [spaceMembers, setSpaceMembers] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"POSTS" | "PENDING">("POSTS");
+  const [showPendingAlert, setShowPendingAlert] = useState(false);
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const addToast = useToastStore((state) => state.addToast);
@@ -69,14 +72,23 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
     try {
       const token = localStorage.getItem("access_token");
       const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
-      // Add ?spaceId=${resolvedParams.id} if your backend filters it, or maybe we just use getFeed?
-      // Wait, we didn't add a specific GET /spaces/:id/posts endpoint. The main feed only returns posts if spaceId is null or user is member.
-      // But we want ONLY posts from this space. We should update the backend or just create a specific endpoint.
-      // Let's assume we update PostsController to support ?spaceId=...
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts?spaceId=${resolvedParams.id}`, { headers });
       if (!res.ok) throw new Error("Failed to fetch posts");
       const data = await res.json();
       setPosts(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchPendingPosts = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces/${resolvedParams.id}/pending-posts`, { headers });
+      if (!res.ok) return;
+      const data = await res.json();
+      setPendingPosts(data);
     } catch (err) {
       console.error(err);
     }
@@ -99,7 +111,45 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
     fetchSpace();
     fetchPosts();
     fetchSpaceMembers();
+    fetchPendingPosts();
   }, [resolvedParams.id]);
+
+  useEffect(() => {
+    if (!space || pendingPosts.length === 0) return;
+    const isMod = space.members && space.members.length > 0 && (space.members[0].role === 'MODERATOR' || space.members[0].role === 'ADMIN');
+    if (!isMod) return;
+
+    const todayDate = new Date().toDateString();
+    const storageKey = `pendingAlert_${space.id}`;
+    let stored;
+    try {
+      stored = JSON.parse(localStorage.getItem(storageKey) || '{"date": "", "count": 0, "lastSeenCount": 0}');
+    } catch {
+      stored = { date: "", count: 0, lastSeenCount: 0 };
+    }
+
+    if (stored.date !== todayDate) {
+      stored.count = 0;
+      stored.date = todayDate;
+    }
+
+    if (pendingPosts.length > stored.lastSeenCount && stored.count < 5) {
+      setShowPendingAlert(true);
+      stored.count += 1;
+      stored.lastSeenCount = pendingPosts.length;
+      localStorage.setItem(storageKey, JSON.stringify(stored));
+
+      const timer = setTimeout(() => {
+        setShowPendingAlert(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    } else {
+      if (pendingPosts.length !== stored.lastSeenCount) {
+        stored.lastSeenCount = pendingPosts.length;
+        localStorage.setItem(storageKey, JSON.stringify(stored));
+      }
+    }
+  }, [pendingPosts.length, space]);
 
   const handleJoinRequest = async () => {
     if (!isAuthenticated) return router.push("/login");
@@ -166,6 +216,47 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
       } else {
         const error = await res.json();
         addToast(error.message || "Failed to submit appeal", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("An error occurred", "error");
+    }
+  };
+
+  const handleApprovePost = async (postId: number) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${postId}/approve`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        addToast("Post approved successfully", "success");
+        fetchPendingPosts();
+        fetchPosts();
+      } else {
+        const error = await res.json().catch(() => ({ message: "Failed to approve post" }));
+        addToast(error.message || "Failed to approve post", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("An error occurred", "error");
+    }
+  };
+
+  const handleRejectPost = async (postId: number) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${postId}/reject`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        addToast("Post rejected", "success");
+        fetchPendingPosts();
+      } else {
+        const error = await res.json().catch(() => ({ message: "Failed to reject post" }));
+        addToast(error.message || "Failed to reject post", "error");
       }
     } catch (err) {
       console.error(err);
@@ -276,8 +367,11 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
                   </AlertDialogContent>
                 </AlertDialog>
                 {space.members[0].role === 'MODERATOR' && (
-                  <button onClick={() => router.push(`/spaces/${space.id}/members`)} className="bg-secondary text-secondary-foreground font-bold px-4 py-2 rounded-full hover:bg-secondary/80 backdrop-blur-md">
-                    Manage
+                  <button 
+                    onClick={() => router.push(`/spaces/${space.id}/members`)} 
+                    className="flex items-center gap-2 bg-secondary text-secondary-foreground font-bold px-5 py-2 rounded-full hover:bg-secondary/80 backdrop-blur-md transform hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shadow-md"
+                  >
+                    <Settings className="w-4 h-4" /> Manage
                   </button>
                 )}
               </div>
@@ -296,34 +390,103 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
         </div>
       )}
 
+      {space.members && space.members.length > 0 && (space.members[0].role === 'MODERATOR' || space.members[0].role === 'ADMIN') && (
+        <div className="flex border-b border-border text-sm font-bold">
+          <button 
+            className={`flex-1 py-4 hover:bg-white/5 transition-colors ${activeTab === 'POSTS' ? 'text-white border-b-2 border-brand' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('POSTS')}
+          >
+            Selas
+          </button>
+          <button 
+            className={`flex-1 py-4 hover:bg-white/5 transition-colors flex items-center justify-center gap-2 ${activeTab === 'PENDING' ? 'text-white border-b-2 border-brand' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('PENDING')}
+          >
+            Pending Approvals
+            {pendingPosts.length > 0 && (
+              <span className="bg-[#3BC492] text-black text-[10px] px-1.5 py-0.5 rounded-full">{pendingPosts.length}</span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {space.members && space.members.length > 0 && (space.members[0].role === 'MODERATOR' || space.members[0].role === 'ADMIN') && showPendingAlert && activeTab === 'POSTS' && (
+        <div className="bg-yellow-500/10 border border-yellow-500/50 m-4 p-3 rounded-lg flex items-center justify-between text-yellow-500 text-sm font-medium">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" />
+            There are {pendingPosts.length} pending selas awaiting your approval.
+          </div>
+          <button onClick={() => setActiveTab('PENDING')} className="bg-yellow-500 text-black px-3 py-1.5 rounded-full font-bold hover:bg-yellow-400">
+            Review
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col">
-        {posts.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No posts in this space yet.</div>
+        {activeTab === 'POSTS' ? (
+          posts.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">No selas in this space yet.</div>
+          ) : (
+            posts.map(post => {
+              const postAuthorRole = spaceMembers.find(m => m.user?.username === post.author.username)?.role;
+              return (
+                <PostCard 
+                  key={post.id}
+                  id={post.id}
+createdAt={post.createdAt}
+                  author={{
+                    name: post.author.firstName || post.author.username,
+                    username: post.author.username,
+                    avatarUrl: post.author.avatarUrl,
+                    isFollowing: post.author.isFollowing,
+                    isFollower: post.author.isFollower
+                  }}
+                  content={post.content} 
+                  earned={post.earned}
+                  stats={post.stats}
+                  userInteractions={post.userInteractions}
+                  quotedPost={post.quotedPost}
+                  mediaType={post.mediaType}
+                  mediaUrl={post.mediaUrl}
+                  mediaUrls={post.mediaUrls}
+                  thumbnailUrl={post.thumbnailUrl}
+                  approvalStatus={post.approvalStatus}
+                  authorRole={postAuthorRole}
+                  onDelete={() => fetchPosts()}
+                />
+              );
+            })
+        )
+      ) : (
+        pendingPosts.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">No pending selas to review.</div>
         ) : (
-          posts.map(post => (
-            <PostCard 
-              key={post.id}
-              id={post.id}
-              author={{
-                name: post.author.firstName || post.author.username,
-                username: post.author.username,
-                avatarUrl: post.author.avatarUrl,
-                isFollowing: post.author.isFollowing,
-                isFollower: post.author.isFollower
-              }}
-              content={post.content} 
-              earned={post.earned}
-              stats={post.stats}
-              userInteractions={post.userInteractions}
-              quotedPost={post.quotedPost}
-              mediaType={post.mediaType}
-              mediaUrl={post.mediaUrl}
-              mediaUrls={post.mediaUrls}
-              thumbnailUrl={post.thumbnailUrl}
-              onDelete={() => fetchPosts()}
-            />
-          ))
-        )}
+          pendingPosts.map(post => {
+            const postAuthorRole = spaceMembers.find(m => m.user?.username === post.author.username)?.role;
+            return (
+              <div key={post.id} className="relative border-b border-border group">
+                <PostCard 
+                  id={post.id}
+createdAt={post.createdAt}
+                  author={{
+                    name: post.author.firstName || post.author.username,
+                    username: post.author.username,
+                    avatarUrl: post.author.avatarUrl
+                  }}
+                  content={post.content}
+                  stats={{ likes: 0, reselas: 0, replies: 0, views: 0 }}
+                  approvalStatus={post.approvalStatus}
+                  authorRole={postAuthorRole}
+                />
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1 rounded-md backdrop-blur-sm z-10">
+                  <button onClick={() => handleApprovePost(post.id)} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded">Approve</button>
+                  <button onClick={() => handleRejectPost(post.id)} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded">Reject</button>
+                </div>
+              </div>
+            );
+          })
+        )
+      )}
       </div>
     </div>
   );
