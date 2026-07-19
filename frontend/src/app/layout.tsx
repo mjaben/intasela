@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-[100dvh] bg-background text-foreground flex flex-col items-center overflow-x-clip max-w-[100vw]`} suppressHydrationWarning>
+      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-[100dvh] bg-background text-foreground flex flex-col items-center`} suppressHydrationWarning>
         <GoogleAdSense publisherId="pub-1173851541726956" />
         <MobileHeader />
         <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0">
