@@ -45,21 +45,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-md bg-[#18181b] p-8 rounded-xl border border-gray-800 shadow-2xl">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+    <div className="w-full max-w-md bg-[#18181b] p-6 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
+      <div className="text-center mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Welcome Back</h1>
         <p className="text-gray-400">Log in to your Intasela account</p>
       </div>
 
-      <div className="min-h-[62px]">
+      <div className="min-h-[44px] mb-2">
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
+          <div className="p-2.5 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
             {error}
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">Email or Username</label>
           <input

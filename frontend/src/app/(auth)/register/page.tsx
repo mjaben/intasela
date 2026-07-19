@@ -107,9 +107,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-w-lg bg-[#18181b] p-8 rounded-xl border border-gray-800 shadow-2xl">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+    <div className="w-full max-w-lg bg-[#18181b] p-6 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
+      <div className="text-center mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Create Account</h1>
         <p className="text-gray-400">Step {step} of 3</p>
         
         {/* Progress Bar */}
@@ -121,17 +121,17 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <div className="min-h-[62px]">
+      <div className="min-h-[44px] mb-2">
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
+          <div className="p-2.5 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
             {error}
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col">
         {step === 1 && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">First Name *</label>
@@ -168,7 +168,7 @@ export default function RegisterPage() {
         )}
 
         {step === 2 && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">Country (Optional)</label>
                 <div className="relative">
@@ -243,7 +243,7 @@ export default function RegisterPage() {
         )}
 
         {step === 3 && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">What is your current educational or professional status?</label>
               <div className="relative">
@@ -302,7 +302,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div className="flex gap-4 mt-8">
+        <div className="flex gap-4 mt-6">
           {step > 1 && (
             <button
               type="button"
