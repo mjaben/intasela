@@ -39,10 +39,10 @@ export default function RootLayout({
       <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-screen bg-background text-foreground flex flex-col items-center overflow-x-clip max-w-[100vw]`} suppressHydrationWarning>
         <GoogleAdSense publisherId="pub-1173851541726956" />
         <MobileHeader />
-        <div className="flex w-full max-w-[1280px] mx-auto px-0 sm:px-4">
+        <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4">
           <SidebarNav />
           
-          <main className="flex-1 min-h-screen min-w-0 pb-[80px] sm:pb-0">
+          <main className="flex-1 min-w-0 pb-[80px] sm:pb-0 flex flex-col">
             {children}
           </main>
 

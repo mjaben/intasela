@@ -11,10 +11,6 @@ export default function MobileBottomNav() {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const { unreadCount } = useNotificationStore();
 
-  if (pathname === "/login" || pathname === "/register") {
-    return null;
-  }
-
   const navItems: { name: string; href: string; icon?: string; svg?: React.ReactNode }[] = [
     {
       name: "Home",
