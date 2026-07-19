@@ -93,6 +93,7 @@ createdAt={post.createdAt}
           onDelete={() => router.push("/")}
           parentPost={post.parent}
           isReplyContext={!!post.parent}
+          poll={post.poll}
         />
       </div>
 
@@ -145,6 +146,7 @@ createdAt={post.createdAt}
               mediaUrl={reply.mediaUrl}
               mediaUrls={reply.mediaUrls}
               thumbnailUrl={reply.thumbnailUrl}
+              poll={reply.poll}
               onDelete={() => fetchPost()}
             />
           ))}

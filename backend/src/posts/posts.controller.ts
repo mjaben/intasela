@@ -87,6 +87,12 @@ export class PostsController {
     return this.postsService.getLikesByUsername(username, currentUserId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('drafts')
+  async getDrafts(@Request() req: any) {
+    return this.postsService.getDrafts(req.user.id);
+  }
+
   @Get(':id')
   async getPostById(@Param('id') id: string, @Headers('authorization') authHeader: string) {
     let currentUserId: string | undefined;
@@ -113,8 +119,19 @@ export class PostsController {
       videoWidth: body.videoWidth,
       videoHeight: body.videoHeight,
       videoDuration: body.videoDuration
-    }, body.spaceId);
+    }, body.spaceId, body.status, body.pollOptions, body.pollDurationDays, body.scheduledFor);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/poll/vote')
+  async votePoll(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() body: { optionId: number }
+  ) {
+    return this.postsService.votePoll(parseInt(id), body.optionId, req.user.id);
+  }
+
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/engage')

@@ -16,6 +16,7 @@ import { AuditLogInterceptor } from './security/audit.interceptor';
 import { BullModule } from '@nestjs/bullmq';
 import { AdsModule } from './ads/ads.module';
 import { SpacesModule } from './spaces/spaces.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SpacesModule } from './spaces/spaces.module';
     UsersModule, 
     AuthModule, 
     PostsModule,
+    ScheduleModule.forRoot(),
     UploadsModule,
     NotificationsModule,
     AdsModule,

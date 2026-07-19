@@ -144,6 +144,7 @@ createdAt={post.createdAt}
                 stats={post.stats}
                 userInteractions={post.userInteractions}
                 quotedPost={post.quotedPost}
+                poll={post.poll}
                 mediaType={post.mediaType}
                 mediaUrl={post.mediaUrl}
                 mediaUrls={post.mediaUrls}

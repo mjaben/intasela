@@ -51,7 +51,8 @@ export default function PostCard({
   hideMedia,
   approvalStatus,
   authorRole,
-  createdAt
+  createdAt,
+  poll
 }: { 
   id: number;
   content: string;
@@ -82,6 +83,7 @@ export default function PostCard({
   approvalStatus?: string;
   authorRole?: string;
   createdAt?: string | Date;
+  poll?: any;
 }) {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const user = useUserStore((state) => state.user);
@@ -141,6 +143,7 @@ export default function PostCard({
   const hasViewedRef = useRef(false);
 
   // Sync state if props change (e.g. feed re-fetched)
+  const [localPoll, setLocalPoll] = useState(poll);
   useEffect(() => {
     setIsLiked(userInteractions.isLiked);
     setLikeCount(stats.likes);
@@ -149,7 +152,8 @@ export default function PostCard({
     setBookmarkCount(stats.bookmarks || 0);
     setReselaCount(stats.reselas);
     setViews(stats.views);
-  }, [stats, userInteractions]);
+    setLocalPoll(poll);
+  }, [stats, userInteractions, poll]);
 
   // Intersection Observer for Views
   useEffect(() => {
@@ -700,6 +704,95 @@ export default function PostCard({
                 )}
               </>
             )}
+
+            {localPoll && (
+              <div className="mt-3 border border-border rounded-xl p-3 bg-card max-w-[95%] sm:max-w-[90%]" onClick={(e) => e.stopPropagation()}>
+                <div className="space-y-2">
+                  {localPoll.options.map((opt: any) => {
+                    const totalVotes = localPoll.options.reduce((sum: number, o: any) => sum + o.votes, 0);
+                    const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+                    const isExpired = new Date(localPoll.expiresAt) < new Date();
+                    const hasVotedAny = localPoll.options.some((o: any) => o.hasVoted);
+                    const isWinner = isExpired && opt.votes === Math.max(...localPoll.options.map((o: any) => o.votes));
+                    
+                    return (
+                      <div key={opt.id} className="relative h-10 w-full overflow-hidden rounded-md border border-border bg-background">
+                        {(hasVotedAny || isExpired) && (
+                          <div 
+                            className={`absolute left-0 top-0 h-full opacity-30 transition-all duration-500 ease-out ${opt.hasVoted || isWinner ? 'bg-[#3BC492]' : 'bg-muted-foreground'}`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        )}
+                        <button 
+                          disabled={hasVotedAny || isExpired || !isAuthenticated}
+                          onClick={async () => {
+                            if (!isAuthenticated) {
+                              router.push('/login');
+                              return;
+                            }
+                            
+                            // Optimistically update
+                            const token = localStorage.getItem("access_token");
+                            if (!token) return;
+                            
+                            const newPoll = { ...localPoll, options: localPoll.options.map((o: any) => ({
+                              ...o,
+                              hasVoted: o.id === opt.id ? true : o.hasVoted,
+                              votes: o.id === opt.id ? o.votes + 1 : o.votes
+                            })) };
+                            setLocalPoll(newPoll);
+                            
+                            try {
+                              await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${id}/poll/vote`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ optionId: opt.id })
+                              });
+                            } catch (e) {
+                              console.error(e);
+                              // Revert on error
+                              setLocalPoll(localPoll);
+                              addToast("Failed to vote", "error");
+                            }
+                          }}
+                          className="absolute inset-0 flex items-center justify-between px-3 w-full h-full text-sm font-medium hover:bg-white/5 disabled:hover:bg-transparent transition-colors z-10"
+                        >
+                          <span className="flex items-center gap-2 z-10">
+                            {opt.text}
+                            {opt.hasVoted && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3BC492" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
+                          </span>
+                          {(hasVotedAny || isExpired) && (
+                            <span className="font-bold z-10 text-xs">{percentage}%</span>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
+                  <span>{localPoll.options.reduce((sum: number, o: any) => sum + o.votes, 0)} votes</span>
+                  <span>·</span>
+                  <span>
+                    {(() => {
+                      const end = new Date(localPoll.expiresAt).getTime();
+                      const now = Date.now();
+                      const diff = end - now;
+                      if (diff <= 0) return 'Final results';
+                      const hours = Math.floor(diff / (1000 * 60 * 60));
+                      if (hours >= 24) {
+                        const days = Math.floor(hours / 24);
+                        return `${days} day${days > 1 ? 's' : ''} left`;
+                      }
+                      const minutes = Math.floor(diff / (1000 * 60));
+                      if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} left`;
+                      if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} left`;
+                      return 'Ending soon';
+                    })()}
+                  </span>
+                </div>
+              </div>
+            )}
+            
             
             {quotedPost && (
               <div 

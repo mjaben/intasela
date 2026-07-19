@@ -1,13 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MonetizationService } from '../monetization/monetization.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class PostsService {
+  private readonly logger = new Logger(PostsService.name);
   constructor(
     private prisma: PrismaService,
     private monetizationService: MonetizationService
   ) {}
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async publishScheduledPosts() {
+    const now = new Date();
+    const scheduledPosts = await this.prisma.post.findMany({
+      where: {
+        status: 'SCHEDULED',
+        scheduledFor: {
+          lte: now
+        }
+      }
+    });
+
+    if (scheduledPosts.length > 0) {
+      this.logger.log(`Publishing ${scheduledPosts.length} scheduled posts...`);
+      for (const post of scheduledPosts) {
+        await this.prisma.post.update({
+          where: { id: post.id },
+          data: {
+            status: 'PUBLISHED',
+            createdAt: now, // Update createdAt to now so it appears fresh in the feed
+          }
+        });
+      }
+      this.logger.log(`Successfully published ${scheduledPosts.length} scheduled posts.`);
+    }
+  }
 
   private getAuthorSelect(currentUserId?: string) {
     return {
@@ -29,7 +58,7 @@ export class PostsService {
   }
 
   async getFeed(currentUserId?: string, type?: string, spaceId?: string) {
-    let whereClause: any = { parentId: null };
+    let whereClause: any = { parentId: null, status: 'PUBLISHED' };
 
     if (spaceId) {
       // If a specific spaceId is requested, filter exactly by it.
@@ -85,7 +114,7 @@ export class PostsService {
         author: {
           select: this.getAuthorSelect(currentUserId)
         },
-        _count: {
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: {
           select: { replies: true, engagements: true }
         },
         space: { select: { id: true, name: true, type: true } },
@@ -111,7 +140,7 @@ export class PostsService {
   }
 
   async getOrbitFeed(currentUserId?: string, type?: string, videoId?: string) {
-    let whereClause: any = { mediaType: 'VIDEO', parentId: null };
+    let whereClause: any = { mediaType: 'VIDEO', parentId: null, status: 'PUBLISHED' };
 
     if (type === 'following' && currentUserId) {
       whereClause.author = {
@@ -135,7 +164,7 @@ export class PostsService {
             author: {
               select: this.getAuthorSelect(currentUserId)
             },
-            _count: {
+            poll: { include: { options: { include: { userVotes: true } } } }, _count: {
               select: { replies: true, engagements: true }
             },
             engagements: true,
@@ -151,7 +180,7 @@ export class PostsService {
         author: {
           select: this.getAuthorSelect(currentUserId)
         },
-        _count: {
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: {
           select: { replies: true, engagements: true }
         },
         engagements: true,
@@ -169,6 +198,7 @@ export class PostsService {
 
     const posts = await this.prisma.post.findMany({
       where: { 
+        status: 'PUBLISHED',
         OR: [
           { author: { username }, parentId: null },
           { engagements: { some: { type: 'RESELA', userId: user.id } } }
@@ -179,7 +209,7 @@ export class PostsService {
         author: {
           select: this.getAuthorSelect(currentUserId)
         },
-        _count: {
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: {
           select: { replies: true, engagements: true }
         },
         engagements: true,
@@ -232,6 +262,7 @@ export class PostsService {
   async getRepliesByUsername(username: string, currentUserId?: string) {
     const posts = await this.prisma.post.findMany({
       where: { 
+        status: 'PUBLISHED',
         author: { username },
         parentId: { not: null } // Only replies
       },
@@ -240,13 +271,13 @@ export class PostsService {
         author: {
           select: this.getAuthorSelect(currentUserId)
         },
-        _count: { select: { replies: true, engagements: true } },
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
         engagements: true,
         quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } },
         parent: {
           include: {
             author: { select: this.getAuthorSelect(currentUserId) },
-            _count: { select: { replies: true, engagements: true } },
+            poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
             engagements: true,
             quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
           }
@@ -260,6 +291,7 @@ export class PostsService {
   async getLikesByUsername(username: string, currentUserId?: string) {
     const posts = await this.prisma.post.findMany({
       where: { 
+        status: 'PUBLISHED',
         engagements: {
           some: {
             user: { username },
@@ -272,7 +304,7 @@ export class PostsService {
         author: {
           select: this.getAuthorSelect(currentUserId)
         },
-        _count: { select: { replies: true, engagements: true } },
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
         engagements: true,
         quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
       },
@@ -284,6 +316,7 @@ export class PostsService {
   async getBookmarks(currentUserId: string) {
     const posts = await this.prisma.post.findMany({
       where: { 
+        status: 'PUBLISHED',
         engagements: {
           some: {
             userId: currentUserId,
@@ -296,7 +329,7 @@ export class PostsService {
         author: {
           select: this.getAuthorSelect(currentUserId)
         },
-        _count: { select: { replies: true, engagements: true } },
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
         engagements: true,
         quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
       },
@@ -317,13 +350,27 @@ export class PostsService {
     const isFollowing = currentUserId && post.author?.followers && post.author.followers.length > 0;
     const isFollower = currentUserId && post.author?.following && post.author.following.length > 0;
 
-    const { engagements, parent, author, space, ...rest } = post;
+    const { engagements, parent, author, space, poll, ...rest } = post;
+
+    let formattedPoll = undefined;
+    if (poll) {
+      formattedPoll = {
+        ...poll,
+        options: poll.options ? poll.options.map((opt: any) => ({
+          id: opt.id,
+          text: opt.text,
+          votes: opt.votes,
+          hasVoted: currentUserId && opt.userVotes ? opt.userVotes.some((v: any) => v.userId === currentUserId) : false,
+        })) : []
+      };
+    }
 
     return {
       ...rest,
       author: author ? { ...author, isFollowing, isFollower } : undefined,
       parent: parent ? this.formatPost(parent, currentUserId) : undefined,
       space: space || undefined,
+      poll: formattedPoll,
       stats: {
         likes: likes.length,
         reselas: reselas.length,
@@ -346,7 +393,7 @@ export class PostsService {
         author: {
           select: this.getAuthorSelect(currentUserId)
         },
-        _count: { select: { replies: true, engagements: true } },
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
         engagements: true,
         quotedPost: {
           include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } }
@@ -355,7 +402,7 @@ export class PostsService {
           orderBy: { createdAt: 'desc' },
           include: {
             author: { select: this.getAuthorSelect(currentUserId) },
-            _count: { select: { replies: true, engagements: true } },
+            poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
             engagements: true,
             quotedPost: {
               include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } }
@@ -365,7 +412,7 @@ export class PostsService {
         parent: {
           include: {
             author: { select: this.getAuthorSelect(currentUserId) },
-            _count: { select: { replies: true, engagements: true } },
+            poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
             engagements: true,
             quotedPost: { include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } } }
           }
@@ -387,11 +434,26 @@ export class PostsService {
       const isFollowing = currentUserId && p.author?.followers && p.author.followers.length > 0;
       const isFollower = currentUserId && p.author?.following && p.author.following.length > 0;
       
-      const { engagements, parent, author, ...rest } = p;
+      const { engagements, parent, author, poll, ...rest } = p;
+      
+      let formattedPoll = undefined;
+      if (poll) {
+        formattedPoll = {
+          ...poll,
+          options: poll.options ? poll.options.map((opt: any) => ({
+            id: opt.id,
+            text: opt.text,
+            votes: opt.votes,
+            hasVoted: currentUserId && opt.userVotes ? opt.userVotes.some((v: any) => v.userId === currentUserId) : false,
+          })) : []
+        };
+      }
+      
       return {
         ...rest,
         author: author ? { ...author, isFollowing, isFollower } : undefined,
         parent: parent ? formatPost(parent) : undefined,
+        poll: formattedPoll,
         stats: { likes: likes.length, reselas: reselas.length, replies: p._count?.replies || 0, views: p.viewsCount || 0 },
         userInteractions: { isLiked, isReselaed, isBookmarked }
       };
@@ -411,7 +473,11 @@ export class PostsService {
     parentId?: number, 
     quotedPostId?: number,
     mediaOptions?: { mediaUrl?: string, mediaUrls?: string[], thumbnailUrl?: string, mediaType?: string, videoWidth?: number, videoHeight?: number, videoDuration?: number },
-    spaceId?: string
+    spaceId?: string,
+    status: string = 'PUBLISHED',
+    pollOptions?: string[],
+    pollDurationDays?: number,
+    scheduledFor?: string
   ) {
     if (spaceId) {
       const member = await this.prisma.spaceMember.findUnique({
@@ -439,6 +505,17 @@ export class PostsService {
       }
     }
 
+    let finalStatus = status;
+    let scheduledDate: Date | null = null;
+    
+    if (scheduledFor) {
+      const parsedDate = new Date(scheduledFor);
+      if (parsedDate > new Date()) {
+        finalStatus = 'SCHEDULED';
+        scheduledDate = parsedDate;
+      }
+    }
+
     const post = await this.prisma.post.create({
       data: {
         content,
@@ -448,6 +525,8 @@ export class PostsService {
         quotedPostId: quotedPostId || null,
         spaceId: spaceId || null,
         approvalStatus: initialApprovalStatus,
+        status: finalStatus,
+        scheduledFor: scheduledDate,
         ...(mediaOptions || {})
       },
       include: {
@@ -455,6 +534,21 @@ export class PostsService {
         quotedPost: true,
       }
     });
+
+    if (pollOptions && pollOptions.length > 0) {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + (pollDurationDays || 1));
+      
+      await this.prisma.poll.create({
+        data: {
+          postId: post.id,
+          expiresAt,
+          options: {
+            create: pollOptions.map(text => ({ text }))
+          }
+        }
+      });
+    }
 
     if (post.parentId && post.parent && post.parent.authorId !== userId) {
       await this.prisma.notification.create({
@@ -668,5 +762,73 @@ export class PostsService {
     return this.prisma.post.delete({
       where: { id: postId }
     });
+  }
+
+  async votePoll(postId: number, optionId: number, userId: string) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { poll: { include: { options: true } } }
+    });
+
+    if (!post || !post.poll) {
+      throw new Error("Poll not found");
+    }
+
+    if (new Date() > new Date(post.poll.expiresAt)) {
+      throw new Error("Poll has expired");
+    }
+
+    const option = post.poll.options.find(o => o.id === optionId);
+    if (!option) {
+      throw new Error("Invalid option");
+    }
+
+    // Check if user already voted in this poll
+    const existingVote = await this.prisma.pollVote.findFirst({
+      where: {
+        userId,
+        pollOption: {
+          pollId: post.poll.id
+        }
+      }
+    });
+
+    if (existingVote) {
+      throw new Error("You have already voted in this poll");
+    }
+
+    await this.prisma.pollVote.create({
+      data: {
+        userId,
+        pollOptionId: optionId
+      }
+    });
+
+    await this.prisma.pollOption.update({
+      where: { id: optionId },
+      data: { votes: { increment: 1 } }
+    });
+
+    return { success: true };
+  }
+
+  async getDrafts(currentUserId: string) {
+    const posts = await this.prisma.post.findMany({
+      where: {
+        authorId: currentUserId,
+        status: 'DRAFT',
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: {
+          select: this.getAuthorSelect(currentUserId)
+        },
+        poll: { include: { options: { include: { userVotes: true } } } }, _count: {
+          select: { replies: true, engagements: true }
+        },
+        engagements: true,
+      },
+    });
+    return posts.map(post => this.formatPost(post, currentUserId));
   }
 }

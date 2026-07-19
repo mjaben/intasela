@@ -94,6 +94,7 @@ export default function SpacePostDetail() {
           onDelete={() => router.push(`/spaces/${spaceId}`)}
           parentPost={post.parent}
           isReplyContext={!!post.parent}
+          poll={post.poll}
         />
       </div>
 
@@ -147,6 +148,7 @@ export default function SpacePostDetail() {
               mediaUrl={reply.mediaUrl}
               mediaUrls={reply.mediaUrls}
               thumbnailUrl={reply.thumbnailUrl}
+              poll={reply.poll}
               space={reply.space}
               onDelete={() => fetchPost()}
             />

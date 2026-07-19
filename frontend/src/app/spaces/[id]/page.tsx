@@ -452,6 +452,7 @@ createdAt={post.createdAt}
                   thumbnailUrl={post.thumbnailUrl}
                   approvalStatus={post.approvalStatus}
                   authorRole={postAuthorRole}
+                  poll={post.poll}
                   onDelete={() => fetchPosts()}
                 />
               );
@@ -478,6 +479,7 @@ createdAt={post.createdAt}
                   stats={{ likes: 0, reselas: 0, replies: 0, views: 0 }}
                   approvalStatus={post.approvalStatus}
                   authorRole={postAuthorRole}
+                  poll={post.poll}
                 />
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1 rounded-md backdrop-blur-sm z-10">
                   <button onClick={() => handleApprovePost(post.id)} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded">Approve</button>

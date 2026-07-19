@@ -14,6 +14,14 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
   const [spaces, setSpaces] = useState<any[]>([]);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(spaceId || null);
   const [isSpaceDropdownOpen, setIsSpaceDropdownOpen] = useState(false);
+  const [acceptType, setAcceptType] = useState<string>("image/*,video/*");
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [draftsList, setDraftsList] = useState<any[]>([]);
+  const [showPoll, setShowPoll] = useState(false);
+  const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+  const [pollDurationDays, setPollDurationDays] = useState<number>(1);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledFor, setScheduledFor] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const user = useUserStore((state) => state.user);
@@ -69,9 +77,31 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
     }
   }, [isAuthenticated, isOpen, spaceId, user?.id]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!content.trim()) return;
+  const fetchDrafts = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/drafts`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDraftsList(data);
+        setShowDrafts(true);
+      }
+    } catch (err) {
+      console.error("Failed to load drafts", err);
+    }
+  };
+
+  const loadDraft = (draft: any) => {
+    setContent(draft.content);
+    setShowDrafts(false);
+    // Ideally we would load media as well, but this is a V1 drafts implementation
+  };
+
+  const handleSubmit = async (e?: React.FormEvent | 'DRAFT') => {
+    if (typeof e !== 'string' && e) e.preventDefault();
+    if (!content.trim() && mediaFiles.length === 0) return;
 
     setLoading(true);
     setError("");
@@ -128,6 +158,20 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
         payload.videoHeight = mediaData.height;
         payload.videoDuration = mediaData.duration;
       }
+      
+      // If saving as draft, flag it
+      if (e === 'DRAFT') {
+        payload.status = 'DRAFT';
+      }
+
+      if (showPoll) {
+        payload.pollOptions = pollOptions.filter(o => o.trim() !== '');
+        payload.pollDurationDays = pollDurationDays;
+      }
+
+      if (showSchedule && scheduledFor) {
+        payload.scheduledFor = new Date(scheduledFor).toISOString();
+      }
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts`, {
         method: "POST",
@@ -147,6 +191,10 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
       setMediaFiles([]);
       mediaPreviews.forEach(p => URL.revokeObjectURL(p));
       setMediaPreviews([]);
+      setShowPoll(false);
+      setPollOptions(['', '']);
+      setShowSchedule(false);
+      setScheduledFor("");
       closeComposer(); // Close modal
       onPostCreated(); // Refresh feed
     } catch (err: any) {
@@ -307,17 +355,46 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                     </div>
                     
                     {/* Drafts Button */}
-                    <button className="text-[14px] font-medium text-white hover:text-gray-300 transition-colors absolute right-0 top-0">
-                      Drafts
+                    <button 
+                      onClick={showDrafts ? () => setShowDrafts(false) : fetchDrafts}
+                      className="text-[14px] font-medium text-[#3BC492] hover:text-[#2fa076] transition-colors absolute right-0 top-0"
+                    >
+                      {showDrafts ? 'Back' : 'Drafts'}
                     </button>
                   </div>
-                  <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder={mode === 'REPLY' ? "Drop your reply" : "Drop your thought..."}
-                    className={`w-full bg-transparent text-white text-lg placeholder-gray-500 focus:outline-none resize-none ${mode === 'REPLY' ? 'min-h-[80px]' : mode === 'QUOTE' ? 'min-h-[40px] mt-2' : 'min-h-[150px] mt-1'}`}
-                    autoFocus
-                  />
+                  
+                  {showDrafts ? (
+                    <div className="w-full bg-transparent min-h-[150px] mt-1 overflow-y-auto max-h-[300px]">
+                      {draftsList.length === 0 ? (
+                        <div className="text-gray-500 text-center pt-8">No drafts found.</div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {draftsList.map(draft => (
+                            <div 
+                              key={draft.id} 
+                              onClick={() => loadDraft(draft)}
+                              className="p-3 border border-white/10 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                            >
+                              <p className="text-white text-sm line-clamp-2">{draft.content || "Empty draft"}</p>
+                              <span className="text-gray-500 text-xs block mt-1">{new Date(draft.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <textarea
+                      value={content}
+                      onChange={(e) => {
+                        setContent(e.target.value);
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                      }}
+                      placeholder={mode === 'REPLY' ? "Drop your reply" : "Drop your thought..."}
+                      className={`w-full bg-transparent text-white text-lg placeholder-gray-500 focus:outline-none resize-none ${mode === 'REPLY' ? 'min-h-[60px]' : mode === 'QUOTE' ? 'min-h-[40px] mt-2' : 'min-h-[60px] mt-1'}`}
+                      autoFocus
+                    />
+                  )}
                   
                   {/* QUOTE PREVIEW UI */}
                   {mode === 'QUOTE' && targetPost && (
@@ -366,6 +443,81 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                 </div>
               </div>
 
+              {/* POLL UI */}
+              {showPoll && (
+                <div className="px-16 pb-4">
+                  <div className="border border-gray-800 rounded-2xl overflow-hidden">
+                    <div className="p-3 border-b border-gray-800 space-y-3">
+                      {pollOptions.map((opt, i) => (
+                        <div key={i} className="flex items-center gap-2 relative">
+                          <input 
+                            type="text" 
+                            placeholder={`Choice ${i + 1}${i > 1 ? ' (optional)' : ''}`}
+                            value={opt}
+                            onChange={(e) => {
+                              const newOpts = [...pollOptions];
+                              newOpts[i] = e.target.value;
+                              setPollOptions(newOpts);
+                            }}
+                            className="w-full bg-transparent border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#3BC492] text-[15px]"
+                          />
+                          {i > 1 && (
+                            <button onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))} className="absolute right-3 text-gray-500 hover:text-red-500">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {pollOptions.length < 4 && (
+                        <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-[#3BC492] hover:text-[#2fa076] text-[15px] p-2 flex items-center gap-1 transition-colors w-full rounded-md hover:bg-[#3BC492]/10 justify-center border border-dashed border-[#3BC492]/30">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+                          Add Choice
+                        </button>
+                      )}
+                    </div>
+                    <div className="p-3 bg-gray-900/30 flex items-center justify-between">
+                      <span className="text-gray-400 text-[15px]">Poll length</span>
+                      <select 
+                        value={pollDurationDays} 
+                        onChange={e => setPollDurationDays(Number(e.target.value))}
+                        className="bg-transparent text-white border border-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-[#3BC492]"
+                      >
+                        <option value={1}>1 Day</option>
+                        <option value={3}>3 Days</option>
+                        <option value={7}>7 Days</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SCHEDULE UI */}
+              {showSchedule && (
+                <div className="px-16 pb-4">
+                  <div className="border border-gray-800 rounded-2xl overflow-hidden p-4">
+                    <h3 className="text-white text-[15px] font-bold mb-3 flex items-center gap-2">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path></svg>
+                      Schedule Post
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1.5 block">Date & Time</label>
+                        <input 
+                          type="datetime-local" 
+                          value={scheduledFor}
+                          onChange={(e) => setScheduledFor(e.target.value)}
+                          className="w-full bg-transparent border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#3BC492] text-[15px]"
+                        />
+                        <p className="text-gray-500 text-xs mt-1.5">Scheduled posts will be published at this exact time in your local timezone.</p>
+                      </div>
+                      {scheduledFor && new Date(scheduledFor) < new Date() && (
+                        <p className="text-red-500 text-sm">Please select a time in the future.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Error Message */}
               {error && <div className="px-6 pb-2 text-red-500 text-sm">{error}</div>}
 
@@ -374,31 +526,66 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                 <div className="flex items-center gap-1">
                   <input 
                     type="file" 
-                    accept="image/*,video/mp4,video/webm,video/quicktime" multiple
+                    accept={acceptType} multiple={acceptType.includes('image')}
                     className="hidden" 
                     ref={fileInputRef} 
                     onChange={handleFileChange} 
                   />
+                  
+                  {/* Image Button */}
                   <button 
                     type="button" 
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => { setAcceptType("image/*"); setTimeout(() => fileInputRef.current?.click(), 0); }}
                     className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors" 
-                    title="Media (Image/Video)"
+                    title="Image"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"></path></svg>
                   </button>
-                  <button type="button" className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors hidden sm:block" title="Poll">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+
+                  {/* Video Button */}
+                  <button 
+                    type="button" 
+                    onClick={() => { setAcceptType("video/mp4,video/webm,video/quicktime"); setTimeout(() => fileInputRef.current?.click(), 0); }}
+                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors" 
+                    title="Video"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                  </button>
+
+                  {/* Poll Button */}
+                  <button 
+                    type="button" 
+                    onClick={() => { setShowPoll(!showPoll); setShowSchedule(false); }}
+                    className={`p-2 rounded-full transition-colors hidden sm:block ${showPoll ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    title="Poll"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                  </button>
+
+                  {/* Schedule Button */}
+                  <button 
+                    type="button" 
+                    onClick={() => { setShowSchedule(!showSchedule); setShowPoll(false); }}
+                    className={`p-2 rounded-full transition-colors hidden sm:block ${showSchedule ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    title="Schedule"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path></svg>
                   </button>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => closeComposer()}
+                    onClick={() => {
+                      if (content.trim() || mediaFiles.length > 0) {
+                        handleSubmit('DRAFT');
+                      } else {
+                        closeComposer();
+                      }
+                    }}
                     className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-full transition-colors"
                   >
-                    Cancel
+                    {(content.trim() || mediaFiles.length > 0) ? "Save Draft" : "Cancel"}
                   </button>
                   <button
                     type="button"

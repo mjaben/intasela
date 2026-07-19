@@ -51,6 +51,7 @@ model User {
   posts         Post[]
   engagements   Engagement[]
   transactions  Transaction[]
+  pollVotes     PollVote[]
   
   // Removed Admin Fields (Segregated to SystemAdmin model)
   
@@ -99,6 +100,13 @@ model Post {
   isEligible     Boolean      @default(true)
   isFlagged      Boolean      @default(false)
   approvalStatus String       @default("APPROVED") // "APPROVED", "PENDING", "REJECTED"
+  
+  // Post State & Scheduling
+  status         String       @default("PUBLISHED") // "PUBLISHED", "DRAFT", "SCHEDULED"
+  scheduledFor   DateTime?
+  
+  // Poll
+  poll           Poll?
   
   // Reply System (Tree structure)
   parentId       Int?
@@ -358,6 +366,34 @@ model AdImpression {
   @@index([userId, timestamp])
 }
 
+model Poll {
+  id        Int          @id @default(autoincrement())
+  postId    Int          @unique
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  options   PollOption[]
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+}
+
+model PollOption {
+  id        Int        @id @default(autoincrement())
+  pollId    Int
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  text      String
+  votes     Int        @default(0)
+  userVotes PollVote[]
+}
+
+model PollVote {
+  id           Int        @id @default(autoincrement())
+  pollOptionId Int
+  userId       String
+  pollOption   PollOption @relation(fields: [pollOptionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@unique([pollOptionId, userId])
+}
 
 model AdClick {
   id          String   @id @default(uuid())
