@@ -5,7 +5,7 @@ import { AdUnit } from "next-google-adsense";
 import { useUserStore } from "@/store/useUserStore";
 
 interface AdSlotProps {
-  format?: "horizontal" | "vertical" | "in-feed" | "reply" | "header";
+  format?: "horizontal" | "vertical" | "in-feed" | "reply" | "header" | "hero";
   slotId: string;
 }
 
@@ -115,6 +115,48 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
   // --- RENDER INTERNAL BUSINESS AD ---
   if (adData?.type === 'internal') {
     const { creative } = adData;
+    
+    if (format === 'hero') {
+      return (
+        <div 
+          ref={containerRef}
+          onClick={handleAdClick}
+          className="w-full relative cursor-pointer group overflow-hidden border-b border-border"
+        >
+          {creative.mediaUrl ? (
+             <div className="w-full h-[300px] sm:h-[400px] relative">
+               {creative.mediaType === 'VIDEO' ? (
+                 <video src={creative.mediaUrl} autoPlay muted loop className="w-full h-full object-cover" />
+               ) : (
+                 <img src={creative.mediaUrl} alt="Ad Creative" className="w-full h-full object-cover transition-transform duration-500" />
+               )}
+               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 pointer-events-none" />
+             </div>
+          ) : (
+             <div className="w-full h-[200px] bg-gradient-to-tr from-primary/80 to-primary/40 relative">
+               <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent pointer-events-none" />
+             </div>
+          )}
+          
+          <div className="absolute bottom-0 left-0 w-full p-6 text-white">
+            <div className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 backdrop-blur-md hover:bg-black/70 transition-colors cursor-pointer" title="Ad options">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+            </div>
+            
+            {creative.headline && <h3 className="font-bold text-3xl mb-1 text-white leading-tight">{creative.headline}</h3>}
+            {creative.description && <p className="text-white/90 text-sm mb-3 max-w-[80%]">{creative.description}</p>}
+            
+            <div className="flex items-center gap-2 text-[13px] font-bold text-white/90">
+              <div className="bg-white text-black rounded-sm p-[1px]">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+              </div>
+              Promoted {creative.advertiserName ? `by ${creative.advertiserName}` : ''}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div 
         ref={containerRef}

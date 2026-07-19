@@ -4,7 +4,7 @@ import AdSlot from "./AdSlot";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useUserStore } from "@/store/useUserStore";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function RecommendedUser({ user }: { user: { name: string, username: string } }) {
   const router = useRouter();
@@ -60,6 +60,40 @@ function RecommendedUser({ user }: { user: { name: string, username: string } })
 
 export default function RightSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/search?q=${searchQuery}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+          setShowSearchDropdown(true);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      setShowSearchDropdown(false);
+      router.push(`/explore?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   if (pathname.startsWith("/wallet") || pathname.startsWith("/creator-studio") || pathname.startsWith("/orbit") || pathname.startsWith("/settings") || pathname.startsWith("/ads/campaigns/new")) {
     return null;
@@ -68,13 +102,47 @@ export default function RightSidebar() {
   return (
     <aside className="w-[350px] h-screen sticky top-0 flex flex-col pt-4 pl-8 pb-6 hidden lg:flex overflow-y-auto no-scrollbar">
       
-      {/* Search */}
       <div className="mb-6 relative">
         <input 
           type="text" 
           placeholder="Search Intasela..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleSearchSubmit}
           className="w-full bg-accent text-foreground rounded-full py-2.5 pl-4 pr-4 border border-border focus:outline-none focus:border-primary transition-colors text-sm"
         />
+        {showSearchDropdown && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowSearchDropdown(false)}></div>
+            <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="py-2">
+                <button
+                  onClick={() => { setShowSearchDropdown(false); router.push(`/explore?q=${encodeURIComponent(searchQuery)}`); }}
+                  className="w-full text-left px-4 py-3 hover:bg-accent transition-colors flex items-center gap-3 border-b border-border/50"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <span className="text-[15px]">Search for "{searchQuery}"</span>
+                </button>
+                {searchResults.length > 0 && (
+                  <div className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">People</div>
+                )}
+                {searchResults.map((u: any) => (
+                  <button
+                    key={u.id}
+                    onClick={() => { setShowSearchDropdown(false); router.push(`/@${u.username}`); }}
+                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-center gap-3"
+                  >
+                    <img src={u.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${u.username}`} className="w-10 h-10 rounded-full bg-muted object-cover" />
+                    <div>
+                      <div className="font-semibold text-sm leading-tight text-foreground">{u.firstName} {u.lastName}</div>
+                      <div className="text-[13px] text-muted-foreground">@{u.username}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Top Earners Widget */}

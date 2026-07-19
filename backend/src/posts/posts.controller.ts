@@ -93,6 +93,24 @@ export class PostsController {
     return this.postsService.getDrafts(req.user.id);
   }
 
+  @Get('search')
+  async searchPosts(
+    @Query('q') q: string, 
+    @Query('sort') sort: string, 
+    @Query('media_only') mediaOnly: string,
+    @Headers('authorization') authHeader: string
+  ) {
+    let currentUserId: string | undefined;
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = this.jwtService.verify(token);
+        currentUserId = decoded.sub;
+      } catch (e) {}
+    }
+    return this.postsService.searchPosts(q, sort as 'top' | 'latest', mediaOnly === 'true', currentUserId);
+  }
+
   @Get(':id')
   async getPostById(@Param('id') id: string, @Headers('authorization') authHeader: string) {
     let currentUserId: string | undefined;
@@ -119,7 +137,7 @@ export class PostsController {
       videoWidth: body.videoWidth,
       videoHeight: body.videoHeight,
       videoDuration: body.videoDuration
-    }, body.spaceId, body.status, body.pollOptions, body.pollDurationDays, body.scheduledFor);
+    }, body.spaceId, body.status, body.pollOptions, body.pollDurationDays, body.scheduledFor, body.draftId);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -17,6 +17,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
   const [acceptType, setAcceptType] = useState<string>("image/*,video/*");
   const [showDrafts, setShowDrafts] = useState(false);
   const [draftsList, setDraftsList] = useState<any[]>([]);
+  const [editingDraftId, setEditingDraftId] = useState<number | null>(null);
   const [showPoll, setShowPoll] = useState(false);
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
   const [pollDurationDays, setPollDurationDays] = useState<number>(1);
@@ -95,8 +96,23 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
 
   const loadDraft = (draft: any) => {
     setContent(draft.content);
+    setEditingDraftId(draft.id);
     setShowDrafts(false);
-    // Ideally we would load media as well, but this is a V1 drafts implementation
+  };
+
+  const deleteDraft = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    try {
+      const token = localStorage.getItem("access_token");
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/${id}`, {
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      setDraftsList(prev => prev.filter(d => d.id !== id));
+      if (editingDraftId === id) setEditingDraftId(null);
+    } catch (err) {
+      console.error("Failed to delete draft", err);
+    }
   };
 
   const handleSubmit = async (e?: React.FormEvent | 'DRAFT') => {
@@ -164,6 +180,10 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
         payload.status = 'DRAFT';
       }
 
+      if (editingDraftId) {
+        payload.draftId = editingDraftId;
+      }
+
       if (showPoll) {
         payload.pollOptions = pollOptions.filter(o => o.trim() !== '');
         payload.pollDurationDays = pollDurationDays;
@@ -195,6 +215,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
       setPollOptions(['', '']);
       setShowSchedule(false);
       setScheduledFor("");
+      setEditingDraftId(null);
       closeComposer(); // Close modal
       onPostCreated(); // Refresh feed
     } catch (err: any) {
@@ -373,10 +394,19 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                             <div 
                               key={draft.id} 
                               onClick={() => loadDraft(draft)}
-                              className="p-3 border border-white/10 rounded-xl hover:bg-white/5 cursor-pointer transition-colors"
+                              className="p-3 border border-white/10 rounded-xl hover:bg-white/5 cursor-pointer transition-colors flex justify-between items-start group"
                             >
-                              <p className="text-white text-sm line-clamp-2">{draft.content || "Empty draft"}</p>
-                              <span className="text-gray-500 text-xs block mt-1">{new Date(draft.createdAt).toLocaleDateString()}</span>
+                              <div>
+                                <p className="text-white text-sm line-clamp-2">{draft.content || "Empty draft"}</p>
+                                <span className="text-gray-500 text-xs block mt-1">{new Date(draft.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              <button 
+                                onClick={(e) => deleteDraft(e, draft.id)}
+                                className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                                title="Delete Draft"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                              </button>
                             </div>
                           ))}
                         </div>

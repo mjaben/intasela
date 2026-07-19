@@ -47,6 +47,22 @@ export class UsersService {
     });
   }
 
+  async getSuggestedUsers(currentUserId?: string) {
+    return this.prisma.user.findMany({
+      where: currentUserId ? { id: { not: currentUserId } } : {},
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true
+      },
+      take: 6,
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
   async getSettings(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

@@ -12,6 +12,19 @@ export class UsersController {
     return this.usersService.searchUsers(query);
   }
 
+  @Get('suggested')
+  async getSuggestedUsers(@Headers('authorization') authHeader?: string) {
+    let currentUserId: string | undefined;
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = this.jwtService.verify(token);
+        currentUserId = decoded.sub;
+      } catch (e) {}
+    }
+    return this.usersService.getSuggestedUsers(currentUserId);
+  }
+
   @Get('profile/:username')
   async getProfile(@Param('username') username: string, @Headers('authorization') authHeader?: string) {
     let currentUserId: string | undefined;

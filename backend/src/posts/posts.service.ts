@@ -477,7 +477,8 @@ export class PostsService {
     status: string = 'PUBLISHED',
     pollOptions?: string[],
     pollDurationDays?: number,
-    scheduledFor?: string
+    scheduledFor?: string,
+    draftId?: number
   ) {
     if (spaceId) {
       const member = await this.prisma.spaceMember.findUnique({
@@ -516,24 +517,44 @@ export class PostsService {
       }
     }
 
-    const post = await this.prisma.post.create({
-      data: {
-        content,
-        authorId: userId,
-        parentId: parentId || null,
-        conversationId: parentId || null,
-        quotedPostId: quotedPostId || null,
-        spaceId: spaceId || null,
-        approvalStatus: initialApprovalStatus,
-        status: finalStatus,
-        scheduledFor: scheduledDate,
-        ...(mediaOptions || {})
-      },
-      include: {
-        parent: true,
-        quotedPost: true,
+    let post;
+    const postData = {
+      content,
+      authorId: userId,
+      parentId: parentId || null,
+      conversationId: parentId || null,
+      quotedPostId: quotedPostId || null,
+      spaceId: spaceId || null,
+      approvalStatus: initialApprovalStatus,
+      status: finalStatus,
+      scheduledFor: scheduledDate,
+      ...(mediaOptions || {})
+    };
+
+    if (draftId) {
+      // Ensure the draft belongs to the user
+      const existingDraft = await this.prisma.post.findUnique({ where: { id: draftId } });
+      if (existingDraft && existingDraft.authorId === userId && existingDraft.status === 'DRAFT') {
+        post = await this.prisma.post.update({
+          where: { id: draftId },
+          data: postData,
+          include: {
+            parent: true,
+            quotedPost: true,
+          }
+        });
+      } else {
+        throw new Error("Draft not found or unauthorized");
       }
-    });
+    } else {
+      post = await this.prisma.post.create({
+        data: postData,
+        include: {
+          parent: true,
+          quotedPost: true,
+        }
+      });
+    }
 
     if (pollOptions && pollOptions.length > 0) {
       const expiresAt = new Date();
@@ -830,5 +851,160 @@ export class PostsService {
       },
     });
     return posts.map(post => this.formatPost(post, currentUserId));
+  }
+  async searchPosts(query: string, sort: 'top' | 'latest', mediaOnly: boolean, currentUserId?: string) {
+    if (!query) return [];
+
+    let fromUsername = undefined;
+    let toUsername = undefined;
+    let exactPhrase = undefined;
+    let cleanQuery = query;
+
+    let minReplies = 0;
+    let minFaves = 0;
+    let minRetweets = 0;
+    let filterReplies: boolean | undefined = undefined;
+    let filterLinks: boolean | undefined = undefined;
+    let sinceDate: Date | undefined = undefined;
+    let untilDate: Date | undefined = undefined;
+
+    // Helper to extract and replace safely
+    const extract = (regex: RegExp) => {
+      const match = cleanQuery.match(regex);
+      if (match) {
+        cleanQuery = cleanQuery.replace(regex, '').trim();
+        return match[1];
+      }
+      return undefined;
+    };
+    
+    const extractBool = (regex: RegExp) => {
+      const match = cleanQuery.match(regex);
+      if (match) {
+        cleanQuery = cleanQuery.replace(regex, '').trim();
+        return true;
+      }
+      return false;
+    };
+
+    fromUsername = extract(/from:(\w+)/);
+    toUsername = extract(/to:(\w+)/);
+    
+    // Exact phrase
+    const exactMatch = cleanQuery.match(/"([^"]+)"/);
+    if (exactMatch) {
+      exactPhrase = exactMatch[1];
+      cleanQuery = cleanQuery.replace(/"([^"]+)"/, '').trim();
+    }
+
+    const minRepStr = extract(/min_replies:(\d+)/);
+    if (minRepStr) minReplies = parseInt(minRepStr, 10);
+    const minFavStr = extract(/min_faves:(\d+)/);
+    if (minFavStr) minFaves = parseInt(minFavStr, 10);
+    const minRtStr = extract(/min_retweets:(\d+)/);
+    if (minRtStr) minRetweets = parseInt(minRtStr, 10);
+
+    if (extractBool(/-filter:replies/)) filterReplies = false;
+    else if (extractBool(/filter:replies/)) filterReplies = true;
+
+    if (extractBool(/-filter:links/)) filterLinks = false;
+    else if (extractBool(/filter:links/)) filterLinks = true;
+
+    const sinceStr = extract(/since:(\d{4}-\d{2}-\d{2})/);
+    if (sinceStr) sinceDate = new Date(sinceStr);
+    const untilStr = extract(/until:(\d{4}-\d{2}-\d{2})/);
+    if (untilStr) untilDate = new Date(untilStr);
+
+    extract(/lang:(\w+)/); // Strip lang operator for now
+
+    const where: any = { status: 'PUBLISHED' };
+
+    if (fromUsername) {
+      where.author = { username: fromUsername };
+    }
+    if (toUsername) {
+      where.parent = { author: { username: toUsername } };
+    }
+    if (mediaOnly) {
+      where.mediaUrl = { not: null };
+    }
+    if (filterReplies === true) {
+      where.parentId = { not: null };
+    } else if (filterReplies === false) {
+      where.parentId = null;
+    }
+    
+    // Dates
+    if (sinceDate || untilDate) {
+      where.createdAt = {};
+      if (sinceDate) where.createdAt.gte = sinceDate;
+      if (untilDate) where.createdAt.lte = untilDate;
+    }
+
+    if (cleanQuery || exactPhrase || filterLinks !== undefined) {
+      where.AND = [];
+      
+      if (exactPhrase) {
+        where.AND.push({ content: { contains: exactPhrase, mode: 'insensitive' } });
+      }
+
+      if (filterLinks === true) {
+        where.AND.push({ content: { contains: 'http', mode: 'insensitive' } });
+      } else if (filterLinks === false) {
+        where.AND.push({ content: { not: { contains: 'http', mode: 'insensitive' } } });
+      }
+
+      if (cleanQuery) {
+        // Split by OR if it exists, otherwise split by space (AND logic)
+        if (cleanQuery.includes(' OR ')) {
+           const orTerms = cleanQuery.split(' OR ').filter(t => t.trim().length > 0);
+           if (orTerms.length > 0) {
+             where.AND.push({
+               OR: orTerms.map(t => ({ content: { contains: t.trim(), mode: 'insensitive' } }))
+             });
+           }
+        } else {
+           const terms = cleanQuery.split(' ').filter(t => t.trim().length > 0);
+           terms.forEach(t => {
+             if (t.startsWith('-')) {
+               where.AND.push({ content: { not: { contains: t.substring(1), mode: 'insensitive' } } });
+             } else {
+               where.AND.push({ content: { contains: t, mode: 'insensitive' } });
+             }
+           });
+        }
+      }
+      
+      if (where.AND.length === 0) delete where.AND;
+    }
+
+    const posts = await this.prisma.post.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: { select: this.getAuthorSelect(currentUserId) },
+        parent: { include: { author: { select: this.getAuthorSelect(currentUserId) } } },
+        poll: { include: { options: { include: { userVotes: true } } } },
+        _count: { select: { replies: true, engagements: true } },
+        engagements: true,
+      },
+      take: 100
+    });
+
+    let formattedPosts = posts.map(post => this.formatPost(post, currentUserId));
+
+    if (minReplies > 0) formattedPosts = formattedPosts.filter(p => p.stats.replies >= minReplies);
+    if (minFaves > 0) formattedPosts = formattedPosts.filter(p => p.stats.likes >= minFaves);
+    if (minRetweets > 0) formattedPosts = formattedPosts.filter(p => p.stats.reselas >= minRetweets);
+
+    if (sort === 'top') {
+      return formattedPosts.sort((a, b) => {
+        const scoreA = (a.stats.likes * 2) + (a.stats.reselas * 3) + a.stats.replies + (a.stats.views * 0.1);
+        const scoreB = (b.stats.likes * 2) + (b.stats.reselas * 3) + b.stats.replies + (b.stats.views * 0.1);
+        return scoreB - scoreA;
+      });
+    }
+
+    return formattedPosts;
   }
 }
