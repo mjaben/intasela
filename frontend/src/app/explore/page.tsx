@@ -104,7 +104,7 @@ function ExploreContent() {
       setCategoryLoading(true);
       try {
         const token = localStorage.getItem("access_token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
         let endpoint = "";
         
