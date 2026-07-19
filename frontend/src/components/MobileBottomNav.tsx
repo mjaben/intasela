@@ -43,6 +43,7 @@ export default function MobileBottomNav() {
   return (
     <nav className="sm:hidden fixed bottom-0 left-0 right-0 h-[60px] bg-background/95 backdrop-blur-md border-t border-border z-50 flex items-center justify-around px-2">
       {navItems.map((item) => {
+        if (item.name === "Activity" && !isAuthenticated) return null;
         const isActive = pathname === item.href || (item.name === "Profile" && pathname.startsWith("/@"));
         return (
           <Link
