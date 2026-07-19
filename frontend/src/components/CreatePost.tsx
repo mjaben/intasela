@@ -586,7 +586,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                   <button 
                     type="button" 
                     onClick={() => { setShowPoll(!showPoll); setShowSchedule(false); }}
-                    className={`p-2 rounded-full transition-colors hidden sm:block ${showPoll ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    className={`p-2 rounded-full transition-colors ${showPoll ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     title="Poll"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -596,7 +596,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                   <button 
                     type="button" 
                     onClick={() => { setShowSchedule(!showSchedule); setShowPoll(false); }}
-                    className={`p-2 rounded-full transition-colors hidden sm:block ${showSchedule ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    className={`p-2 rounded-full transition-colors ${showSchedule ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     title="Schedule"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path></svg>
