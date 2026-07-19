@@ -56,11 +56,7 @@ export default function RegisterPage() {
   const nextStep = () => {
     setError("");
     if (step === 1) {
-      if (formData.password !== formData.confirmPassword) {
-        setError("Passwords do not match");
-        return;
-      }
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.username) {
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.username) {
         setError("Please fill in all required fields");
         return;
       }
@@ -72,8 +68,17 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step !== 3) {
+    if (step !== 4) {
       nextStep();
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (!formData.password) {
+      setError("Password is required");
       return;
     }
 
@@ -110,13 +115,13 @@ export default function RegisterPage() {
     <div className="w-full max-w-lg bg-[#18181b] p-6 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
       <div className="text-center mb-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Create Account</h1>
-        <p className="text-gray-400">Step {step} of 3</p>
+        <p className="text-gray-400">Step {step} of 4</p>
         
         {/* Progress Bar */}
         <div className="w-full bg-gray-800 h-2 rounded-full mt-4">
           <div 
             className="bg-[#3BC492] h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(step / 3) * 100}%` }}
+            style={{ width: `${(step / 4) * 100}%` }}
           />
         </div>
       </div>
@@ -153,16 +158,6 @@ export default function RegisterPage() {
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
               <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Password *</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Confirm *</label>
-                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
-              </div>
             </div>
           </div>
         )}
@@ -302,6 +297,21 @@ export default function RegisterPage() {
           </div>
         )}
 
+        {step === 4 && (
+          <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+            <h2 className="text-xl font-bold text-white mb-2">Secure your account</h2>
+            <p className="text-gray-400 text-sm mb-4">Choose a strong password to protect your account.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Password *</label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Confirm Password *</label>
+              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-4 mt-6">
           {step > 1 && (
             <button
@@ -317,7 +327,7 @@ export default function RegisterPage() {
             disabled={loading}
             className="flex-1 bg-[#3BC492] hover:bg-[#2fa076] text-black font-bold py-3 rounded-lg transition-colors disabled:opacity-50"
           >
-            {step === 3 ? (loading ? "Creating..." : "Complete Setup") : "Continue"}
+            {step === 4 ? (loading ? "Creating..." : "Complete Setup") : "Continue"}
           </button>
         </div>
       </form>
