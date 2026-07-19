@@ -36,13 +36,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-[100dvh] bg-background text-foreground flex flex-col items-center`} suppressHydrationWarning>
+      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased h-[100dvh] bg-background text-foreground flex flex-col items-center overflow-hidden`} suppressHydrationWarning>
         <GoogleAdSense publisherId="pub-1173851541726956" />
         <MobileHeader />
-        <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0">
+        <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0 overflow-hidden">
           <SidebarNav />
           
-          <main className="flex-1 min-w-0 pb-[80px] sm:pb-0 flex flex-col">
+          <main className="flex-1 min-w-0 pb-[80px] sm:pb-0 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar">
             {children}
           </main>
 
