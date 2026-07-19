@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useState } from "react";
 import MobileSidebarDrawer from "./MobileSidebarDrawer";
 
 export default function MobileHeader() {
+  const pathname = usePathname();
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  if (pathname === "/login" || pathname === "/register") {
+    return null;
+  }
 
   return (
     <>

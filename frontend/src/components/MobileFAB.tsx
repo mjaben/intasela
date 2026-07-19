@@ -2,12 +2,17 @@
 
 import { useFeedStore } from "@/store/useFeedStore";
 import { useUserStore } from "@/store/useUserStore";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function MobileFAB() {
   const { openComposer } = useFeedStore();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const router = useRouter();
+  const pathname = usePathname();
+
+  if (pathname === "/login" || pathname === "/register") {
+    return null;
+  }
 
   const handleClick = () => {
     if (!isAuthenticated) {

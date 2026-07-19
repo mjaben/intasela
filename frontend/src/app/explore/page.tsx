@@ -59,6 +59,17 @@ function ExploreContent() {
   const [advDateTo, setAdvDateTo] = useState("");
 
   useEffect(() => {
+    if (showAdvanced) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showAdvanced]);
+
+  useEffect(() => {
     if (!q) {
       setResults([]);
       return;

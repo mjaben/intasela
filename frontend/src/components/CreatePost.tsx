@@ -9,6 +9,10 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
   const [content, setContent] = useState("");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedMediaData, setUploadedMediaData] = useState<any[]>([]);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [spaces, setSpaces] = useState<any[]>([]);
@@ -117,39 +121,15 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
 
   const handleSubmit = async (e?: React.FormEvent | 'DRAFT') => {
     if (typeof e !== 'string' && e) e.preventDefault();
-    if (!content.trim() && mediaFiles.length === 0) return;
+    if (!content.trim() && uploadedMediaData.length === 0) return;
 
     setLoading(true);
     setError("");
 
     try {
       const token = localStorage.getItem("access_token");
-      let mediaData = null;
-      let mediaUrls: string[] = [];
-
-      if (mediaFiles.length > 0) {
-        const uploadPromises = mediaFiles.map(async (file) => {
-          const formData = new FormData();
-          formData.append("file", file);
-          const endpoint = file.type.startsWith("video/") ? "/uploads/video" : "/uploads/image";
-          
-          const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${endpoint}`, {
-            method: "POST",
-            headers: { "Authorization": `Bearer ${token}` },
-            body: formData
-          });
-          
-          if (!uploadRes.ok) {
-            const errRes = await uploadRes.json();
-            throw new Error(errRes.message || "Failed to upload media");
-          }
-          return await uploadRes.json();
-        });
-        
-        const results = await Promise.all(uploadPromises);
-        mediaData = results[0]; // For fallback and video details
-        mediaUrls = results.map(r => r.url);
-      }
+      let mediaData = uploadedMediaData[0] || null;
+      let mediaUrls: string[] = uploadedMediaData.map(d => d.url);
 
       const payload: any = { content };
       
@@ -209,6 +189,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
 
       setContent(""); // Clear input on success
       setMediaFiles([]);
+      setUploadedMediaData([]);
       mediaPreviews.forEach(p => URL.revokeObjectURL(p));
       setMediaPreviews([]);
       setShowPoll(false);
@@ -225,7 +206,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
@@ -253,14 +234,100 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
     setError("");
     
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    // Start background upload immediately
+    setUploadingMedia(true);
+    setUploadProgress(0);
+
+    const token = localStorage.getItem("access_token");
+    let currentUploadData = [...uploadedMediaData];
+    
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      const endpoint = file.type.startsWith("video/") ? "/uploads/video" : "/uploads/image";
+      
+      try {
+        const result: any = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhrRef.current = xhr;
+          
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = Math.round((event.loaded / event.total) * 100);
+              setUploadProgress(percentComplete);
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              try {
+                const err = JSON.parse(xhr.responseText);
+                reject(new Error(err.message || "Failed to upload media"));
+              } catch {
+                reject(new Error("Failed to upload media"));
+              }
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Network error during upload"));
+          xhr.onabort = () => reject(new Error("Upload cancelled"));
+
+          xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${endpoint}`, true);
+          if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+          xhr.send(formData);
+        });
+        
+        currentUploadData.push(result);
+      } catch (err: any) {
+        if (err.message !== "Upload cancelled") {
+          setError(err.message);
+        }
+        setUploadingMedia(false);
+        xhrRef.current = null;
+        return; // Stop processing further files on error
+      }
+    }
+    
+    setUploadedMediaData(currentUploadData);
+    setUploadingMedia(false);
+    xhrRef.current = null;
   };
 
-  const removeMedia = (index: number) => {
+  const removeMedia = async (index: number) => {
+    // If currently uploading, cancel it
+    if (uploadingMedia && xhrRef.current) {
+      xhrRef.current.abort();
+      setUploadingMedia(false);
+      setUploadProgress(0);
+    }
+    
+    const previewToRemove = mediaPreviews[index];
+    const uploadedDataToRemove = uploadedMediaData[index];
+    
+    URL.revokeObjectURL(previewToRemove);
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
-    setMediaPreviews(prev => {
-      URL.revokeObjectURL(prev[index]);
-      return prev.filter((_, i) => i !== index);
-    });
+    setMediaPreviews(prev => prev.filter((_, i) => i !== index));
+    
+    if (uploadedDataToRemove?.url) {
+      // Call backend delete endpoint
+      try {
+        const token = localStorage.getItem("access_token");
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/uploads/delete`, {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ url: uploadedDataToRemove.url })
+        });
+      } catch (e) {
+        console.error("Failed to delete orphaned media", e);
+      }
+      setUploadedMediaData(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   const UserAvatar = ({ size = "sm", src, fallback }: { size?: "sm" | "md", src?: string, fallback?: string }) => {
@@ -452,22 +519,35 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
 
                   {/* MEDIA PREVIEW UI */}
                   {mediaPreviews.length > 0 && (
-                    <div className="mt-3 flex overflow-x-auto snap-x snap-mandatory gap-0.5 pb-1 no-scrollbar">
-                      {mediaPreviews.map((preview, index) => (
-                        <div key={preview} className={`relative shrink-0 ${mediaPreviews.length > 1 ? 'w-[85%]' : 'w-full'} snap-center rounded-lg overflow-hidden bg-black/20 flex justify-center border border-white/10 group`}>
-                          <button 
-                            onClick={() => removeMedia(index)}
-                            className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80 backdrop-blur-md transition opacity-0 group-hover:opacity-100 z-10"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
-                          </button>
-                          {mediaFiles[index]?.type.startsWith('video/') ? (
-                            <video src={preview} controls className="max-h-[300px] w-full object-cover" />
-                          ) : (
-                            <img src={preview} className="max-h-[300px] w-full object-cover" alt={`Upload preview ${index + 1}`} />
-                          )}
+                    <div className="relative mt-3">
+                      <div className="flex overflow-x-auto snap-x snap-mandatory gap-0.5 pb-1 no-scrollbar">
+                        {mediaPreviews.map((preview, index) => (
+                          <div key={preview} className={`relative shrink-0 ${mediaPreviews.length > 1 ? 'w-[85%]' : 'w-full'} snap-center rounded-lg overflow-hidden bg-black/20 flex justify-center border border-white/10 group`}>
+                            <button 
+                              onClick={() => removeMedia(index)}
+                              className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80 backdrop-blur-md transition opacity-0 group-hover:opacity-100 z-10"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+                            </button>
+                            {mediaFiles[index]?.type.startsWith('video/') ? (
+                              <video src={preview} controls className="max-h-[300px] w-full object-cover" />
+                            ) : (
+                              <img src={preview} className="max-h-[300px] w-full object-cover" alt={`Upload preview ${index + 1}`} />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {uploadingMedia && (
+                        <div className="absolute inset-0 bg-black/60 rounded-lg flex flex-col items-center justify-center z-20 backdrop-blur-sm">
+                          <span className="text-white font-bold mb-3">{uploadProgress}% Uploaded</span>
+                          <div className="w-[80%] h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-[#3BC492] transition-all duration-300 ease-out" 
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </div>
@@ -620,9 +700,9 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                   <button
                     type="button"
                     onClick={() => handleSubmit()}
-                    disabled={loading || (!content.trim() && mediaFiles.length === 0)}
+                    disabled={loading || uploadingMedia || (!content.trim() && uploadedMediaData.length === 0)}
                     className={`px-6 py-2 rounded-full font-bold transition-colors flex items-center gap-2 ${
-                      loading || (!content.trim() && mediaFiles.length === 0) 
+                      loading || uploadingMedia || (!content.trim() && uploadedMediaData.length === 0) 
                         ? "bg-[#262626] text-gray-500 cursor-not-allowed" 
                         : "bg-[#3BC492] hover:bg-[#2fa076] text-black"
                     }`}

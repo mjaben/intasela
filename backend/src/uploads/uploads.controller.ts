@@ -1,5 +1,5 @@
 import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException, Req } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -262,5 +262,26 @@ export class UploadsController {
           });
       });
     });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('delete')
+  async deleteMedia(@Body() body: { url: string }, @Req() req: any) {
+    if (!body.url) return { success: false };
+    
+    try {
+      const urlObj = new URL(body.url);
+      const key = urlObj.pathname.substring(1); // remove leading slash
+      
+      const command = new DeleteObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME || 'intasela',
+        Key: key,
+      });
+      await this.s3Client.send(command);
+      return { success: true };
+    } catch (e) {
+      console.error("Delete media error", e);
+      return { success: false };
+    }
   }
 }
