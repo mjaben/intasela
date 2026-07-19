@@ -32,6 +32,11 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
 
   const navItems = [
     {
+      name: "Profile",
+      href: `/@${user?.username}`,
+      icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADa0lEQVR4nO2Za2gUVxiGH9dxdy5ndjZixRatRSwFQSzaBNEixYqiBRUawURag4WiJTHYG+SHKAiCVLwmWkSjIKgo2qKY9d5sQlI3jU3TuF6TViRt1VZtNZvEWDrl1MmfgmJmdzMj7gMvu7Ccb+bdOd/5vnMGsmTJ4gUvKUqgLCcn8p2h67eCwWDSNEV7JBI+BRQCIXxOSNf1zZqmJQvm53ftrNxi18aO2U3nau1jVQftjRvW2LlvjL8nhNEOvIlPGSx0vXna2291NjZU2z+1Nj9WlTsq7HDYvA/MwGcMEsKIFy0s7Gm7+sMTTfTq60N7bE3TOoAR+AVNC62aPHlisvVK01OZ6NUnHxc/NE0zik8YoqpqR6y6qk8mpBItcVsII+mLpxIIBD6aNXN6sq8mepX/7pxuRQl85rUPLMuKVZSvdWVCavOmL+xIJHLCax8Yhn6rpjrq2siJ41/Zpil+9doHiqL0XEw0uDbyfWONHQqFOp55I4mWuC1jeO0DXddu19eddG1ETktD13/32geRiBWv3F7u2ois8rIn88PUWl60cMEDt0YKC+Z1K4ri/fILjBaGkbxwvsFVohuGLgvicPyAECJaunRJT5+LYf6cLtMwKvARw1VV/Wvf3sqnNrFyRdnfQhhX5XqBz5gmu9mtW9Y/0cD5lrN20fsFXUIYP/uix3oME3Vdv56XN+G+bFvO1p+2ZVvf3FT3X9teUvzhQysc7jBNcw9g4nOCwCLLCtdrmvon8E8wGOy0TLNNC4XWAmO8vsEsWbI8x7wGlADlwBHgDNAIJIA24A/gpvNdqtX5vQbYB2wAPgdmAzleGHgdOAz8AmwDlgJzZVEEcoFxwCjgReezV68CE4ApzonjMkAuyd8AncABZ2zGCQArgRvA4jQffVrAp8BtYDUwkAwWugPOvzc0UxcBXgBiwC5gQLqDy4C7gUPyVJHMowFVTg6llSXAj4BK/2EB15y8SwvDnHnbL0n4P6YCl9OVi+uBdXhHFHgv1SAyH34DXsE7ZgB1qQZ5BziKtwx0lvuRqQT50qncXrMf+CCVAPK8aSzeU+rUFdePNOmTF5eTgG9TqbDypaUfeNlpPl13trJj9QNBoNvtYNmpXsIfDAIeuB08BOgCbBeSuXUnjbrr7HH6Dc3ZIGVCan8ayZKFR/wL2mi+pmPniNsAAAAASUVORK5CYII="
+    },
+    {
       name: "Creator Studio",
       href: "/creator-studio",
       icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFVUlEQVR4nO2ZeWwUVRyAv63dzs7szOx0oxweERGkoiYiEM/oH4palQAGigpGDFIhkFBAWzQQDZQERUShRG7EcihGy02RmxZQg7RcQa4KoihHgEBbDinPvOaRNJvZbbd0y27Cl7xs+t70zfzm/e6BmyQmh4GjQDHwLTAGsEhAtgK9gSeB14G5wAZAJ8EYB3xU428PMBX4CdBIILoAa0PmktTJFADJJAi3AhVASsj8LcAC4BslWEKwB+joMi+FWwpMJkGYCgwIsyaNvgjYASwEVgIbgW1AZ+KMt4AZEdaDyk1LVUsHngHaAz7ijIeBklquuQ34HXiPOEZTBl/bG74H+EudYNyyE3i0Dtc9APwLvEicMjeCwYfyuBJG2kmjkQy0BJ4F3gE+UMYbSjbwZRT7vgz8rfZuFI4CfwLrgJlAPrAfSAu5TqrKsij3HqT2kkE15vzoYpzyZE4AL9SYuxvYW4/9JwKbGiMvywAKXeZlJC9T6uRVKcl59RsN8vrFwBxijAGcUXEglCbAalWLyBM5pH6jRdYvpcBwYsy8CB5JJoRDlBc6pbLh1AjDH2afu5Q9douhHLyi8iM37khOThpuWWZJUlJSlaalXNZ9vos+n3Yh3PB4PFcBEW5oKSmVhmGcsm3riOMEdjuOs9lxAits28zXNW088CHQH3geuDcaQaQNnAxRm46WZa01DL0yI6PbhRnTJondO7eKsoM7rnuUbi8WxZsKReGKH8T3380Rs2ZOFhO//FSMyR0pcrKzxID+fa/26N61okP7dmccJ1BuGPopv98vPeoTdRFmOjBMnoBtmitSU53y3NEjru7d82uDPPz1jLWrl4ic7CFVTZs2OW/blswwXookiAyIB3Xdd27QwMz/4kGAspBx6ECpmPLVBHF782bllmXKqrWFmyBSF88Zhl4+JGvg5YZSo1iM0u3FolWrlle83uQ/3ATJUurVwjTNxX6/vyKzX59LRRsLb/iDl6mxe9fP0oaumKa/0jRNWfvc6SbIOuW9rtHCMHx5mqadT2vT+uzwnKFV0jjl8Ta2AMuXLhS9e/W8pOt6pWX5ZSbyYDj7kP7/bJhelUwqn/P7/V+bpnlMerG2bdPKM3p0vZjZr0/VsKGDRPb7g8XoUSOqvc6kieNE3qRxIn/OVDEvf7pYsmiBWLZ0odiwfrnYXLRKlPxWJHaUbK7+3bplTfW8XF9cML/6f2bNyBPjPxsjsgYPqEpP7ySNu8KyzCOapo0NdwI16QUsqu0i4DFgi4oHs4Ac2Xk0DGOCruuzg44z37bN5cFgcE0gYP0SDKaW2La9P2Dbhw3DOG4Yxmmv11sp40yK13tB1/Uzpmkcl+u2be8LBlO3OU6g2HGcAo/HMwp4M9o4IpsGb0dYT1U1u6z+MoHT9cxobVUyy4DX4GgRci3J08ARYDbgAPcBu+pxH6/qTkqHEhPSVZrtZhsfq1OQ+dU15InkRXkPj3oR61wafQ1GrmpUt6ox11T1qlYqtarJfKBnlPcYrbJfqVoxw690VhZSU1QxJVVprEvtId/sMaB5FPtnqgq0Vo/TUMg6/ROVrod74/cD+6LYU8alf1zK5hvOYGBaHa99SgnRgThkVYjhR4o3J1U9EXf4VfwIVwFeo50SojtxSmdgSR2EOKEyhbhlNtA3wvpDqj+8RX2G+BwYWY+uS0zRlFo1C7PeRgXOXPXBVLrcoao0iCtBuqg37UaaEkJ++Y17FqjebyiPqP7uGyQAhiyBXepjmUweB14lQXgNWO/SaZfeqRMJRAEwSj30u8AXKmK7feWNaw6oZvYalZ7I7yetb/RD3eQmxJ7/AdrfHEZjypLQAAAAAElFTkSuQmCC"
@@ -76,7 +81,10 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
 
         {/* User Info (if logged in) */}
         {isAuthenticated && user && (
-          <div className="p-6 border-b border-border">
+          <div 
+            className="p-6 border-b border-border cursor-pointer hover:bg-accent/50 transition-colors"
+            onClick={() => { onClose(); router.push(`/@${user.username}`); }}
+          >
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-muted overflow-hidden border border-border">
                 <img 
@@ -86,7 +94,7 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
                 />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-[15px]">{user.username}</span>
+                <span className="font-bold text-[15px]">{user.name || user.username}</span>
                 <span className="text-muted-foreground text-sm">@{user.username}</span>
               </div>
             </div>

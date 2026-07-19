@@ -684,22 +684,22 @@ export default function PostCard({
               </div>
             )}
 
-            {!hideMedia && (mediaUrl || (mediaUrls && mediaUrls.length > 0)) && mediaType === 'IMAGE' && (
+            {!hideMedia && (mediaType === 'IMAGE' && (mediaUrl || (mediaUrls && mediaUrls.length > 0))) && (
               <>
                 {mediaUrls && mediaUrls.length > 1 ? (
                   <div 
-                    className="mt-3 flex overflow-x-auto snap-x snap-mandatory gap-0.5 pb-1 no-scrollbar"
+                    className="mt-3 flex overflow-x-auto snap-x snap-mandatory gap-1 pb-2 no-scrollbar"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {mediaUrls.map((url, index) => (
-                      <div key={index} className="shrink-0 w-[49.5%] snap-center rounded-xl overflow-hidden border border-border cursor-pointer" onClick={(e) => handleMediaClick(e, index)}>
-                        <img src={url} alt={`Sela media ${index}`} className="w-full h-[180px] sm:h-[240px] object-cover" />
+                    {mediaUrls.map((url: string, idx: number) => (
+                      <div key={idx} className={`shrink-0 ${mediaUrls.length === 2 ? 'w-[49.5%]' : 'w-[80%] sm:w-[60%]'} snap-center rounded-lg overflow-hidden border border-border cursor-pointer`} onClick={(e) => handleMediaClick(e, idx)}>
+                        <img src={url} alt={`Sela media ${idx+1}`} className="w-full h-[250px] sm:h-[350px] object-cover hover:opacity-90 transition-opacity" />
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-3 inline-block rounded-xl overflow-hidden border border-border cursor-pointer max-w-[90%] sm:max-w-[80%]" onClick={(e) => handleMediaClick(e, 0)}>
-                    <img src={mediaUrls?.[0] || mediaUrl} alt="Sela media" className="w-full max-h-[200px] sm:max-h-[280px] object-cover" />
+                  <div className="mt-3 inline-block rounded-xl overflow-hidden border border-border cursor-pointer w-full" onClick={(e) => handleMediaClick(e, 0)}>
+                    <img src={mediaUrls?.[0] || mediaUrl} alt="Sela media" className="w-full max-h-[500px] object-cover" />
                   </div>
                 )}
               </>

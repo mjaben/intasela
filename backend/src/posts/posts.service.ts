@@ -739,20 +739,53 @@ export class PostsService {
   }
 
   async incrementView(postId: number, currentUserId?: string) {
+    let shouldIncrement = false;
+
     if (currentUserId) {
       const post = await this.prisma.post.findUnique({ where: { id: postId } });
       if (post && post.authorId === currentUserId) {
         return post; // Author viewing their own post, ignore increment
       }
+
+      // Try to insert VIEW_1
+      try {
+        await this.prisma.engagement.create({
+          data: {
+            userId: currentUserId,
+            postId,
+            type: 'VIEW_1'
+          }
+        });
+        shouldIncrement = true;
+      } catch (e) {
+        // VIEW_1 exists, try VIEW_2
+        try {
+          await this.prisma.engagement.create({
+            data: {
+              userId: currentUserId,
+              postId,
+              type: 'VIEW_2'
+            }
+          });
+          shouldIncrement = true;
+        } catch (e2) {
+          // VIEW_2 also exists. User has already viewed 2 times.
+          return post; // Do not increment
+        }
+      }
+    } else {
+      shouldIncrement = true; // Allow anonymous views
     }
 
-    const updatedPost = await this.prisma.post.update({
-      where: { id: postId },
-      data: { viewsCount: { increment: 1 } }
-    });
+    if (shouldIncrement) {
+      const updatedPost = await this.prisma.post.update({
+        where: { id: postId },
+        data: { viewsCount: { increment: 1 } }
+      });
 
-    await this.monetizationService.processViewMilestone(updatedPost);
-    return updatedPost;
+      await this.monetizationService.processViewMilestone(updatedPost);
+      return updatedPost;
+    }
   }
 
   async deletePost(postId: number, userId: string) {

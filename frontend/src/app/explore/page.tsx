@@ -180,7 +180,7 @@ function ExploreContent() {
   };
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen border-x border-border pb-20 sm:pb-0">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen pb-20 sm:pb-0 overflow-x-hidden">
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">Explore</h1>
@@ -548,7 +548,7 @@ function ExploreContent() {
 
 export default function ExplorePage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-[650px] mx-auto min-h-screen border-x border-border"></div>}>
+    <Suspense fallback={<div className="w-full max-w-[650px] mx-auto min-h-screen"></div>}>
       <ExploreContent />
     </Suspense>
   );
