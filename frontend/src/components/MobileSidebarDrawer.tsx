@@ -94,7 +94,7 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
                 />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-[15px]">{user.name || user.username}</span>
+                <span className="font-bold text-[15px]">{user.username}</span>
                 <span className="text-muted-foreground text-sm">@{user.username}</span>
               </div>
             </div>
