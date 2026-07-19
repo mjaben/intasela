@@ -263,16 +263,15 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
             if (xhr.status >= 200 && xhr.status < 300) {
               resolve(JSON.parse(xhr.responseText));
             } else {
-              try {
-                const err = JSON.parse(xhr.responseText);
-                reject(new Error(err.message || "Failed to upload media"));
-              } catch {
-                reject(new Error("Failed to upload media"));
+              if (xhr.status === 413) {
+                reject(new Error("File is too large. Please select a smaller file."));
+              } else {
+                reject(new Error("Upload failed. Please try again later."));
               }
             }
           };
 
-          xhr.onerror = () => reject(new Error("Network error during upload"));
+          xhr.onerror = () => reject(new Error("Internet connection dropped. Please check your network and try again."));
           xhr.onabort = () => reject(new Error("Upload cancelled"));
 
           xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}${endpoint}`, true);
@@ -285,6 +284,16 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
         if (err.message !== "Upload cancelled") {
           setError(err.message);
         }
+        
+        // Rollback the UI to match only successfully uploaded files
+        setMediaFiles(prev => prev.slice(0, currentUploadData.length));
+        setMediaPreviews(prev => {
+          // revoke object URLs for the ones we are removing
+          const removed = prev.slice(currentUploadData.length);
+          removed.forEach(url => URL.revokeObjectURL(url));
+          return prev.slice(0, currentUploadData.length);
+        });
+
         setUploadingMedia(false);
         xhrRef.current = null;
         return; // Stop processing further files on error
@@ -539,13 +548,25 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                       </div>
                       {uploadingMedia && (
                         <div className="absolute inset-0 bg-black/60 rounded-lg flex flex-col items-center justify-center z-20 backdrop-blur-sm">
-                          <span className="text-white font-bold mb-3">{uploadProgress}% Uploaded</span>
-                          <div className="w-[80%] h-2 bg-gray-800 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-[#3BC492] transition-all duration-300 ease-out" 
-                              style={{ width: `${uploadProgress}%` }}
-                            />
-                          </div>
+                          {uploadProgress === 100 ? (
+                            <div className="flex flex-col items-center gap-3">
+                              <svg className="animate-spin h-6 w-6 text-[#3BC492]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span className="text-white text-sm font-medium">Processing...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <span className="text-white font-medium text-sm mb-2">{uploadProgress}%</span>
+                              <div className="w-[50%] h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-[#3BC492] transition-all duration-300 ease-out" 
+                                  style={{ width: `${uploadProgress}%` }}
+                                />
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
