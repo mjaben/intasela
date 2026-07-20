@@ -52,7 +52,8 @@ export default function PostCard({
   approvalStatus,
   authorRole,
   createdAt,
-  poll
+  poll,
+  isExpandedView
 }: { 
   id: number;
   content: string;
@@ -84,6 +85,7 @@ export default function PostCard({
   authorRole?: string;
   createdAt?: string | Date;
   poll?: any;
+  isExpandedView?: boolean;
 }) {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const user = useUserStore((state) => state.user);

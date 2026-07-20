@@ -53,7 +53,7 @@ export default function SpacePostDetail() {
   }
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-background pb-20 border-x border-border/50">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-background pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center gap-6 p-4 bg-background/80 backdrop-blur-md border-b border-border">
         <button 
