@@ -53,7 +53,7 @@ export default function SpacePostDetail() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto min-h-screen bg-background pb-20">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-background pb-20 border-x border-border/50">
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center gap-6 p-4 bg-background/80 backdrop-blur-md border-b border-border">
         <button 
@@ -95,31 +95,37 @@ export default function SpacePostDetail() {
           parentPost={post.parent}
           isReplyContext={!!post.parent}
           poll={post.poll}
+          isExpandedView={true}
         />
       </div>
 
-      {/* Leave a Reply Box */}
-      <div className="px-6 py-6 bg-background">
-        <div 
-          onClick={() => {
-            if (!isAuthenticated) return router.push('/login');
-            openComposer('REPLY', { 
-              id: post.id, 
-              author: post.author.firstName || post.author.username, 
-              content: post.content 
-            });
-          }}
-          className="flex items-center gap-4 p-4 rounded-xl border border-white/10 hover:border-white/20 transition-all cursor-text group"
-        >
-          <div className="w-9 h-9 rounded-full bg-muted overflow-hidden shrink-0">
-            {user ? (
-              <img src={user.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.username}`} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <svg className="w-full h-full text-gray-500 bg-gray-800" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            )}
-          </div>
-          <div className="flex-1 text-muted-foreground group-hover:text-foreground/80 transition-colors text-[15px]">
-            Leave a reply...
+      {/* Sticky Bottom Reply Box */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-md border-t border-border p-3 md:pb-3 pb-[env(safe-area-inset-bottom,20px)] sm:static sm:z-auto sm:border-none sm:bg-transparent sm:p-6 sm:pb-6 flex justify-center">
+        <div className="w-full max-w-[650px] relative">
+          <div 
+            onClick={() => {
+              if (!isAuthenticated) return router.push('/login');
+              openComposer('REPLY', { 
+                id: post.id, 
+                author: post.author.firstName || post.author.username, 
+                content: post.content 
+              });
+            }}
+            className="flex items-center gap-3 p-2.5 sm:p-4 rounded-full border border-white/10 hover:border-white/20 transition-all cursor-text group bg-accent/20"
+          >
+            <div className="w-8 h-8 rounded-full bg-muted overflow-hidden shrink-0">
+              {user ? (
+                <img src={user.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.username}`} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <svg className="w-full h-full text-gray-500 bg-gray-800" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              )}
+            </div>
+            <div className="flex-1 text-muted-foreground group-hover:text-foreground/80 transition-colors text-[14px]">
+              Post your reply
+            </div>
+            <button className="bg-brand text-black px-4 py-1.5 rounded-full text-sm font-bold opacity-50 cursor-text">
+              Reply
+            </button>
           </div>
         </div>
       </div>

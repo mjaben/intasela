@@ -2,10 +2,17 @@
 
 import { useEffect } from "react";
 import { useMediaViewerStore } from "@/store/useMediaViewerStore";
+import { useFeedStore } from "@/store/useFeedStore";
+import { useUserStore } from "@/store/useUserStore";
+import { useRouter } from "next/navigation";
 import PostCard from "./PostCard";
 
 export default function MediaViewerModal() {
   const { isOpen, post, currentIndex, mediaUrls, mediaType, closeViewer, next, prev } = useMediaViewerStore();
+  const { openComposer } = useFeedStore();
+  const user = useUserStore((state) => state.user);
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
@@ -75,11 +82,58 @@ export default function MediaViewerModal() {
         {currentIndex < mediaUrls.length - 1 && (
           <button 
             onClick={next}
-            className="absolute right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-white/20 transition-colors"
+            className="absolute right-4 z-10 p-2 rounded-full bg-black/50 text-white hover:bg-white/20 transition-colors hidden md:block"
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         )}
+
+        {/* Mobile Bottom Engagement Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 md:hidden bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-10 pb-[env(safe-area-inset-bottom,20px)] px-4 flex flex-col gap-3">
+          
+          <div className="flex items-center justify-around text-white/90">
+            <button className="flex items-center gap-1 hover:text-white" onClick={() => { if(!isAuthenticated) router.push('/login'); openComposer('REPLY', { id: post.id, author: post.author?.firstName || post.author?.username, content: post.content }); }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span className="text-sm">{post.stats?.replies || 0}</span>
+            </button>
+            <button className="flex items-center gap-1 hover:text-white">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h13.8"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H3.2"/></svg>
+              <span className="text-sm">{post.stats?.reselas || 0}</span>
+            </button>
+            <button className="flex items-center gap-1 hover:text-white">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span className="text-sm">{post.stats?.likes || 0}</span>
+            </button>
+          </div>
+
+          <div 
+            onClick={() => {
+              if (!isAuthenticated) return router.push('/login');
+              closeViewer();
+              openComposer('REPLY', { 
+                id: post.id, 
+                author: post.author?.firstName || post.author?.username, 
+                content: post.content 
+              });
+            }}
+            className="w-full flex items-center gap-3 p-2.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md cursor-text"
+          >
+            <div className="w-8 h-8 rounded-full bg-muted overflow-hidden shrink-0">
+              {user ? (
+                <img src={user.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${user.username}`} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <svg className="w-full h-full text-gray-500 bg-gray-800" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              )}
+            </div>
+            <div className="flex-1 text-white/70 text-[14px]">
+              Post your reply
+            </div>
+            <button className="bg-brand text-black px-4 py-1.5 rounded-full text-sm font-bold opacity-50">
+              Reply
+            </button>
+          </div>
+
+        </div>
       </div>
 
       {/* Right Area - Post Context (hidden on mobile by default) */}
