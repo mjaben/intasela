@@ -2,6 +2,10 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request, 
 import { SpacesService } from './spaces.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { CreateSpaceDto } from './dto/create-space.dto';
+import { UpdateSpaceDto } from './dto/update-space.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
+import { UpdateMemberStatusDto } from './dto/update-member-status.dto';
 
 @Controller('spaces')
 export class SpacesController {
@@ -11,7 +15,7 @@ export class SpacesController {
   ) {}
 
   @Post()
-  async createSpace(@Headers('x-admin-id') adminId: string, @Body() body: any) {
+  async createSpace(@Headers('x-admin-id') adminId: string, @Body() body: CreateSpaceDto) {
     if (!adminId) throw new UnauthorizedException('Admin ID required');
     return this.spacesService.createSpace(adminId, body);
   }
@@ -64,7 +68,7 @@ export class SpacesController {
   @Post(':id')
   async updateSpace(
     @Param('id') id: string,
-    @Body() body: any,
+    @Body() body: UpdateSpaceDto,
     @Headers('x-admin-id') adminId?: string,
     @Headers('authorization') authHeader?: string
   ) {
@@ -162,19 +166,17 @@ export class SpacesController {
     @Headers('x-admin-id') adminId: string,
     @Param('id') id: string,
     @Param('userId') userId: string,
-    @Body('role') role: string,
-    @Body('permissions') permissions?: string[]
+    @Body() body: UpdateMemberRoleDto
   ) {
     if (!adminId) throw new UnauthorizedException('Admin ID required');
-    return this.spacesService.updateMemberRole(adminId, id, userId, role, permissions);
+    return this.spacesService.updateMemberRole(adminId, id, userId, body.role, body.permissions);
   }
 
   @Patch(':id/members/:userId/suspend')
   async updateMemberStatus(
     @Param('id') id: string,
     @Param('userId') userId: string,
-    @Body('status') status: string,
-    @Body('reason') reason: string,
+    @Body() body: UpdateMemberStatusDto,
     @Headers('x-admin-id') adminId?: string,
     @Headers('authorization') authHeader?: string
   ) {
@@ -187,6 +189,6 @@ export class SpacesController {
       } catch (e) {}
     }
     if (!currentUserId) throw new UnauthorizedException('Authentication required');
-    return this.spacesService.updateMemberStatus(currentUserId, id, userId, status, reason);
+    return this.spacesService.updateMemberStatus(currentUserId, id, userId, body.status, body.reason);
   }
 }

@@ -2,14 +2,23 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException,
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
+/**
+ * Helper to check if a given ID belongs to a SystemAdmin.
+ * Replaces the old `adminId === 'admin'` string backdoor.
+ */
+async function isSystemAdmin(prisma: PrismaService, id: string | undefined): Promise<boolean> {
+  if (!id) return false;
+  const admin = await prisma.systemAdmin.findUnique({ where: { id } });
+  return !!admin;
+}
+
 @Injectable()
 export class SpacesService {
   constructor(private prisma: PrismaService) {}
 
   async createSpace(adminId: string, data: { name: string; description?: string; coverUrl?: string; type?: string; postApprovalMode?: string }) {
-    if (adminId !== 'admin') {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (!admin) throw new ForbiddenException('Only System Admin can create spaces');
+    if (!(await isSystemAdmin(this.prisma, adminId))) {
+      throw new ForbiddenException('Only System Admin can create spaces');
     }
 
     return this.prisma.space.create({
@@ -28,9 +37,8 @@ export class SpacesService {
   async getAllSpaces(userId?: string, adminId?: string) {
     let spaces: any[] = [];
     if (adminId) {
-      if (adminId !== 'admin') {
-        const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-        if (!admin) throw new ForbiddenException('Not authorized');
+      if (!(await isSystemAdmin(this.prisma, adminId))) {
+        throw new ForbiddenException('Not authorized');
       }
       spaces = await this.prisma.space.findMany({
         include: { _count: { select: { members: true } } }
@@ -93,11 +101,9 @@ export class SpacesService {
   }
 
   async getPendingPosts(spaceId: string, currentUserId: string) {
-    let isAdmin = false;
-    const admin = await this.prisma.systemAdmin.findUnique({ where: { id: currentUserId } });
-    if (admin) isAdmin = true;
+    const adminCheck = await isSystemAdmin(this.prisma, currentUserId);
 
-    if (!isAdmin) {
+    if (!adminCheck) {
       const member = await this.prisma.spaceMember.findUnique({
         where: { spaceId_userId: { spaceId, userId: currentUserId } }
       });
@@ -179,12 +185,7 @@ export class SpacesService {
     const space = await this.prisma.space.findUnique({ where: { id: spaceId } });
     if (!space) throw new NotFoundException('Space not found');
 
-    // Super Admin check (simulate admin id usage here)
-    let isAdmin = adminOrModId === 'admin';
-    if (!isAdmin) {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminOrModId } });
-      if (admin) isAdmin = true;
-    }
+    const isAdmin = await isSystemAdmin(this.prisma, adminOrModId);
     
     let isMod = false;
     
@@ -213,17 +214,10 @@ export class SpacesService {
       data: { spaceId, userId: targetUser.id, status: 'INVITED' }
     });
 
-    // Create Notification
-    let validActorId = adminOrModId;
-    let isAdminUser = false;
-    if (adminOrModId === 'admin') {
-      isAdminUser = true;
-    } else {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminOrModId } });
-      if (admin) isAdminUser = true;
-    }
-
-    if (isAdminUser) validActorId = targetUser.id;
+    // Create Notification — use the admin/mod's actual ID as actor
+    // For SystemAdmins, their ID is in the SystemAdmin table, not the User table,
+    // so we use the target user as both actor and recipient for the notification.
+    const validActorId = isAdmin ? targetUser.id : adminOrModId;
 
     await this.prisma.notification.create({
       data: {
@@ -243,11 +237,7 @@ export class SpacesService {
     const space = await this.prisma.space.findUnique({ where: { id: spaceId } });
     if (!space) throw new NotFoundException('Space not found');
 
-    let isAdmin = adminOrModId === 'admin';
-    if (!isAdmin) {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminOrModId } });
-      if (admin) isAdmin = true;
-    }
+    const isAdmin = await isSystemAdmin(this.prisma, adminOrModId);
     
     let isMod = false;
     if (!isAdmin) {
@@ -323,18 +313,8 @@ export class SpacesService {
   }
 
   async updateMemberRole(adminId: string, spaceId: string, targetUserId: string, role: string, permissions?: string[]) {
-    let isAdmin = adminId === 'admin';
-    if (!isAdmin) {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (admin) isAdmin = true;
-    }
-
-    if (!isAdmin) {
+    if (!(await isSystemAdmin(this.prisma, adminId))) {
       throw new ForbiddenException('Only System Admin can assign roles');
-    }
-
-    if (adminId === targetUserId && !isAdmin) {
-      throw new ForbiddenException('You cannot change your own role');
     }
 
     const membership = await this.prisma.spaceMember.findUnique({
@@ -352,16 +332,9 @@ export class SpacesService {
       }
     });
 
-    let validActorId = adminId;
-    let isAdminRoleUpdate = false;
-    if (adminId === 'admin') {
-      isAdminRoleUpdate = true;
-    } else {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (admin) isAdminRoleUpdate = true;
-    }
-
-    if (isAdminRoleUpdate) validActorId = targetUserId;
+    // For SystemAdmins, their ID is not in the User table,
+    // so use targetUserId as actor for the notification.
+    const validActorId = targetUserId;
 
     // Notification
     await this.prisma.notification.create({
@@ -377,11 +350,7 @@ export class SpacesService {
   }
 
   async updateMemberStatus(adminOrModId: string, spaceId: string, targetUserId: string, status?: string, reason?: string) {
-    let isAdmin = adminOrModId === 'admin';
-    if (!isAdmin) {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminOrModId } });
-      if (admin) isAdmin = true;
-    }
+    const isAdmin = await isSystemAdmin(this.prisma, adminOrModId);
     
     if (!isAdmin) {
         const mod = await this.prisma.spaceMember.findUnique({
@@ -414,9 +383,8 @@ export class SpacesService {
   }
 
   async getAppeals(adminId: string) {
-    if (adminId !== 'admin') {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (!admin) throw new ForbiddenException('Only System Admin can view appeals queue');
+    if (!(await isSystemAdmin(this.prisma, adminId))) {
+      throw new ForbiddenException('Only System Admin can view appeals queue');
     }
 
     return this.prisma.spaceMember.findMany({
@@ -433,14 +401,7 @@ export class SpacesService {
     const space = await this.prisma.space.findUnique({ where: { id: spaceId } });
     if (!space) throw new NotFoundException('Space not found');
 
-    let isAdmin = false;
-    if (adminId) {
-      if (adminId === 'admin') isAdmin = true;
-      else {
-        const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-        if (admin) isAdmin = true;
-      }
-    }
+    const isAdmin = adminId ? await isSystemAdmin(this.prisma, adminId) : false;
 
     if (space.type === 'PRIVATE' && !isAdmin) {
       if (!userId) throw new ForbiddenException('Not authorized');
@@ -462,11 +423,7 @@ export class SpacesService {
   }
 
   async updateSpace(adminId: string, spaceId: string, data: { name?: string; description?: string; coverUrl?: string; type?: string; postApprovalMode?: string }) {
-    let isAdmin = adminId === 'admin';
-    if (!isAdmin) {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (admin) isAdmin = true;
-    }
+    const isAdmin = await isSystemAdmin(this.prisma, adminId);
 
     if (!isAdmin) {
       const mod = await this.prisma.spaceMember.findUnique({
@@ -493,20 +450,17 @@ export class SpacesService {
   }
 
   async deleteSpace(adminId: string, spaceId: string) {
-    if (adminId !== 'admin') {
-      const admin = await this.prisma.systemAdmin.findUnique({ where: { id: adminId } });
-      if (!admin) throw new ForbiddenException('Only System Admin can delete spaces');
+    if (!(await isSystemAdmin(this.prisma, adminId))) {
+      throw new ForbiddenException('Only System Admin can delete spaces');
     }
 
     const space = await this.prisma.space.findUnique({ where: { id: spaceId } });
     if (!space) throw new NotFoundException('Space not found');
 
-    // Due to relations, we might need to delete members first, or rely on cascade
-    // Our schema for SpaceMember does not have onDelete: Cascade right now (maybe it does, let's assume it doesn't and clean it up).
+    // Due to relations, we need to delete members first
     await this.prisma.spaceMember.deleteMany({ where: { spaceId } });
 
-    // What about posts? Posts have spaceId. If no cascade, we should set spaceId to null or delete them.
-    // Setting spaceId to null is safer.
+    // Setting spaceId to null is safer than deleting posts
     await this.prisma.post.updateMany({
       where: { spaceId },
       data: { spaceId: null }

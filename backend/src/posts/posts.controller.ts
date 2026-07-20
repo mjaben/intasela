@@ -2,6 +2,9 @@ import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, Delete
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { CreatePostDto } from './dto/create-post.dto';
+import { EngageDto } from './dto/engage.dto';
+import { VotePollDto } from './dto/vote-poll.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -128,7 +131,7 @@ export class PostsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async createPost(@Request() req: any, @Body() body: any) {
+  async createPost(@Request() req: any, @Body() body: CreatePostDto) {
     return this.postsService.createPost(req.user.id, body.content, body.parentId, body.quotedPostId, {
       mediaUrl: body.mediaUrl,
       mediaUrls: body.mediaUrls,
@@ -145,7 +148,7 @@ export class PostsController {
   async votePoll(
     @Request() req: any,
     @Param('id') id: string,
-    @Body() body: { optionId: number }
+    @Body() body: VotePollDto
   ) {
     return this.postsService.votePoll(parseInt(id), body.optionId, req.user.id);
   }
@@ -156,7 +159,7 @@ export class PostsController {
   async toggleEngagement(
     @Request() req: any, 
     @Param('id') id: string, 
-    @Body() body: { type: string }
+    @Body() body: EngageDto
   ) {
     return this.postsService.toggleEngagement(req.user.id, parseInt(id), body.type);
   }

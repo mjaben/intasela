@@ -2,6 +2,9 @@ import { Controller, Get, Param, NotFoundException, Patch, Body, Request, UseGua
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { RequestEmailUpdateDto } from './dto/request-email-update.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 @Controller('users')
 export class UsersController {
@@ -51,19 +54,19 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('me/settings')
-  async updateSettings(@Request() req: any, @Body() data: any) {
+  async updateSettings(@Request() req: any, @Body() data: Record<string, unknown>) {
     return this.usersService.updateSettings(req.user.id, data);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me/email/request-update')
-  async requestEmailUpdate(@Request() req: any, @Body() data: { newEmail: string }) {
+  async requestEmailUpdate(@Request() req: any, @Body() data: RequestEmailUpdateDto) {
     return this.usersService.requestEmailUpdate(req.user.id, data.newEmail);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('me/email/verify')
-  async verifyEmailUpdate(@Request() req: any, @Body() data: { otp: string }) {
+  async verifyEmailUpdate(@Request() req: any, @Body() data: VerifyEmailDto) {
     return this.usersService.verifyEmailUpdate(req.user.id, data.otp);
   }
 
@@ -77,7 +80,7 @@ export class UsersController {
   @Patch('profile')
   async updateProfile(
     @Request() req: any,
-    @Body() updateData: { firstName?: string; lastName?: string; phone?: string; bio?: string; country?: string; state?: string; username?: string; avatarUrl?: string; coverUrl?: string }
+    @Body() updateData: UpdateProfileDto
   ) {
     const userId = req.user.id;
     return this.usersService.updateProfile(userId, updateData);
