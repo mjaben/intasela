@@ -64,6 +64,13 @@ export default function RegisterPage() {
         setError("Please enter a valid email address");
         return;
       }
+      if (formData.phone) {
+        const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
+        if (!phoneRegex.test(formData.phone)) {
+          setError("Please enter a valid phone number");
+          return;
+        }
+      }
     }
     if (step === 2) {
       if (!formData.country) {

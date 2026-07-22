@@ -17,6 +17,7 @@ export default function MobileFAB() {
     openComposer("CREATE");
   };
 
+  if (!isAuthenticated) return null;
   if (pathname && (pathname.includes('/posts/') || pathname.includes('/orbit'))) return null;
 
   return (

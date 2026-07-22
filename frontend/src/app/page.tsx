@@ -112,7 +112,7 @@ export default function Home() {
       </div>
 
       {/* Feed */}
-      <div className="flex flex-col">
+      <div className="flex flex-col pb-28 sm:pb-0">
         {loading && filteredPosts.length === 0 ? (
           <>
             {[1, 2, 3, 4, 5].map((i) => (

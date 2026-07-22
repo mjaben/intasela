@@ -224,20 +224,21 @@ export default function SidebarNav() {
 
       {/* Actions */}
       <div className={`flex flex-col mt-4 mb-4 ${isCollapsed ? 'gap-4 items-center' : 'gap-3 px-4'}`}>
-        <button
-          onClick={() => {
-            if (!isAuthenticated) return router.push("/login");
-            openComposer('CREATE');
-          }}
-          title={isCollapsed ? "Create Sela" : undefined}
-          className={`bg-[#3BC492]/5 backdrop-blur-md border border-[#3BC492]/10 text-[#3BC492] py-2.5 rounded-full font-bold shadow-lg hover:bg-[#3BC492]/20 transition-all transform hover:scale-[1.02] ${isCollapsed ? 'w-10 h-10 flex flex-col justify-center items-center px-0' : 'w-full text-[13px]'}`}
-        >
-          {isCollapsed ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          ) : (
-            "Create Sela"
-          )}
-        </button>
+        {isAuthenticated && (
+          <button
+            onClick={() => {
+              openComposer('CREATE');
+            }}
+            title={isCollapsed ? "Create Sela" : undefined}
+            className={`bg-[#3BC492]/5 backdrop-blur-md border border-[#3BC492]/10 text-[#3BC492] py-2.5 rounded-full font-bold shadow-lg hover:bg-[#3BC492]/20 transition-all transform hover:scale-[1.02] ${isCollapsed ? 'w-10 h-10 flex flex-col justify-center items-center px-0' : 'w-full text-[13px]'}`}
+          >
+            {isCollapsed ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            ) : (
+              "Create Sela"
+            )}
+          </button>
+        )}
 
         {isAuthenticated && (
           <button
