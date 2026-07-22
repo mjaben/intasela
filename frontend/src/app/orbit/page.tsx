@@ -43,7 +43,7 @@ function OrbitContent() {
   }, [feedType, videoId]);
 
   return (
-    <div className="w-full h-screen bg-background overflow-y-scroll snap-y snap-mandatory relative no-scrollbar" style={{ height: '100dvh' }}>
+    <div className="w-full h-full bg-background overflow-y-scroll snap-y snap-mandatory relative no-scrollbar">
       {/* Back button or Header */}
       <div className="absolute top-4 left-4 z-50 flex items-center gap-4 bg-black/30 backdrop-blur-md p-2 rounded-full border border-white/10 shadow-lg">
         <button onClick={() => router.push("/")} className="text-white hover:text-gray-300 transition-colors">
@@ -294,8 +294,7 @@ function OrbitPlayer({ post }: { post: any }) {
   return (
     <div 
       ref={containerRef} 
-      className="w-full h-screen snap-start snap-always flex items-center justify-center bg-transparent relative md:py-6"
-      style={{ height: '100dvh' }}
+      className="w-full h-full snap-start snap-always flex items-center justify-center bg-transparent relative md:py-6"
     >
       {/* TikTok Style Container */}
       <div className="relative flex w-full h-full md:w-[350px] lg:w-[400px] md:h-full md:max-h-[850px] md:rounded-[20px]">
@@ -322,7 +321,7 @@ function OrbitPlayer({ post }: { post: any }) {
           )}
 
           {/* Bottom Info Overlay */}
-          <div className="absolute bottom-0 left-0 w-full p-4 pb-[80px] md:pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-20">
+          <div className="absolute bottom-0 left-0 w-full p-4 pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-20">
             <div className="flex flex-col gap-2 max-w-[85%] md:max-w-full pointer-events-auto">
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => router.push(`/@${post.author.username}`)}>
@@ -361,7 +360,7 @@ function OrbitPlayer({ post }: { post: any }) {
         </div>
 
         {/* Action Buttons (Overlay on mobile, Right side on desktop) */}
-        <div className="absolute bottom-[80px] md:bottom-2 right-3 md:-right-[72px] flex flex-col gap-2 items-center z-30">
+        <div className="absolute bottom-6 md:bottom-2 right-3 md:-right-[72px] flex flex-col gap-2 items-center z-30">
 
           {/* Like */}
           <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
