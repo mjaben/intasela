@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PostCard from "@/components/PostCard";
+import ThreadedReply from "@/components/ThreadedReply";
 import CreatePost from "@/components/CreatePost";
 import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
@@ -55,7 +56,7 @@ export default function PostDetail() {
   return (
     <div className="w-full max-w-[650px] mx-auto min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-6 p-4 bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="sticky top-0 z-10 flex items-center gap-6 px-4 py-2 bg-background/80 backdrop-blur-md">
         <button 
           onClick={() => router.back()} 
           className="p-2 -ml-2 rounded-full hover:bg-accent transition-colors"
@@ -99,7 +100,7 @@ createdAt={post.createdAt}
       </div>
 
       {/* Sticky Bottom Reply Box */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-md border-t border-border p-3 md:pb-3 pb-[env(safe-area-inset-bottom,20px)] sm:static sm:z-auto sm:border-none sm:bg-transparent sm:p-6 sm:pb-6 flex justify-center">
+      <div className="fixed bottom-[60px] sm:bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-md border-t border-border p-4 pb-6 sm:static sm:z-auto sm:border-none sm:bg-transparent sm:p-6 sm:pb-6 flex justify-center">
         <div className="w-full max-w-[650px] relative">
           <div 
             onClick={() => {
@@ -110,7 +111,7 @@ createdAt={post.createdAt}
                 content: post.content 
               });
             }}
-            className="flex items-center gap-3 p-2.5 sm:p-4 rounded-full border border-white/10 hover:border-white/20 transition-all cursor-text group bg-accent/20"
+            className="flex items-center gap-3 p-2.5 sm:p-4 rounded-2xl border border-white/10 hover:border-white/20 transition-all cursor-text group bg-accent/20"
           >
             <div className="w-8 h-8 rounded-full bg-muted overflow-hidden shrink-0">
               {user ? (
@@ -122,9 +123,6 @@ createdAt={post.createdAt}
             <div className="flex-1 text-muted-foreground group-hover:text-foreground/80 transition-colors text-[14px]">
               Post your reply
             </div>
-            <button className="bg-brand text-black px-4 py-1.5 rounded-full text-sm font-bold opacity-50 cursor-text">
-              Reply
-            </button>
           </div>
         </div>
       </div>
@@ -132,28 +130,12 @@ createdAt={post.createdAt}
       {/* Replies Thread */}
       {post.replies && post.replies.length > 0 && (
         <div className="border-t border-border">
-          {post.replies.map((reply: any) => (
-            <PostCard 
-              key={reply.id}
-              id={reply.id}
-              author={{
-                name: reply.author.firstName || reply.author.username,
-                username: reply.author.username,
-                avatarUrl: reply.author.avatarUrl,
-                isFollowing: reply.author.isFollowing,
-                isFollower: reply.author.isFollower
-              }}
-              content={reply.content} 
-              earned={reply.earned || 0}
-              stats={reply.stats}
-              userInteractions={reply.userInteractions}
-              quotedPost={reply.quotedPost}
-              mediaType={reply.mediaType}
-              mediaUrl={reply.mediaUrl}
-              mediaUrls={reply.mediaUrls}
-              thumbnailUrl={reply.thumbnailUrl}
-              poll={reply.poll}
-              onDelete={() => fetchPost()}
+          {post.replies.map((reply: any, index: number) => (
+            <ThreadedReply 
+              key={reply.id} 
+              reply={reply} 
+              isLastInList={index === post.replies.length - 1} 
+              onReplyDeleted={() => fetchPost()}
             />
           ))}
         </div>

@@ -406,6 +406,17 @@ export class PostsService {
             engagements: true,
             quotedPost: {
               include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } }
+            },
+            replies: {
+              orderBy: { createdAt: 'desc' },
+              include: {
+                author: { select: this.getAuthorSelect(currentUserId) },
+                poll: { include: { options: { include: { userVotes: true } } } }, _count: { select: { replies: true, engagements: true } },
+                engagements: true,
+                quotedPost: {
+                  include: { author: { select: { id: true, firstName: true, lastName: true, username: true, avatarUrl: true } } }
+                }
+              }
             }
           }
         },
@@ -461,7 +472,20 @@ export class PostsService {
 
     const formattedMainPost = formatPost(post);
     if (formattedMainPost && post.replies) {
-      formattedMainPost.replies = post.replies.map(formatPost);
+      formattedMainPost.replies = post.replies.map((r: any) => {
+        const formattedR = formatPost(r);
+        if (r.replies && r.replies.length > 0) {
+          const authorReplies = r.replies.filter((r2: any) => r2.authorId === post.authorId);
+          if (authorReplies.length > 0) {
+            formattedR.replies = authorReplies.map(formatPost);
+          } else {
+            delete formattedR.replies;
+          }
+        } else {
+          delete formattedR.replies;
+        }
+        return formattedR;
+      });
     }
 
     return formattedMainPost;

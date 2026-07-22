@@ -8,6 +8,7 @@ export default function MobileFAB() {
   const { openComposer } = useFeedStore();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleClick = () => {
     if (!isAuthenticated) {
@@ -15,6 +16,8 @@ export default function MobileFAB() {
     }
     openComposer("CREATE");
   };
+
+  if (pathname && (pathname.includes('/posts/') || pathname.includes('/orbit'))) return null;
 
   return (
     <button

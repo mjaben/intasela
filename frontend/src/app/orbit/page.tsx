@@ -306,7 +306,7 @@ function OrbitPlayer({ post }: { post: any }) {
             ref={videoRef}
             src={post.mediaUrl}
             poster={post.thumbnailUrl}
-            className="w-full h-full object-cover cursor-pointer"
+            className="w-full h-full object-contain cursor-pointer"
             loop
             playsInline
             onClick={togglePlay}
@@ -322,7 +322,7 @@ function OrbitPlayer({ post }: { post: any }) {
           )}
 
           {/* Bottom Info Overlay */}
-          <div className="absolute bottom-0 left-0 w-full p-4 pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-20">
+          <div className="absolute bottom-0 left-0 w-full p-4 pb-[80px] md:pb-6 pt-24 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-20">
             <div className="flex flex-col gap-2 max-w-[85%] md:max-w-full pointer-events-auto">
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => router.push(`/@${post.author.username}`)}>
@@ -361,7 +361,7 @@ function OrbitPlayer({ post }: { post: any }) {
         </div>
 
         {/* Action Buttons (Overlay on mobile, Right side on desktop) */}
-        <div className="absolute bottom-6 right-3 md:bottom-2 md:-right-[72px] flex flex-col gap-2 items-center z-30">
+        <div className="absolute bottom-[80px] md:bottom-2 right-3 md:-right-[72px] flex flex-col gap-2 items-center z-30">
 
           {/* Like */}
           <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
