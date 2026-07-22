@@ -64,6 +64,24 @@ export default function RightSidebar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [trendingTopics, setTrendingTopics] = useState<any[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/trending/topics`)
+      .then(res => res.json())
+      .then(data => setTrendingTopics(Array.isArray(data) ? data : []))
+      .catch(console.error);
+
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/suggested`, { headers })
+      .then(res => res.json())
+      .then(data => setSuggestedUsers(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -145,63 +163,33 @@ export default function RightSidebar() {
         )}
       </div>
 
-      {/* Top Earners Widget */}
-      <div className="bg-card border border-border rounded-xl p-4 mb-6">
-        <h3 className="font-bold mb-4 text-[15px] tracking-tight">Top Earners This Week</h3>
-        <div className="space-y-4">
-          {[
-            { name: "Salem King", username: "salemking", earned: "+4.2k" },
-            { name: "Shee_dah", username: "shee_dah", earned: "+3.8k" },
-            { name: "TechSis_Lagos", username: "techsis_lagos", earned: "+2.5k" },
-          ].map((user, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                  <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user.username}`} alt="avatar" className="w-full h-full" />
-                </div>
-                <div>
-                  <div className="font-semibold text-sm leading-tight hover:underline cursor-pointer">{user.name}</div>
-                  <div className="text-[13px] text-muted-foreground">@{user.username}</div>
-                </div>
-              </div>
-              <div className="text-primary font-bold text-sm">
-                {user.earned}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Trending Topics */}
       <div className="bg-card border border-border rounded-xl p-4 mb-6">
         <h3 className="font-bold mb-4 text-[15px] tracking-tight">Trending Topics</h3>
         <div className="space-y-4">
-          {[
-            { topic: "#CreatorEconomy", posts: "12.5K selas" },
-            { topic: "Web3 Monetization", posts: "8,432 selas" },
-            { topic: "#TechTwitter", posts: "5,210 selas" },
-            { topic: "NextJS 15", posts: "3,100 selas" },
-          ].map((item, i) => (
-            <div key={i} className="cursor-pointer hover:bg-accent/50 -mx-2 px-2 py-1 rounded-lg transition-colors">
+          {trendingTopics.map((item, i) => (
+            <div key={i} onClick={() => router.push(`/explore?q=${encodeURIComponent(item.topic)}`)} className="cursor-pointer hover:bg-accent/50 -mx-2 px-2 py-1 rounded-lg transition-colors">
               <div className="font-bold text-[14px]">{item.topic}</div>
               <div className="text-[13px] text-muted-foreground">{item.posts}</div>
             </div>
           ))}
+          {trendingTopics.length === 0 && (
+            <div className="text-sm text-muted-foreground">Loading trends...</div>
+          )}
         </div>
       </div>
 
       {/* Recommended for you */}
-      <div className="bg-card border border-border rounded-xl p-4 mb-6">
-        <h3 className="font-bold mb-4 text-[15px] tracking-tight">Recommended for you</h3>
-        <div className="space-y-4">
-          {[
-            { name: "UI/UX Daily", username: "uiux_daily" },
-            { name: "Startup Founder", username: "startupguy" },
-          ].map((user, i) => (
-            <RecommendedUser key={i} user={user} />
-          ))}
+      {suggestedUsers.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-4 mb-6">
+          <h3 className="font-bold mb-4 text-[15px] tracking-tight">Recommended for you</h3>
+          <div className="space-y-4">
+            {suggestedUsers.map((user, i) => (
+              <RecommendedUser key={i} user={{ name: `${user.firstName} ${user.lastName || ''}`.trim() || user.username, username: user.username }} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* AdSense Slot */}
       <div className="mt-auto pb-4">

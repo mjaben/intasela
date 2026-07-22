@@ -48,19 +48,88 @@ export class UsersService {
   }
 
   async getSuggestedUsers(currentUserId?: string) {
-    return this.prisma.user.findMany({
-      where: currentUserId ? { id: { not: currentUserId } } : {},
+    if (!currentUserId) {
+      return this.prisma.user.findMany({
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          bio: true
+        },
+        take: 6,
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: currentUserId },
+      select: { country: true, state: true, occupation: true, interests: true }
+    });
+
+    const candidates = await this.prisma.user.findMany({
+      where: {
+        id: { not: currentUserId },
+        followers: {
+          none: { followerId: currentUserId }
+        }
+      },
       select: {
         id: true,
         username: true,
         firstName: true,
         lastName: true,
         avatarUrl: true,
-        bio: true
+        bio: true,
+        country: true,
+        state: true,
+        occupation: true,
+        interests: true,
       },
-      take: 6,
+      take: 50,
       orderBy: { createdAt: 'desc' }
     });
+
+    if (!currentUser) {
+      return candidates.slice(0, 6).map(u => ({
+        id: u.id,
+        username: u.username,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        avatarUrl: u.avatarUrl,
+        bio: u.bio
+      }));
+    }
+
+    const scored = candidates.map(user => {
+      let score = 0;
+      if (currentUser.country && user.country && currentUser.country === user.country) score += 1;
+      if (currentUser.state && user.state && currentUser.state === user.state) score += 2;
+      if (currentUser.occupation && user.occupation && currentUser.occupation === user.occupation) score += 2;
+      
+      if (currentUser.interests && user.interests) {
+        try {
+          const myInterests = Array.isArray(currentUser.interests) ? currentUser.interests : [];
+          const theirInterests = Array.isArray(user.interests) ? user.interests : [];
+          const shared = myInterests.filter((i: any) => theirInterests.includes(i));
+          score += shared.length * 3;
+        } catch (e) {}
+      }
+
+      return { ...user, _score: score };
+    });
+
+    scored.sort((a, b) => b._score - a._score);
+
+    return scored.slice(0, 6).map(u => ({
+      id: u.id,
+      username: u.username,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      avatarUrl: u.avatarUrl,
+      bio: u.bio
+    }));
   }
 
   async getSettings(userId: string) {

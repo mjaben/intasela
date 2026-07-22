@@ -6,6 +6,7 @@ import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
 import { useStates, useLGAs } from "nigeria-location-kit/react";
 import SearchableOccupationSelect from "@/components/SearchableOccupationSelect";
+import CustomSelect from "@/components/CustomSelect";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
@@ -47,9 +48,7 @@ export default function RegisterPage() {
         interests: formData.interests.filter((i) => i !== interest),
       });
     } else {
-      if (formData.interests.length < 3) {
-        setFormData({ ...formData, interests: [...formData.interests, interest] });
-      }
+      setFormData({ ...formData, interests: [...formData.interests, interest] });
     }
   };
 
@@ -58,6 +57,29 @@ export default function RegisterPage() {
     if (step === 1) {
       if (!formData.firstName || !formData.lastName || !formData.email || !formData.username) {
         setError("Please fill in all required fields");
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError("Please enter a valid email address");
+        return;
+      }
+    }
+    if (step === 2) {
+      if (!formData.country) {
+        setError("Please select a country");
+        return;
+      }
+      if (formData.country === "Nigeria") {
+        if (!formData.state || !formData.lga) {
+          setError("Please select a State and LGA");
+          return;
+        }
+      }
+    }
+    if (step === 3) {
+      if (formData.interests.length < 5) {
+        setError("Please select at least 5 interests");
         return;
       }
     }
@@ -97,7 +119,11 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
+        let errorMessage = errorData.message || "Registration failed";
+        if (Array.isArray(errorMessage)) {
+          errorMessage = errorMessage[0]; // Display the first error in the list
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await res.json();
@@ -139,25 +165,25 @@ export default function RegisterPage() {
           <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">First Name *</label>
-                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+                <label className="block text-sm font-medium text-gray-300 mb-1">First Name <span className="text-red-500">*</span></label>
+                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Last Name *</label>
-                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+                <label className="block text-sm font-medium text-gray-300 mb-1">Last Name <span className="text-red-500">*</span></label>
+                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
               </div>
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Username *</label>
-                <input type="text" name="username" value={formData.username} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+                <label className="block text-sm font-medium text-gray-300 mb-1">Username <span className="text-red-500">*</span></label>
+                <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Email *</label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+              <label className="block text-sm font-medium text-gray-300 mb-1">Email <span className="text-red-500">*</span></label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
-              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+234 800 000 0000" className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
             </div>
           </div>
         )}
@@ -165,67 +191,40 @@ export default function RegisterPage() {
         {step === 2 && (
             <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Country (Optional)</label>
-                <div className="relative">
-                  <select 
-                    name="country" 
-                    value={formData.country} 
-                    onChange={handleChange} 
-                    className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-3 text-white focus:outline-none focus:border-[#3BC492] appearance-none cursor-pointer"
-                  >
-                    <option value="">Select a country...</option>
-                    <option value="Nigeria">Nigeria</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                  </div>
-                </div>
+                <CustomSelect 
+                  label="Country"
+                  value={formData.country}
+                  onChange={(val) => setFormData({ ...formData, country: val })}
+                  options={["Nigeria"]}
+                  placeholder="Select a country..."
+                  required
+                />
               </div>
 
               {formData.country === "Nigeria" && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">State</label>
-                    <div className="relative">
-                      <select 
-                        name="state" 
-                        value={formData.state} 
-                        onChange={(e) => {
-                          handleChange(e);
-                          // Reset LGA when state changes
-                          setFormData(prev => ({ ...prev, lga: "" }));
-                        }}
-                        className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-2 text-white focus:outline-none focus:border-[#3BC492] appearance-none cursor-pointer"
-                      >
-                        <option value="">Select State</option>
-                        {states.map(s => (
-                          <option key={s.id} value={s.name}>{s.name}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
-                    </div>
+                    <CustomSelect 
+                      label="State"
+                      value={formData.state}
+                      onChange={(val) => {
+                        setFormData(prev => ({ ...prev, state: val, lga: "" }));
+                      }}
+                      options={states.map(s => s.name)}
+                      placeholder="Select State"
+                      required
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">LGA</label>
-                    <div className="relative">
-                      <select 
-                        name="lga" 
-                        value={formData.lga} 
-                        onChange={handleChange} 
-                        disabled={!formData.state}
-                        className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-2 text-white focus:outline-none focus:border-[#3BC492] disabled:opacity-50 appearance-none cursor-pointer"
-                      >
-                        <option value="">Select LGA</option>
-                        {lgas.map(l => (
-                          <option key={l.id} value={l.name}>{l.name}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                      </div>
-                    </div>
+                    <CustomSelect 
+                      label="LGA"
+                      value={formData.lga}
+                      onChange={(val) => setFormData({ ...formData, lga: val })}
+                      options={lgas.map(l => l.name)}
+                      placeholder="Select LGA"
+                      disabled={!formData.state}
+                      required
+                    />
                   </div>
                 </div>
               )}
@@ -240,27 +239,26 @@ export default function RegisterPage() {
         {step === 3 && (
           <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">What is your current educational or professional status?</label>
-              <div className="relative">
-                <select name="creatorType" value={formData.creatorType} onChange={handleChange} className="w-full bg-[#09090b] border border-gray-700 rounded-lg pl-4 pr-10 py-3 text-white focus:outline-none focus:border-[#3BC492] appearance-none cursor-pointer">
-                  <option value="">Select an option...</option>
-                  <option value="Secondary School">Secondary School</option>
-                  <option value="Pre-Uni">Pre-Uni</option>
-                  <option value="Under-graduate">Under-graduate</option>
-                  <option value="Graduate">Graduate</option>
-                  <option value="Post Graduate">Post Graduate</option>
-                  <option value="Entrepreneur">Entrepreneur</option>
-                  <option value="Out of School">Out of School</option>
-                  <option value="Other">Other</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-500">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                </div>
-              </div>
+              <CustomSelect 
+                label="What is your current educational or professional status?"
+                value={formData.creatorType}
+                onChange={(val) => setFormData({ ...formData, creatorType: val })}
+                options={[
+                  "Secondary School",
+                  "Pre-Uni",
+                  "Under-graduate",
+                  "Graduate",
+                  "Post Graduate",
+                  "Entrepreneur",
+                  "Out of School",
+                  "Other"
+                ]}
+                placeholder="Select an option..."
+              />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Interests (Select top 3)</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Interests (Select at least 5) <span className="text-red-500">*</span></label>
               <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto custom-scrollbar p-3 border border-gray-800 bg-[#09090b]/50 rounded-xl">
                 {[
                   "Arts & Entertainment", "Movies & TV", "Action Movies", "Comedy", "Drama", "Sci-Fi & Fantasy", "Music", "Pop", "Hip-Hop & Rap", "Afrobeats", "Rock", "Electronic / EDM", "Classical", "Books & Literature", "Theater & Performing Arts", "Visual Arts & Design",
@@ -302,12 +300,12 @@ export default function RegisterPage() {
             <h2 className="text-xl font-bold text-white mb-2">Secure your account</h2>
             <p className="text-gray-400 text-sm mb-4">Choose a strong password to protect your account.</p>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Password *</label>
-              <input type="password" name="password" value={formData.password} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+              <label className="block text-sm font-medium text-gray-300 mb-1">Password <span className="text-red-500">*</span></label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Confirm Password *</label>
-              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" />
+              <label className="block text-sm font-medium text-gray-300 mb-1">Confirm Password <span className="text-red-500">*</span></label>
+              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
             </div>
           </div>
         )}

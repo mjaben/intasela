@@ -367,7 +367,12 @@ export class PostsService {
 
     return {
       ...rest,
-      author: author ? { ...author, isFollowing, isFollower } : undefined,
+      author: author ? { 
+        ...author, 
+        name: author.firstName ? `${author.firstName} ${author.lastName || ''}`.trim() : author.username,
+        isFollowing, 
+        isFollower 
+      } : undefined,
       parent: parent ? this.formatPost(parent, currentUserId) : undefined,
       space: space || undefined,
       poll: formattedPoll,
@@ -909,7 +914,54 @@ export class PostsService {
     });
     return posts.map(post => this.formatPost(post, currentUserId));
   }
-  async searchPosts(query: string, sort: 'top' | 'latest', mediaOnly: boolean, currentUserId?: string) {
+
+  async getTrendingTopics() {
+    const recentPosts = await this.prisma.post.findMany({
+      where: {
+        status: 'PUBLISHED',
+        createdAt: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+        }
+      },
+      select: { content: true },
+      take: 500,
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const hashtagCount: Record<string, { display: string, count: number }> = {};
+    const hashtagRegex = /#[\w]+/g;
+
+    for (const post of recentPosts) {
+      if (!post.content) continue;
+      const matches = post.content.match(hashtagRegex);
+      if (matches) {
+        const uniqueTags = [...new Set(matches)]; // Keep original case
+        const seenLower = new Set<string>();
+        for (const tag of uniqueTags) {
+          const lower = tag.toLowerCase();
+          if (!seenLower.has(lower)) {
+            seenLower.add(lower);
+            if (!hashtagCount[lower]) {
+              hashtagCount[lower] = { display: tag, count: 0 };
+            }
+            hashtagCount[lower].count++;
+          }
+        }
+      }
+    }
+
+    const sorted = Object.values(hashtagCount)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map(item => ({
+        topic: item.display,
+        posts: `${item.count} selas`
+      }));
+
+    return sorted;
+  }
+
+  async searchPosts(query: string, sort: 'top' | 'latest' = 'top', mediaOnly: boolean = false, currentUserId?: string) {
     if (!query) return [];
 
     let fromUsername = undefined;

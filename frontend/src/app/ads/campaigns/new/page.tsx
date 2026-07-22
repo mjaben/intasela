@@ -433,7 +433,11 @@ function CreateCampaignForm() {
               </div>
 
               <div className="pt-4 flex justify-end">
-                <button onClick={handleNext} disabled={!formData.name || !formData.dailyBudget} className="bg-primary text-primary-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity">
+                <button 
+                  onClick={handleNext} 
+                  disabled={!formData.name || !formData.objective || formData.durationDays <= 0 || !formData.dailyBudget || !formData.startDate} 
+                  className="bg-primary text-primary-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
                   Next Step
                 </button>
               </div>
@@ -482,7 +486,7 @@ function CreateCampaignForm() {
                     <AutocompleteTagInput 
                       label="Target States (Nigeria)"
                       placeholder="Search and select states..."
-                      description="Leave empty to target all of Nigeria."
+                      description="Select at least one state."
                       tags={targeting.targetStates}
                       setTags={(tags) => setTargeting({...targeting, targetStates: tags})}
                       options={[
@@ -549,7 +553,11 @@ function CreateCampaignForm() {
                 <button onClick={handlePrev} className="bg-muted text-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-80 transition-opacity">
                   Back
                 </button>
-                <button onClick={handleNext} className="bg-primary text-primary-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-90 transition-opacity">
+                <button 
+                  onClick={handleNext} 
+                  disabled={!targeting.targetCountry || !targeting.targetAgeMin || !targeting.targetAgeMax || !targeting.targetGender || targeting.interests.length === 0 || targeting.keywords.length === 0 || (targeting.targetCountry === "Nigeria" && targeting.targetStates.length === 0)}
+                  className="bg-primary text-primary-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
                   Next Step
                 </button>
               </div>
@@ -592,7 +600,7 @@ function CreateCampaignForm() {
               </div>
 
               <div className="bg-muted/10 border border-border rounded-xl p-4">
-                <label className="block text-[11px] text-muted-foreground font-semibold mb-1.5 uppercase tracking-wider">Ad Headline <span className="lowercase font-normal opacity-70">(Optional)</span></label>
+                <label className="block text-[11px] text-muted-foreground font-semibold mb-1.5 uppercase tracking-wider">Ad Headline</label>
                 <input 
                   type="text" 
                   value={creativeData.headline}
@@ -603,7 +611,7 @@ function CreateCampaignForm() {
               </div>
 
               <div className="bg-muted/10 border border-border rounded-xl p-4">
-                <label className="block text-[11px] text-muted-foreground font-semibold mb-1.5 uppercase tracking-wider">Ad Description <span className="lowercase font-normal opacity-70">(Optional)</span></label>
+                <label className="block text-[11px] text-muted-foreground font-semibold mb-1.5 uppercase tracking-wider">Ad Description</label>
                 <textarea 
                   value={creativeData.description}
                   onChange={(e) => setCreativeData({...creativeData, description: e.target.value})}
@@ -621,7 +629,7 @@ function CreateCampaignForm() {
                     onChange={(e) => setCreativeData({...creativeData, ctaText: e.target.value})}
                     className="w-full bg-background border border-border rounded-lg py-2.5 px-4 focus:outline-none focus:border-primary font-medium text-sm appearance-none" 
                   >
-                    <option>None</option>
+                    <option value="" disabled hidden>Select CTA</option>
                     <option>Learn More</option>
                     <option>Buy Now</option>
                     <option>Sign Up</option>
@@ -644,7 +652,11 @@ function CreateCampaignForm() {
                 <button onClick={handlePrev} className="bg-muted text-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-80 transition-opacity">
                   Back
                 </button>
-                <button onClick={handleNext} disabled={!creativeData.postId} className="bg-primary text-primary-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity">
+                <button 
+                  onClick={handleNext} 
+                  disabled={!creativeData.postId || !creativeData.headline || !creativeData.description || !creativeData.ctaText || creativeData.ctaText === "None" || creativeData.ctaText === "Select CTA" || !creativeData.ctaLink} 
+                  className="bg-primary text-primary-foreground font-bold px-8 py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
                   Review & Pay
                 </button>
               </div>

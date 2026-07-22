@@ -96,6 +96,11 @@ export class PostsController {
     return this.postsService.getDrafts(req.user.id);
   }
 
+  @Get('trending/topics')
+  async getTrendingTopics() {
+    return this.postsService.getTrendingTopics();
+  }
+
   @Get('search')
   async searchPosts(
     @Query('q') q: string, 
