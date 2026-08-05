@@ -10,7 +10,6 @@ import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileFAB from "@/components/MobileFAB";
 import MediaViewerModal from "@/components/MediaViewerModal";
-import { GoogleAdSense } from "next-google-adsense";
 import { useEffect } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
@@ -36,8 +35,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1173851541726956" crossOrigin="anonymous"></script>
+      </head>
       <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased h-[100dvh] bg-background text-foreground flex flex-col items-center overflow-hidden`} suppressHydrationWarning>
-        <GoogleAdSense publisherId="pub-1173851541726956" />
         <MobileHeader />
         <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0 overflow-hidden">
           <SidebarNav />
