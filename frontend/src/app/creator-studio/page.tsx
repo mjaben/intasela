@@ -21,6 +21,8 @@ export default function CreatorStudioPage() {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [period, setPeriod] = useState<PeriodType>("all");
 
+  const updateUser = useUserStore((state) => state.updateUser);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
@@ -37,6 +39,9 @@ export default function CreatorStudioPage() {
         if (!res.ok) throw new Error("Failed to load studio data");
         const json = await res.json();
         setData(json);
+        if (typeof json.walletBalance === 'number') {
+          updateUser({ walletBalance: json.walletBalance });
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {

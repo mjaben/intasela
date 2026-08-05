@@ -25,6 +25,32 @@ export class UsersService {
     });
   }
 
+  async getCurrentUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        username: true,
+        avatarUrl: true,
+        coverUrl: true,
+        bio: true,
+        country: true,
+        state: true,
+        occupation: true,
+        creatorType: true,
+        walletBalance: true,
+        paymentSettings: true,
+        settings: true,
+        createdAt: true,
+      }
+    });
+    if (!user) throw new BadRequestException('User not found');
+    return user;
+  }
+
   async searchUsers(query: string) {
     if (!query || query.length < 2) return [];
     

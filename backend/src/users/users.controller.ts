@@ -47,6 +47,12 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getCurrentUser(@Request() req: any) {
+    return this.usersService.getCurrentUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me/settings')
   async getSettings(@Request() req: any) {
     return this.usersService.getSettings(req.user.id);

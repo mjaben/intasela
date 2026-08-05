@@ -31,14 +31,15 @@ export class MonetizationService {
         this.prisma.systemSetting.findUnique({ where: { key: 'monetization_rules' } }),
       ]);
 
-      let rates: MonetizationRates = { sela: 0, resela: 0, reply: 0, viewRpm: 0 };
+      let rates: MonetizationRates = { sela: 10, resela: 5, reply: 2, viewRpm: 1 };
       if (ratesSetting && ratesSetting.value) {
-        rates = typeof ratesSetting.value === 'string' ? JSON.parse(ratesSetting.value as string) : ratesSetting.value as unknown as MonetizationRates;
+        const dbRates = typeof ratesSetting.value === 'string' ? JSON.parse(ratesSetting.value as string) : ratesSetting.value as unknown as MonetizationRates;
+        rates = { ...rates, ...dbRates };
       }
 
       let rules: MonetizationRules = {
         bannedWords: "",
-        minCharacterCount: 15,
+        minCharacterCount: 5,
         preventDuplicates: true,
         preventSelfReward: true,
         echoChamberLimit: 5,
@@ -50,14 +51,29 @@ export class MonetizationService {
         rules = { ...rules, ...dbRules };
       }
 
+      if (!ratesSetting) {
+        await this.prisma.systemSetting.upsert({
+          where: { key: 'monetization_rates' },
+          update: {},
+          create: { key: 'monetization_rates', value: rates as any },
+        }).catch(() => {});
+      }
+      if (!rulesSetting) {
+        await this.prisma.systemSetting.upsert({
+          where: { key: 'monetization_rules' },
+          update: {},
+          create: { key: 'monetization_rules', value: rules as any },
+        }).catch(() => {});
+      }
+
       return { rates, rules };
     } catch (error) {
       this.logger.error('Failed to load monetization settings', error);
       return {
-        rates: { sela: 0, resela: 0, reply: 0, viewRpm: 0 },
+        rates: { sela: 10, resela: 5, reply: 2, viewRpm: 1 },
         rules: {
           bannedWords: "",
-          minCharacterCount: 15,
+          minCharacterCount: 5,
           preventDuplicates: true,
           preventSelfReward: true,
           echoChamberLimit: 5,
@@ -68,37 +84,35 @@ export class MonetizationService {
     }
   }
 
-  async validateContent(content: string, authorId: string, rules: MonetizationRules): Promise<boolean> {
-    if (!content) return false;
-
-    // 1. Min Character Count (exclude emojis and whitespace)
-    const strippedContent = content.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]/gu, '');
-    if (strippedContent.length < rules.minCharacterCount) {
+  async validateContent(content: string, authorId: string, rules: MonetizationRules, hasMedia: boolean = false): Promise<boolean> {
+    if (!content && !hasMedia) {
+      this.logger.warn(`Monetization validation failed: Empty content and no media`);
       return false;
     }
 
+    // 1. Min Character Count (exclude emojis and whitespace) - skip if post has media
+    if (!hasMedia && content) {
+      const strippedContent = content.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]/gu, '');
+      if (strippedContent.length < rules.minCharacterCount) {
+        this.logger.warn(`Monetization validation failed for author ${authorId}: stripped content length ${strippedContent.length} < minCharacterCount ${rules.minCharacterCount}`);
+        return false;
+      }
+    }
+
     // 2. Banned Words
-    if (rules.bannedWords && rules.bannedWords.trim().length > 0) {
+    if (content && rules.bannedWords && rules.bannedWords.trim().length > 0) {
       const bannedList = rules.bannedWords.split(',').map(w => w.trim().toLowerCase()).filter(w => w.length > 0);
       const lowerContent = content.toLowerCase();
       for (const word of bannedList) {
         if (lowerContent.includes(word)) {
+          this.logger.warn(`Monetization validation failed for author ${authorId}: content contains banned word '${word}'`);
           return false;
         }
       }
     }
 
     // 3. Prevent Duplicates
-    if (rules.preventDuplicates) {
-      const existingPost = await this.prisma.post.findFirst({
-        where: {
-          authorId,
-          content
-        }
-      });
-      // If we found the exact same post from this user, it's a duplicate.
-      // Note: This function might be called AFTER the post is created, so we might find 1 match (the current post).
-      // If we find > 1 match, it's a duplicate. Let's just check count.
+    if (rules.preventDuplicates && content) {
       const duplicateCount = await this.prisma.post.count({
         where: {
           authorId,
@@ -106,6 +120,7 @@ export class MonetizationService {
         }
       });
       if (duplicateCount > 1) {
+        this.logger.warn(`Monetization validation failed for author ${authorId}: duplicate post detected (count: ${duplicateCount})`);
         return false;
       }
     }
@@ -116,6 +131,7 @@ export class MonetizationService {
   async checkAntiSpam(earnerId: string, interactorId: string, type: string, rules: MonetizationRules): Promise<boolean> {
     // 1. Prevent Self-Reward (but not for original Sela creations)
     if (rules.preventSelfReward && earnerId === interactorId && type !== 'POST') {
+      this.logger.warn(`AntiSpam failed: self-reward blocked for earner ${earnerId} on type ${type}`);
       return false;
     }
 
@@ -130,18 +146,10 @@ export class MonetizationService {
     });
 
     if (hourlyRewards >= rules.hourlyRewardLimit) {
+      this.logger.warn(`AntiSpam failed for ${earnerId}: hourly rewards limit hit (${hourlyRewards} >= ${rules.hourlyRewardLimit})`);
       return false;
     }
 
-    // 3. Echo-Chamber Limit (Interactions between same pair in 24h)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
-    // We check how many times interactorId has rewarded earnerId
-    // Since our Transaction model only stores the earner (userId), we can't easily query by interactor from the Transaction table alone.
-    // However, we can approximate Echo-Chamber by seeing if earner has received too many rewards of this specific 'type' in 24h
-    // Wait, let's actually just log it if we can. To truly do this, we'd need interactorId on Transaction.
-    // For now, let's approximate or just allow it if we can't strictly enforce.
-    
     return true;
   }
 
@@ -150,7 +158,8 @@ export class MonetizationService {
       const { rates, rules } = await this.getSettings();
       if (rates.sela <= 0) return;
 
-      const isEligible = await this.validateContent(post.content, post.authorId, rules);
+      const hasMedia = Boolean(post.mediaUrl || (post.mediaUrls && post.mediaUrls.length > 0));
+      const isEligible = await this.validateContent(post.content, post.authorId, rules, hasMedia);
       if (!isEligible) return;
 
       const passesSpam = await this.checkAntiSpam(post.authorId, post.authorId, 'POST', rules);
@@ -187,7 +196,8 @@ export class MonetizationService {
       const { rates, rules } = await this.getSettings();
       if (rates.reply <= 0) return;
 
-      const isEligible = await this.validateContent(reply.content, reply.authorId, rules);
+      const hasMedia = Boolean(reply.mediaUrl || (reply.mediaUrls && reply.mediaUrls.length > 0));
+      const isEligible = await this.validateContent(reply.content, reply.authorId, rules, hasMedia);
       if (!isEligible) return;
 
       const passesSpam = await this.checkAntiSpam(reply.authorId, parent.authorId, 'REPLY', rules);
