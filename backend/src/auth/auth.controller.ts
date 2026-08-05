@@ -23,6 +23,12 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @Post('check-availability')
+  async checkAvailability(@Body() body: { email?: string; username?: string; phone?: string }) {
+    return this.authService.checkAvailability(body.email, body.username, body.phone);
+  }
+
+  @HttpCode(HttpStatus.OK)
   @Post('send-registration-otp')
   async sendRegistrationOtp(@Body('email') email: string) {
     return this.authService.sendRegistrationOtp(email);

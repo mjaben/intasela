@@ -25,6 +25,31 @@ export class AuthService {
     return null;
   }
 
+  async checkAvailability(email?: string, username?: string, phone?: string) {
+    const errors: string[] = [];
+
+    if (email) {
+      const userByEmail = await this.prisma.user.findUnique({ where: { email } });
+      if (userByEmail) errors.push('Email is already in use');
+    }
+
+    if (username) {
+      const userByUsername = await this.prisma.user.findUnique({ where: { username } });
+      if (userByUsername) errors.push('Username is already taken');
+    }
+
+    if (phone) {
+      const userByPhone = await this.prisma.user.findFirst({ where: { phone } });
+      if (userByPhone) errors.push('Phone number is already in use');
+    }
+
+    if (errors.length > 0) {
+      throw new ConflictException(errors);
+    }
+
+    return { available: true };
+  }
+
   async login(user: any) {
     const payload = { email: user.email, sub: user.id };
     return {

@@ -9,11 +9,13 @@ import SearchableOccupationSelect from "@/components/SearchableOccupationSelect"
 import CustomSelect from "@/components/CustomSelect";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const login = useUserStore((state) => state.login);
   
@@ -55,7 +57,7 @@ export default function RegisterPage() {
     }
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     setError("");
     if (step === 1) {
       if (!formData.firstName || !formData.lastName || !formData.email || !formData.username) {
@@ -74,6 +76,27 @@ export default function RegisterPage() {
           return;
         }
       }
+
+      setLoading(true);
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/check-availability`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, username: formData.username, phone: formData.phone }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          let errorMessage = errorData.message || "Validation failed";
+          if (Array.isArray(errorMessage)) errorMessage = errorMessage.join(", ");
+          throw new Error(errorMessage);
+        }
+      } catch (err: any) {
+        setError(err.message);
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
     }
     if (step === 2) {
       if (!formData.country) {
@@ -112,6 +135,19 @@ export default function RegisterPage() {
       }
       if (!formData.password) {
         setError("Password is required");
+        return;
+      }
+      
+      const strengthScore = [
+        formData.password.length >= 8,
+        /[A-Z]/.test(formData.password),
+        /[a-z]/.test(formData.password),
+        /[0-9]/.test(formData.password),
+        /[^A-Za-z0-9]/.test(formData.password)
+      ].filter(Boolean).length;
+
+      if (strengthScore < 5) {
+        setError("Password is not strong enough. Please meet all criteria.");
         return;
       }
 
@@ -343,9 +379,48 @@ export default function RegisterPage() {
             <p className="text-gray-400 text-sm mb-4">Choose a strong password to protect your account.</p>
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Password <span className="text-red-500">*</span></label>
-              <Input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
+              <div className="relative">
+                <Input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              
+              {/* Password Strength Indicator */}
+              <div className="mt-3 bg-white/5 p-3 rounded-lg border border-white/10 space-y-2">
+                <div className="flex gap-1 h-1.5">
+                  {[1, 2, 3, 4, 5].map((level) => {
+                    const score = [
+                      formData.password.length >= 8,
+                      /[A-Z]/.test(formData.password),
+                      /[a-z]/.test(formData.password),
+                      /[0-9]/.test(formData.password),
+                      /[^A-Za-z0-9]/.test(formData.password)
+                    ].filter(Boolean).length;
+                    
+                    let bg = "bg-gray-700";
+                    if (score >= level) {
+                      if (score <= 2) bg = "bg-red-500";
+                      else if (score <= 4) bg = "bg-yellow-500";
+                      else bg = "bg-[#3BC492]";
+                    }
+                    return <div key={level} className={`flex-1 rounded-full ${bg} transition-colors duration-300`} />
+                  })}
+                </div>
+                <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-xs">
+                  <span className={formData.password.length >= 8 ? "text-[#3BC492]" : "text-gray-500"}>✓ Min 8 characters</span>
+                  <span className={/[A-Z]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One uppercase</span>
+                  <span className={/[a-z]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One lowercase</span>
+                  <span className={/[0-9]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One number</span>
+                  <span className={/[^A-Za-z0-9]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One special char</span>
+                </div>
+              </div>
             </div>
-            <div>
+            <div className="pt-2">
               <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Confirm Password <span className="text-red-500">*</span></label>
               <Input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required />
             </div>

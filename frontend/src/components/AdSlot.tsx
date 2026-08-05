@@ -212,7 +212,7 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
         <AdUnit 
           key={slotId}
           publisherId="pub-1173851541726956"
-          slotId={slotId === 'feed' ? '1111111111' : slotId === 'sidebar' ? '2222222222' : '0000000000'} 
+          slotId={slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '0000000000'}
           layout={format === 'in-feed' ? 'in-article' : 'display'}
         />
       </div>
