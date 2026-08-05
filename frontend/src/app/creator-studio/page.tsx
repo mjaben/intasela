@@ -59,8 +59,8 @@ export default function CreatorStudioPage() {
   const progressPercent = Math.min((balance / threshold) * 100, 100);
 
   return (
-    <main className="flex-1 min-h-screen pb-20 sm:pb-0 bg-background flex flex-col w-full">
-      <div className="sticky top-0 z-10 flex flex-col bg-background/95 backdrop-blur-md border-b border-border">
+    <main className="flex-1 min-h-screen pb-20 sm:pb-0 bg-[#09090b] flex flex-col w-full text-white">
+      <div className="sticky top-0 z-10 flex flex-col bg-[#09090b]/80 backdrop-blur-xl border-b border-white/10">
         <div className="p-4 flex flex-col md:flex-row md:items-center justify-between max-w-5xl mx-auto w-full gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
@@ -187,24 +187,24 @@ export default function CreatorStudioPage() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-muted/30 border border-border rounded-2xl p-5">
-                <h3 className="text-muted-foreground text-sm font-medium mb-1">Period Earnings</h3>
-                <p className="text-2xl font-bold text-[#3BC492]">
+              <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
+                <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider font-mono mb-2">Period Earnings</h3>
+                <p className="text-3xl font-bold text-[#3BC492] tracking-tight">
                   {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(data?.periodEarned || 0)}
                 </p>
               </div>
-              <div className="bg-muted/30 border border-border rounded-2xl p-5">
-                <h3 className="text-muted-foreground text-sm font-medium mb-1">Monetization Events</h3>
-                <p className="text-2xl font-bold text-foreground">
+              <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
+                <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider font-mono mb-2">Monetization Events</h3>
+                <p className="text-3xl font-bold text-white tracking-tight">
                   {data?.periodMonetizedPosts || 0}
                 </p>
               </div>
             </div>
 
             {/* Earning History */}
-            <div className="pt-2">
-              <h2 className="text-lg font-bold mb-4 px-1">Recent Transactions</h2>
-              <div className="bg-muted/10 border border-border rounded-2xl overflow-hidden min-h-[200px] relative">
+            <div className="pt-4">
+              <h2 className="text-xl font-bold mb-4 px-1 text-white">Recent Transactions</h2>
+              <div className="bg-black/40 border border-white/10 rounded-3xl overflow-hidden min-h-[200px] relative shadow-inner">
                 {loading && (
                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -212,12 +212,12 @@ export default function CreatorStudioPage() {
                 )}
                 
                 {data?.history && data.history.length > 0 ? (
-                  <div className="divide-y divide-border">
+                  <div className="divide-y divide-white/5">
                     {data.history.slice(0, 10).map((item: any) => (
-                      <div key={item.id} className="p-5 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                      <div key={item.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-colors">
                         <div className="flex-1 min-w-0 pr-4">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#3BC492] bg-[#3BC492]/10 px-2 py-0.5 rounded border border-[#3BC492]/20">
                               {item.type}
                             </span>
                             <p className="text-foreground font-medium truncate">
@@ -262,8 +262,8 @@ export default function CreatorStudioPage() {
              {!loading && data?.metrics && (
                 <>
                   {/* Analytics Chart */}
-                  <div className="bg-card border border-border rounded-2xl p-6 shadow-sm mb-6">
-                    <h3 className="text-lg font-bold mb-6">Performance Over Time</h3>
+                  <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg mb-6">
+                    <h3 className="text-xl font-bold mb-6 text-white tracking-tight">Performance Over Time</h3>
                     <div className="h-[300px] w-full">
                       {data.chartData && data.chartData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
@@ -309,8 +309,8 @@ export default function CreatorStudioPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Views Metric */}
-                    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-4 text-brand">
+                    <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
+                      <div className="w-12 h-12 rounded-full bg-[#3BC492]/10 flex items-center justify-center mb-4 text-[#3BC492] border border-[#3BC492]/20">
                         <div 
                           className="w-[20px] h-[20px] bg-current"
                           style={{
@@ -340,8 +340,8 @@ export default function CreatorStudioPage() {
                     </div>
 
                     {/* Comments Metric */}
-                    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 text-purple-500">
+                    <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
+                      <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 text-purple-400 border border-purple-500/20">
                         <div 
                           className="w-[20px] h-[20px] bg-currentColor"
                           style={{
@@ -371,8 +371,8 @@ export default function CreatorStudioPage() {
                     </div>
 
                     {/* Posts Metric */}
-                    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
-                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center mb-4 text-brand">
+                    <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
+                      <div className="w-12 h-12 rounded-full bg-[#3BC492]/10 flex items-center justify-center mb-4 text-[#3BC492] border border-[#3BC492]/20">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                       </div>
                       <h3 className="text-muted-foreground font-medium mb-1">Total Selas</h3>

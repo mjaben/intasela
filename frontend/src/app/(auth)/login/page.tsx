@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -45,7 +47,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-md bg-[#18181b] p-6 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
+    <div className="w-full max-w-md bg-[#18181b] p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
       <div className="text-center mb-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Welcome Back</h1>
         <p className="text-gray-400">Log in to your Intasela account</p>
@@ -61,36 +63,39 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Email or Username</label>
-          <input
+          <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Email or Username</label>
+          <Input
             type="text"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             required
-            className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#3BC492] transition-colors"
             placeholder="you@example.com or username"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-          <input
+          <div className="flex items-center justify-between mb-1.5 ml-1">
+            <label className="block text-sm font-medium text-gray-400">Password</label>
+            <Link href="/forgot-password" className="text-sm text-[#3BC492] hover:underline">
+              Forgot password?
+            </Link>
+          </div>
+          <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#3BC492] transition-colors"
             placeholder="••••••••"
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#3BC492] hover:bg-[#2fa076] text-black font-bold py-3 rounded-lg transition-colors mt-6 disabled:opacity-50"
+          className="w-full mt-6"
         >
           {loading ? "Logging in..." : "Log In"}
-        </button>
+        </Button>
       </form>
 
       <div className="mt-6 text-center">

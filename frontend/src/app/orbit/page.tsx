@@ -43,7 +43,7 @@ function OrbitContent() {
   }, [feedType, videoId]);
 
   return (
-    <div className="w-full h-full bg-background overflow-y-scroll snap-y snap-mandatory relative no-scrollbar">
+    <div className="w-full h-full bg-[#000000] overflow-y-scroll snap-y snap-mandatory relative no-scrollbar">
       {/* Back button or Header */}
       <div className="absolute top-4 left-4 z-50 flex items-center gap-4 bg-black/30 backdrop-blur-md p-2 rounded-full border border-white/10 shadow-lg">
         <button onClick={() => router.push("/")} className="text-white hover:text-gray-300 transition-colors">

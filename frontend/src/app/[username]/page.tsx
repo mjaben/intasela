@@ -131,10 +131,10 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="flex-1 min-h-screen p-8 flex flex-col items-center justify-center text-muted-foreground">
-        <h2 className="text-2xl font-bold mb-2">Profile not found</h2>
+      <div className="flex-1 min-h-screen p-8 flex flex-col items-center justify-center text-gray-400 bg-[#09090b]">
+        <h2 className="text-2xl font-bold mb-2 text-white">Profile not found</h2>
         <p>The user @{username} doesn't exist or may have been deleted.</p>
-        <button onClick={() => router.push('/')} className="mt-6 text-[#3BC492] hover:underline">
+        <button onClick={() => router.push('/')} className="mt-6 text-[#3BC492] hover:underline font-bold">
           Go back home
         </button>
       </div>
@@ -153,20 +153,20 @@ export default function ProfilePage() {
     : null;
 
   return (
-    <main className="flex-1 min-h-screen pb-20 relative">
+    <main className="flex-1 min-h-screen pb-20 relative bg-[#09090b]">
       {/* Substack-style Cover / Profile Header Area */}
-      <div className="w-full bg-gradient-to-b from-muted/50 to-background relative px-6 py-12 border-b border-border flex justify-between items-center">
+      <div className="w-full bg-gradient-to-b from-white/10 to-[#09090b] relative px-6 py-12 border-b border-white/10 flex justify-between items-center">
         
         {/* Left Side: Profile Info & Action */}
         <div className="flex-1 max-w-xl z-10 pr-6">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-1">{profile.name}</h1>
-          <p className="text-muted-foreground text-[15px] mb-4">@{profile.username}</p>
+          <h1 className="text-3xl font-extrabold tracking-tight mb-1 text-white">{profile.name}</h1>
+          <p className="text-gray-400 text-[15px] mb-4">@{profile.username}</p>
           
-          <div className="mb-4 text-[15px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+          <div className="mb-4 text-[15px] leading-relaxed text-gray-200 whitespace-pre-wrap">
             {profile.bio || profile.occupation || "No bio yet."}
           </div>
 
-          <div className="flex flex-wrap gap-4 text-[14px] text-muted-foreground mb-6">
+          <div className="flex flex-wrap gap-4 text-[14px] text-gray-400 mb-6">
             {location && (
               <div className="flex items-center gap-1.5">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -179,12 +179,12 @@ export default function ProfilePage() {
             </div>
           </div>
           
-          <div className="flex gap-4 text-[14px] text-muted-foreground mb-8">
+          <div className="flex gap-4 text-[14px] text-gray-400 mb-8">
             <div className="hover:underline cursor-pointer" onClick={() => router.push(`/@${profile.username}/following`)}>
-              <span className="font-bold text-foreground">{profile.followingCount ?? profile.following}</span> Following
+              <span className="font-bold text-white">{profile.followingCount ?? profile.following}</span> Following
             </div>
             <div className="hover:underline cursor-pointer" onClick={() => router.push(`/@${profile.username}/followers`)}>
-              <span className="font-bold text-foreground">{profile.followers}</span> Followers
+              <span className="font-bold text-white">{profile.followers}</span> Followers
             </div>
           </div>
 
@@ -192,7 +192,7 @@ export default function ProfilePage() {
             {isOwnProfile ? (
               <button 
                 onClick={() => router.push('/profile/edit')}
-                className="px-6 py-2 rounded-full border border-border font-bold hover:bg-muted transition-colors text-[14px]"
+                className="px-6 py-2 rounded-full border border-white/10 text-white font-bold hover:bg-white/5 transition-colors text-[14px]"
               >
                 Edit profile
               </button>
@@ -221,7 +221,7 @@ export default function ProfilePage() {
                   }
                 }}
                 disabled={followLoading}
-                className={`px-8 py-2 rounded-full font-bold transition-opacity text-[15px] ${isFollowing ? 'border border-border text-foreground hover:bg-red-500/10 hover:text-red-500 hover:border-red-500' : 'bg-[#3BC492] text-white hover:opacity-90'}`}
+                className={`px-8 py-2 rounded-full font-bold transition-opacity text-[15px] ${isFollowing ? 'border border-white/10 text-white hover:bg-red-500/10 hover:text-red-500 hover:border-red-500' : 'bg-[#3BC492] text-black hover:opacity-90'}`}
               >
                 {isFollowing ? 'Following' : (profile.isFollower ? 'Follow Back' : 'Follow')}
               </button>
@@ -230,7 +230,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Right Side: Avatar inside the cover */}
-        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background bg-muted overflow-hidden flex-shrink-0 z-10 shadow-lg relative">
+        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#09090b] bg-white/5 overflow-hidden flex-shrink-0 z-10 shadow-lg relative">
           <img 
             src={profile.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.username}`} 
             alt={profile.name} 
@@ -245,13 +245,13 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-white/10">
         {[{id: 'posts', label: 'Selas'}, {id: 'replies', label: 'Replies'}, {id: 'likes', label: 'Likes'}].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-4 text-center font-bold text-[15px] transition-colors hover:bg-muted/50 relative ${
-              activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground'
+            className={`flex-1 py-4 text-center font-bold text-[15px] transition-colors hover:bg-white/5 relative ${
+              activeTab === tab.id ? 'text-white' : 'text-gray-400'
             }`}
           >
             {tab.label}
@@ -266,7 +266,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Feed Content */}
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-white/10">
         {activeTab === 'posts' && (
           posts.length > 0 ? (
             posts.map((post: any) => (
@@ -301,7 +301,7 @@ createdAt={post.createdAt}
               />
             ))
           ) : (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="p-8 text-center text-gray-400">
               @{profile.username} hasn't dropped any selas yet.
             </div>
           )
@@ -337,7 +337,7 @@ createdAt={post.createdAt}
               />
             ))
           ) : (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="p-8 text-center text-gray-400">
               @{profile.username} hasn't replied to anything yet.
             </div>
           )
@@ -372,7 +372,7 @@ createdAt={post.createdAt}
               />
             ))
           ) : (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="p-8 text-center text-gray-400">
               @{profile.username} hasn't liked any selas yet.
             </div>
           )

@@ -61,21 +61,21 @@ export default function BookmarksPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-[#09090b]">
       {/* Top Header */}
-      <header className="sticky top-0 bg-background/90 backdrop-blur-md border-b border-border z-10 flex items-center px-4 py-4">
-        <h1 className="text-xl font-extrabold tracking-tight">Bookmarks</h1>
-        <div className="ml-2 text-sm text-muted-foreground mt-1">@{useUserStore.getState().user?.username}</div>
+      <header className="sticky top-0 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/10 z-10 flex items-center px-4 py-4">
+        <h1 className="text-xl font-extrabold text-white tracking-tight">Bookmarks</h1>
+        <div className="ml-2 text-sm text-gray-400 mt-1">@{useUserStore.getState().user?.username}</div>
       </header>
 
       {/* Tabs */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-white/10">
         {["All", "Post (sela)", "Resela with Note"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`flex-1 py-4 px-2 text-center font-bold text-[15px] transition-colors hover:bg-muted/50 relative ${
-              activeTab === tab ? "text-foreground" : "text-muted-foreground"
+            className={`flex-1 py-4 px-2 text-center font-bold text-[15px] transition-colors hover:bg-white/5 relative ${
+              activeTab === tab ? "text-white" : "text-gray-400"
             }`}
           >
             {tab}
@@ -103,8 +103,8 @@ export default function BookmarksPage() {
             onRetry={() => window.location.reload()}
           />
         ) : filteredPosts.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground flex flex-col items-center">
-            <h2 className="text-xl font-bold mb-2">Save selas for later</h2>
+          <div className="p-8 text-center text-gray-400 flex flex-col items-center">
+            <h2 className="text-xl font-bold mb-2 text-white">Save selas for later</h2>
             <p className="max-w-xs text-sm">Don't let the good ones fly away! Bookmark Selas to easily find them again in the future.</p>
           </div>
         ) : (

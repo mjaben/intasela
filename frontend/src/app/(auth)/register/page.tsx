@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useStates, useLGAs } from "nigeria-location-kit/react";
 import SearchableOccupationSelect from "@/components/SearchableOccupationSelect";
 import CustomSelect from "@/components/CustomSelect";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
@@ -33,6 +35,7 @@ export default function RegisterPage() {
     occupation: "",
     creatorType: "",
     interests: [] as string[],
+    otp: "",
   });
 
   const lgas = useLGAs(formData.state);
@@ -97,64 +100,96 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step !== 4) {
+    if (step < 4) {
       nextStep();
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (!formData.password) {
-      setError("Password is required");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      // Remove confirmPassword before sending to API
-      const { confirmPassword, ...submitData } = formData;
-      
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submitData),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        let errorMessage = errorData.message || "Registration failed";
-        if (Array.isArray(errorMessage)) {
-          errorMessage = errorMessage[0]; // Display the first error in the list
-        }
-        throw new Error(errorMessage);
+    if (step === 4) {
+      if (formData.password !== formData.confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+      if (!formData.password) {
+        setError("Password is required");
+        return;
       }
 
-      const data = await res.json();
-      login(data.user);
-      localStorage.setItem("access_token", data.access_token);
-      router.push("/");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setLoading(true);
+      setError("");
+
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/send-registration-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to send verification code");
+        }
+
+        setStep(5);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    if (step === 5) {
+      if (!formData.otp || formData.otp.length !== 6) {
+        setError("Please enter a valid 6-digit code");
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        // Remove confirmPassword before sending to API
+        const { confirmPassword, ...submitData } = formData;
+        
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submitData),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          let errorMessage = errorData.message || "Registration failed";
+          if (Array.isArray(errorMessage)) {
+            errorMessage = errorMessage[0];
+          }
+          throw new Error(errorMessage);
+        }
+
+        const data = await res.json();
+        login(data.user);
+        localStorage.setItem("access_token", data.access_token);
+        router.push("/");
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   return (
-    <div className="w-full max-w-lg bg-[#18181b] p-6 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
+    <div className="w-full max-w-lg bg-[#18181b] p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
       <div className="text-center mb-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Create Account</h1>
-        <p className="text-gray-400">Step {step} of 4</p>
+        <p className="text-gray-400">Step {step} of 5</p>
         
         {/* Progress Bar */}
         <div className="w-full bg-gray-800 h-2 rounded-full mt-4">
           <div 
             className="bg-[#3BC492] h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(step / 4) * 100}%` }}
+            style={{ width: `${(step / 5) * 100}%` }}
           />
         </div>
       </div>
@@ -172,25 +207,25 @@ export default function RegisterPage() {
           <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">First Name <span className="text-red-500">*</span></label>
-                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
+                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">First Name <span className="text-red-500">*</span></label>
+                <Input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Last Name <span className="text-red-500">*</span></label>
-                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
+                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Last Name <span className="text-red-500">*</span></label>
+                <Input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required />
               </div>
             </div>
             <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Username <span className="text-red-500">*</span></label>
-                <input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
+                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Username <span className="text-red-500">*</span></label>
+                <Input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Email <span className="text-red-500">*</span></label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Email <span className="text-red-500">*</span></label>
+              <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
-              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+234 800 000 0000" className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Phone Number</label>
+              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+234 800 000 0000" />
             </div>
           </div>
         )}
@@ -265,8 +300,8 @@ export default function RegisterPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Interests (Select at least 5) <span className="text-red-500">*</span></label>
-              <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto custom-scrollbar p-3 border border-gray-800 bg-[#09090b]/50 rounded-xl">
+              <label className="block text-sm font-medium text-gray-400 mb-2 ml-1">Interests (Select at least 5) <span className="text-red-500">*</span></label>
+              <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto custom-scrollbar p-3 border border-white/5 bg-white/5 rounded-xl shadow-inner">
                 {[
                   "Arts & Entertainment", "Movies & TV", "Action Movies", "Comedy", "Drama", "Sci-Fi & Fantasy", "Music", "Pop", "Hip-Hop & Rap", "Afrobeats", "Rock", "Electronic / EDM", "Classical", "Books & Literature", "Theater & Performing Arts", "Visual Arts & Design",
                   "Business & Finance", "Entrepreneurship", "Investing & Stocks", "Marketing & Advertising", "Small Business", "Economics", "Cryptocurrency & Blockchain",
@@ -307,33 +342,65 @@ export default function RegisterPage() {
             <h2 className="text-xl font-bold text-white mb-2">Secure your account</h2>
             <p className="text-gray-400 text-sm mb-4">Choose a strong password to protect your account.</p>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Password <span className="text-red-500">*</span></label>
-              <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Password <span className="text-red-500">*</span></label>
+              <Input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Confirm Password <span className="text-red-500">*</span></label>
-              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492] placeholder-gray-600" />
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Confirm Password <span className="text-red-500">*</span></label>
+              <Input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required />
             </div>
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+            <h2 className="text-xl font-bold text-white mb-2">Verify your email</h2>
+            <p className="text-gray-400 text-sm mb-4">We've sent a 6-digit code to {formData.email}. Please enter it below.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">6-Digit Code <span className="text-red-500">*</span></label>
+              <Input type="text" maxLength={6} name="otp" value={formData.otp} onChange={handleChange} placeholder="123456" className="text-center tracking-widest text-lg font-bold" required />
+            </div>
+            
+            <button 
+              type="button" 
+              onClick={async () => {
+                try {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/send-registration-otp`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: formData.email }),
+                  });
+                  if (!res.ok) throw new Error("Failed to resend code");
+                  alert("Code resent to your email.");
+                } catch (err: any) {
+                  setError(err.message);
+                }
+              }}
+              className="w-full mt-4 py-2 text-sm text-[#3BC492] hover:underline transition-colors"
+            >
+              Didn't receive the code? Resend
+            </button>
           </div>
         )}
 
         <div className="flex gap-4 mt-6">
           {step > 1 && (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={prevStep}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors"
+              className="flex-1"
             >
               Back
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-[#3BC492] hover:bg-[#2fa076] text-black font-bold py-3 rounded-lg transition-colors disabled:opacity-50"
+            className="flex-1"
           >
-            {step === 4 ? (loading ? "Creating..." : "Complete Setup") : "Continue"}
-          </button>
+            {loading ? "Loading..." : step < 4 ? "Continue" : step === 4 ? "Send Code" : "Create Account"}
+          </Button>
         </div>
       </form>
 

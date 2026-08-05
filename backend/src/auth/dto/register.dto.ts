@@ -32,6 +32,10 @@ export class RegisterDto {
 
   @IsOptional()
   @IsString()
+  otp?: string;
+
+  @IsOptional()
+  @IsString()
   country?: string;
 
   @IsOptional()

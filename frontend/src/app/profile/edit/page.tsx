@@ -123,9 +123,9 @@ export default function EditProfilePage() {
 
   return (
     <div className="flex-1 min-h-screen pb-20">
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border p-4 flex items-center justify-between">
+      <div className="sticky top-0 z-30 bg-[#09090b]/80 backdrop-blur-md border-b border-white/10 p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-muted rounded-full transition-colors">
+          <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-full transition-colors">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
           <h1 className="font-bold text-xl">Edit profile</h1>
@@ -133,19 +133,19 @@ export default function EditProfilePage() {
       </div>
 
       {/* Cover / Profile Header Area */}
-      <div className="w-full bg-gradient-to-b from-muted/50 to-background relative px-6 py-12 border-b border-border flex justify-between items-center min-h-[250px] group overflow-hidden">
+      <div className="w-full bg-gradient-to-b from-white/5 to-[#09090b] relative px-6 py-12 border-b border-white/10 flex justify-between items-center min-h-[250px] group overflow-hidden">
         
         {/* Left Side: Mock Profile Info (Optional, to match layout) */}
         <div className="flex-1 max-w-xl z-10 pr-6 relative pointer-events-none">
           <h1 className="text-3xl font-extrabold tracking-tight mb-1">{profile?.firstName} {profile?.lastName}</h1>
-          <p className="text-muted-foreground text-[15px] mb-4">@{username || profile?.username}</p>
+          <p className="text-gray-400 text-[15px] mb-4">@{username || profile?.username}</p>
           <div className="mb-4 text-[15px] leading-relaxed text-foreground/90 whitespace-pre-wrap opacity-70">
             {bio || "Your bio will appear here..."}
           </div>
         </div>
 
         {/* Right Side: Avatar inside the cover */}
-        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background bg-muted overflow-hidden flex-shrink-0 z-30 shadow-lg relative group/avatar pointer-events-auto">
+        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#09090b] bg-white/10 overflow-hidden flex-shrink-0 z-30 shadow-lg relative group/avatar pointer-events-auto">
           {avatarUrl ? (
             <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
@@ -187,54 +187,54 @@ export default function EditProfilePage() {
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-muted-foreground">Bio</label>
+            <label className="text-sm font-semibold text-gray-400">Bio</label>
             <textarea 
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="A short description about yourself..."
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 min-h-[100px] outline-none focus:border-[#3BC492] transition-colors resize-none text-[15px]"
+              className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 min-h-[100px] outline-none focus:border-[#3BC492] transition-colors resize-none text-[15px]"
               maxLength={160}
             />
-            <div className="text-right text-xs text-muted-foreground">
+            <div className="text-right text-xs text-gray-400">
               {bio.length} / 160
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-muted-foreground">Username</label>
+            <label className="text-sm font-semibold text-gray-400">Username</label>
             <div className="relative">
-              <span className="absolute left-4 top-[14px] text-muted-foreground">@</span>
+              <span className="absolute left-4 top-[14px] text-gray-400">@</span>
               <input 
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                 placeholder="username"
-                className="w-full bg-background border border-border rounded-xl pl-9 pr-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
+                className="w-full bg-[#09090b] border border-white/10 rounded-xl pl-9 pr-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
                 maxLength={20}
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">You can only change your username once every 45 days.</p>
+            <p className="text-xs text-gray-400 mt-1">You can only change your username once every 45 days.</p>
           </div>
 
           <div className="flex gap-4">
             <div className="flex flex-col gap-2 flex-1">
-              <label className="text-sm font-semibold text-muted-foreground">Country</label>
+              <label className="text-sm font-semibold text-gray-400">Country</label>
               <input 
                 type="text"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 placeholder="e.g. Nigeria"
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
+                className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
               />
             </div>
             <div className="flex flex-col gap-2 flex-1">
-              <label className="text-sm font-semibold text-muted-foreground">State / Region</label>
+              <label className="text-sm font-semibold text-gray-400">State / Region</label>
               <input 
                 type="text"
                 value={state}
                 onChange={(e) => setState(e.target.value)}
                 placeholder="e.g. Lagos"
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
+                className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
               />
             </div>
           </div>

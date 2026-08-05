@@ -330,23 +330,23 @@ export default function SettingsPage() {
   };
 
   if (loading || !userData) {
-    return <div className="p-8 text-center text-muted-foreground">Loading settings...</div>;
+    return <div className="p-8 text-center text-gray-400">Loading settings...</div>;
   }
 
   const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
     <div className="mb-10">
-      <h2 className="text-xl font-bold mb-4">{title}</h2>
-      <div className="border border-border rounded-xl bg-card overflow-hidden shadow-sm">
+      <h2 className="text-xl font-bold mb-4 text-white">{title}</h2>
+      <div className="border border-white/10 rounded-xl bg-white/5 overflow-hidden shadow-sm">
         {children}
       </div>
     </div>
   );
 
   const RowItem = ({ title, description, action }: { title: string, description?: string, action: React.ReactNode }) => (
-    <div className="flex items-center justify-between p-5 border-b border-border last:border-b-0">
+    <div className="flex items-center justify-between p-5 border-b border-white/10 last:border-b-0">
       <div className="pr-8">
-        <div className="font-semibold text-[15px]">{title}</div>
-        {description && <div className="text-muted-foreground text-[14px] mt-1">{description}</div>}
+        <div className="font-semibold text-[15px] text-white">{title}</div>
+        {description && <div className="text-gray-400 text-[14px] mt-1">{description}</div>}
       </div>
       <div className="shrink-0">{action}</div>
     </div>
@@ -355,26 +355,26 @@ export default function SettingsPage() {
   const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
     <div 
       onClick={() => onChange(!checked)}
-      className={`w-[44px] h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out ${checked ? 'bg-[#FF6719]' : 'bg-muted-foreground/30'}`}
+      className={`w-[44px] h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out ${checked ? 'bg-[#3BC492]' : 'bg-white/20'}`}
     >
       <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
     </div>
   );
 
   const Chevron = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
       <polyline points="9 18 15 12 9 6" />
     </svg>
   );
 
   const DownChevron = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
       <polyline points="6 9 12 15 18 9" />
     </svg>
   );
 
   const UpChevron = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
       <polyline points="18 15 12 9 6 15" />
     </svg>
   );
@@ -382,10 +382,10 @@ export default function SettingsPage() {
   const Checkbox = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
     <div 
       onClick={() => onChange(!checked)}
-      className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors duration-200 ${checked ? 'bg-[#FF6719]' : 'bg-muted-foreground/30'}`}
+      className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors duration-200 ${checked ? 'bg-[#3BC492]' : 'bg-white/20'}`}
     >
       {checked && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
       )}
@@ -393,7 +393,7 @@ export default function SettingsPage() {
   );
 
   const ActionButton = ({ label, primary = false, onClick }: { label: string, primary?: boolean, onClick?: () => void }) => (
-    <button onClick={onClick} className={`px-4 py-1.5 rounded-lg font-semibold text-[14px] transition-colors ${primary ? 'bg-[#FF6719] text-white hover:opacity-90' : 'bg-muted hover:bg-muted/80'}`}>
+    <button onClick={onClick} className={`px-4 py-1.5 rounded-xl font-semibold text-[14px] transition-colors ${primary ? 'bg-[#3BC492] text-black hover:opacity-90' : 'bg-white/10 text-white hover:bg-white/20'}`}>
       {label}
     </button>
   );
@@ -436,14 +436,14 @@ export default function SettingsPage() {
     <div className="max-w-[700px] py-10 px-6 relative">
       
       <Section title="Account">
-        <div className="flex items-center justify-between p-5 border-b border-border">
+        <div className="flex items-center justify-between p-5 border-b border-white/10">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full overflow-hidden bg-muted">
+            <div className="w-14 h-14 rounded-full overflow-hidden bg-white/10">
               <img src={userData.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${userData.username}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="font-semibold text-[15px]">Profile</div>
-              <div className="text-muted-foreground text-[14px]">{userData.firstName} {userData.lastName}</div>
+              <div className="text-gray-400 text-[14px]">{userData.firstName} {userData.lastName}</div>
             </div>
           </div>
           <ActionButton label="Edit" onClick={() => router.push('/profile/edit')} />
@@ -467,11 +467,11 @@ export default function SettingsPage() {
 
       <Section title="Notifications">
         {/* Engagement */}
-        <div className="border-b border-border transition-colors relative">
-          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30" onClick={() => toggleExpand('engagement')}>
+        <div className="border-b border-white/10 transition-colors relative">
+          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/10/30" onClick={() => toggleExpand('engagement')}>
             <div className="flex items-center gap-3">
               <div 
-                className="w-[18px] h-[18px] bg-muted-foreground"
+                className="w-[18px] h-[18px] bg-white/10-foreground"
                 style={{
                   WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADZUlEQVR4nO3ae4hVVRTH8c+de+/MbZz3ODNRgfmYUuk1YZFWY6WRgTVSQdCDgbAgih5/RNEfGhmJPSYpEgzKMiiC6g+tiMyUnpY1jCViPgqkbJwps/qjMYIbB7ZQ5uSM93HuHfrC5cJm77XPOmeftX9r7cP/SGAGbsP9uAVnhfaRcBIuxVxMFgMJ3IAd+Bor8DBWYXdouwkVRxibRDc+x35swLv4DnvxFKYXw4lGvIHNmDNMn4uwCe+g5W/tZ4Rx7+PyIzg6CYuDU89gXKGcqEMfliN9lL7RnX8I32ICbsdPuHGE86zEV2hVgOX0NnpGOe5OHMAWtI9y7GJ8hCp55NqwrqM7PVq6UH+M876Fu+TxaezCTMXnVOzL11OJQuw28bEhhOiceRBLxMciPJIPQy/hOvFxJV7Nh6GNmC0+ZoW9J2d60SE+ZoSImTORhLhEfMwPaiJnXo75HVkSVELO3IsnxMeXOD8fhi4M70kczA572EhTg/8kEoj9mKr4vIeF+TT4GB5XXK4KyyqVT6Mn42ccrzicGDRWQfavJ/GcwpMM+urRQk3QFNLRKM8uJA/gY1QWcpIr8ANOKJD97pDqFsr+P1iKT1FbgB28H6cpElHR4DV8gJo82ewML/e5ikxlSEM35qHacVkoTMSm5zLhyWzKYU1fjYFQQoqVZNBhe0PeMBpuxfc4WwlxDQZx9zAVxsOd7wkFjdGWiIpCdFFfhCAwZZg+DVgbNFSzEiaFe/BjyLOjquEhOkJteMUIKpUlQXUikehtbGwYrKqq+iWVqrgjqtQnk8nfm5ub3lQuJBKJ1Z2ds/bs3tmXXbvmlezM8875beLECb+++MLKbE3NuINFFJ45Ma+xsWFg29bPst/s2vKv380Lu7Ntba15Ke0UlHQ6/cmCrvl/dHScOTjn4s7+wx3p6/0wW1dbOxSOGEqWikQiMVRZmYoi16rp06ZuP+TA8p6l2fHNTQdbW1sO1NfXDWUymShqlTQt4b/rlPYpO9avW5Ntb5/8Z3197f5MJhPpqWlYELK/sqAtnU4PVFdX70smk5tDSC575mLrMZ6tlBzRadfzY8GZBqzHMmVOBVbjaWXOs1iH45QxF2BnuTsRcTr2lIvGOhr3YXv4/qTsWRS+XxlvDLAMrxsDpHB93BehlPkLRtzTRcJTeY0AAAAASUVORK5CYII=)',
                   WebkitMaskSize: 'contain',
@@ -493,7 +493,7 @@ export default function SettingsPage() {
               {/* Left connector line */}
               <div className="absolute left-[1.8rem] top-0 bottom-5 w-px bg-border"></div>
               
-              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">
+              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-gray-400 tracking-wider">
                 <span className="w-8 text-center">EMAIL</span>
                 <span className="w-8 text-center">PUSH</span>
               </div>
@@ -507,7 +507,7 @@ export default function SettingsPage() {
                 <div key={item.id} className="flex items-start justify-between mb-6 group">
                   <div className="pr-8">
                     <div className="font-semibold text-[14px] text-foreground">{item.label}</div>
-                    <div className="text-muted-foreground text-[13px] mt-0.5">{item.desc}</div>
+                    <div className="text-gray-400 text-[13px] mt-0.5">{item.desc}</div>
                   </div>
                   <div className="flex justify-end gap-6 pt-1">
                     <div className="w-8 flex justify-center">
@@ -537,7 +537,7 @@ export default function SettingsPage() {
                   reselas: { email: false, push: false },
                   mentions: { email: false, push: false }
                 })}
-                className="w-full mt-2 py-3 bg-muted rounded-xl text-[14px] font-semibold text-foreground hover:bg-muted/80 transition-colors"
+                className="w-full mt-2 py-3 bg-white/10 rounded-xl text-[14px] font-semibold text-foreground hover:bg-white/10/80 transition-colors"
               >
                 Turn off all
               </button>
@@ -546,11 +546,11 @@ export default function SettingsPage() {
         </div>
 
         {/* Messaging */}
-        <div className="border-b border-border transition-colors relative">
-          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30" onClick={() => toggleExpand('messaging')}>
+        <div className="border-b border-white/10 transition-colors relative">
+          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/10/30" onClick={() => toggleExpand('messaging')}>
             <div className="flex items-center gap-3">
               <div 
-                className="w-[18px] h-[18px] bg-muted-foreground"
+                className="w-[18px] h-[18px] bg-white/10-foreground"
                 style={{
                   WebkitMaskImage: 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADh0lEQVR4nO3Ze4inUxzH8dfuGLus2qzrbmMtxcS65bpbbsuuW2E3/CGS61JbaFxWJKuEtca6RRapdSv+4A/l9geNP+S2YluXGCyLRSktalPo1Ef9mmKfZ+Y383vUvOvUNHOec84z5zyf7/f7OYwzzv+WbvTgIOyJ3bGNhjMBc3EdXsD32Ixv8B4G8RV+w+d4HldjlobQgxuz0A/Qj4WYkZcbSvndTJyB+/Oib+McTOzA+u2IlfgJ9+b4DIcunIwX8REWGUMuwY+4Gzu1cdzjsAarMdUosj2ezZnfexQFoh9foHc0Jihnfl2O09ZGn4URh4PbOWiRzc9wjbHlJPyA2e0YbLvsxBU6wyJ8gmkjHehJPKKz3IyX/0XOK3Eu3sdknaUb7+LC4Ty8Lb7GHM1gX2xI/KrF9Xhas7gT99V5oKQK63FAxf6TE2NmRfsPwbE4EWcl/Vic1oelycluTytxo0rM2AEb6wThBQl6VV+66P3P+BIf5zy/hpfwTATjobS7Wl5gadqVmF5xvnuwrOqLlNzpWs1kv2TPlXgHR2omXfi9ipJ2p+MUzWVdlWi/czLbJvNclXS/t84Z7BAP4rIqH1PZujpMivzOSG2+fyT4cMxvaQsix63t4tQ3u9SY77ao3X8yPVptGPL7bUreDyPBpYR9taW9EjlubQ9HlmfXmLPEoFu31KnUGn90qn6uSDEtVlTpODha1VmbWIabqnR8ChdoLitwVZWOl+NRzeUJnFel426xecaiNh8Oa3Bo1c5v4NQag09NWTwWKcqvdeZaHFtzS0yM7Bb53YQ/8/P6xKO3hkjwSHO4o1K11gpypSI7sOZEExIcexIci51zREtQHKnx1l9VsVrpiyHXFLqz0yVzqMUpcdWH7V60mfNzPGuxB77DMZrBJHyaEroyRRHWYonmcEfdYz4x+X5J5prC/AhPMR8qsxwDDQqGc+L/1pLtJblsGbHP2sad2IgT6tr4Gxpyp7dVrvPKeo6u8+Dc1Omlqus08yI0xRPbte7Da3OReSn2MvYUgSlmwuu5hzl9uAMVC/JsPJbtLOb144ns85JytJspqeEfSNAdwJlJCttGb/zalZlgU+70ynavwg25cihKsk9yqmlDMtJ/cq6ZybVOS4m6KvX8L7FV+8byu+zKYo/HRbglfu5AFjWY/2pZ3F9pm5MFl7+9mdi0PK7JYfmgxxlnHKPP3/f5ueKem89DAAAAAElFTkSuQmCC)',
                   WebkitMaskSize: 'contain',
@@ -571,7 +571,7 @@ export default function SettingsPage() {
             <div className="pl-[2.75rem] pr-5 pb-5 relative animate-in slide-in-from-top-2 duration-200">
               <div className="absolute left-[1.8rem] top-0 bottom-5 w-px bg-border"></div>
               
-              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">
+              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-gray-400 tracking-wider">
                 <span className="w-8 text-center">EMAIL</span>
                 <span className="w-8 text-center">PUSH</span>
               </div>
@@ -587,7 +587,7 @@ export default function SettingsPage() {
                 <div key={item.id} className="flex items-start justify-between mb-6 group">
                   <div className="pr-8">
                     <div className="font-semibold text-[14px] text-foreground">{item.label}</div>
-                    <div className="text-muted-foreground text-[13px] mt-0.5">{item.desc}</div>
+                    <div className="text-gray-400 text-[13px] mt-0.5">{item.desc}</div>
                   </div>
                   <div className="flex justify-end gap-6 pt-1">
                     <div className="w-8 flex justify-center">
@@ -613,11 +613,11 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-8">
                 <div className="pr-8">
                   <div className="font-semibold text-[14px] text-foreground">Allow message requests from</div>
-                  <div className="text-muted-foreground text-[13px] mt-0.5">People you follow or subscribe to can always message you.</div>
+                  <div className="text-gray-400 text-[13px] mt-0.5">People you follow or subscribe to can always message you.</div>
                 </div>
                 <div className="relative">
                   <select 
-                    className="bg-background border border-border text-foreground font-semibold text-[14px] rounded-lg pl-3 pr-10 py-2 outline-none cursor-pointer hover:border-muted-foreground/50 transition-colors appearance-none focus:border-[#FF6719]"
+                    className="bg-[#09090b] border border-white/10 text-foreground font-semibold text-[14px] rounded-lg pl-3 pr-10 py-2 outline-none cursor-pointer hover:border-muted-foreground/50 transition-colors appearance-none focus:border-[#FF6719]"
                     value={settings.notifications?.messaging?.allowRequestsFrom || 'Everyone'}
                     onChange={(e) => updateMessageRequest(e.target.value)}
                   >
@@ -625,7 +625,7 @@ export default function SettingsPage() {
                     <option value="Following">Following</option>
                     <option value="Nobody">Nobody</option>
                   </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                   </div>
                 </div>
@@ -641,7 +641,7 @@ export default function SettingsPage() {
                   directMessageRequests: { email: false, push: false },
                   allowRequestsFrom: settings.notifications?.messaging?.allowRequestsFrom || 'Everyone'
                 })}
-                className="w-full mt-2 py-3 bg-muted rounded-xl text-[14px] font-semibold text-foreground hover:bg-muted/80 transition-colors"
+                className="w-full mt-2 py-3 bg-white/10 rounded-xl text-[14px] font-semibold text-foreground hover:bg-white/10/80 transition-colors"
               >
                 Turn off all
               </button>
@@ -650,10 +650,10 @@ export default function SettingsPage() {
         </div>
 
         {/* Connections */}
-        <div className="border-b border-border transition-colors relative">
-          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30" onClick={() => toggleExpand('connections')}>
+        <div className="border-b border-white/10 transition-colors relative">
+          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/10/30" onClick={() => toggleExpand('connections')}>
             <div className="flex items-center gap-3">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span className="font-semibold text-[15px]">Connections</span>
             </div>
             {expanded.connections ? <UpChevron /> : <DownChevron />}
@@ -663,7 +663,7 @@ export default function SettingsPage() {
             <div className="pl-[2.75rem] pr-5 pb-5 relative animate-in slide-in-from-top-2 duration-200">
               <div className="absolute left-[1.8rem] top-0 bottom-5 w-px bg-border"></div>
               
-              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">
+              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-gray-400 tracking-wider">
                 <span className="w-8 text-center">EMAIL</span>
                 <span className="w-8 text-center">PUSH</span>
               </div>
@@ -679,7 +679,7 @@ export default function SettingsPage() {
                 <div key={item.id} className="flex items-start justify-between mb-6 group">
                   <div className="pr-8">
                     <div className="font-semibold text-[14px] text-foreground">{item.label}</div>
-                    <div className="text-muted-foreground text-[13px] mt-0.5">{item.desc}</div>
+                    <div className="text-gray-400 text-[13px] mt-0.5">{item.desc}</div>
                   </div>
                   <div className="flex justify-end gap-6 pt-1">
                     <div className="w-8 flex justify-center">
@@ -711,7 +711,7 @@ export default function SettingsPage() {
                   newNotes: { email: false, push: false },
                   leaderboardUpdates: { push: false }
                 })}
-                className="w-full mt-2 py-3 bg-muted rounded-xl text-[14px] font-semibold text-foreground hover:bg-muted/80 transition-colors"
+                className="w-full mt-2 py-3 bg-white/10 rounded-xl text-[14px] font-semibold text-foreground hover:bg-white/10/80 transition-colors"
               >
                 Turn off all
               </button>
@@ -721,9 +721,9 @@ export default function SettingsPage() {
 
         {/* Marketing */}
         <div className="transition-colors relative">
-          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30" onClick={() => toggleExpand('marketing')}>
+          <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/10/30" onClick={() => toggleExpand('marketing')}>
             <div className="flex items-center gap-3">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               <span className="font-semibold text-[15px]">Marketing</span>
             </div>
             {expanded.marketing ? <UpChevron /> : <DownChevron />}
@@ -733,7 +733,7 @@ export default function SettingsPage() {
             <div className="pl-[2.75rem] pr-5 pb-5 relative animate-in slide-in-from-top-2 duration-200">
               <div className="absolute left-[1.8rem] top-0 bottom-5 w-px bg-border"></div>
               
-              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-muted-foreground tracking-wider">
+              <div className="flex justify-end gap-6 mb-4 text-xs font-semibold text-gray-400 tracking-wider">
                 <span className="w-8 text-center">EMAIL</span>
                 <span className="w-8 text-center">PUSH</span>
               </div>
@@ -746,7 +746,7 @@ export default function SettingsPage() {
                 <div key={item.id} className="flex items-start justify-between mb-6 group">
                   <div className="pr-8">
                     <div className="font-semibold text-[14px] text-foreground">{item.label}</div>
-                    <div className="text-muted-foreground text-[13px] mt-0.5">{item.desc}</div>
+                    <div className="text-gray-400 text-[13px] mt-0.5">{item.desc}</div>
                   </div>
                   <div className="flex justify-end gap-6 pt-1">
                     <div className="w-8 flex justify-center">
@@ -775,7 +775,7 @@ export default function SettingsPage() {
                   readingSuggestions: { email: false, push: false },
                   marketing: { email: false, push: false }
                 })}
-                className="w-full mt-2 py-3 bg-muted rounded-xl text-[14px] font-semibold text-foreground hover:bg-muted/80 transition-colors"
+                className="w-full mt-2 py-3 bg-white/10 rounded-xl text-[14px] font-semibold text-foreground hover:bg-white/10/80 transition-colors"
               >
                 Turn off all
               </button>
@@ -795,24 +795,24 @@ export default function SettingsPage() {
           description="This includes video posts and video in Notes" 
           action={<Toggle checked={settings.autoplayVideos} onChange={(v) => updateSetting("autoplayVideos", v)} />} 
         />
-        <div className="p-5 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openModal('blocked')}>
+        <div className="p-5 border-b border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/10/30 transition-colors" onClick={() => openModal('blocked')}>
           <div>
             <div className="font-semibold text-[15px]">Blocked accounts</div>
-            <div className="text-muted-foreground text-[14px] mt-1">Blocked accounts can not interact with you or your content.</div>
+            <div className="text-gray-400 text-[14px] mt-1">Blocked accounts can not interact with you or your content.</div>
           </div>
           <Chevron />
         </div>
-        <div className="p-5 border-b border-border flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openModal('muted')}>
+        <div className="p-5 border-b border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/10/30 transition-colors" onClick={() => openModal('muted')}>
           <div>
             <div className="font-semibold text-[15px]">Muted accounts</div>
-            <div className="text-muted-foreground text-[14px] mt-1">Muted accounts are automatically hidden from view.</div>
+            <div className="text-gray-400 text-[14px] mt-1">Muted accounts are automatically hidden from view.</div>
           </div>
           <Chevron />
         </div>
-        <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openModal('interests')}>
+        <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/10/30 transition-colors" onClick={() => openModal('interests')}>
           <div>
             <div className="font-semibold text-[15px]">Manage interests</div>
-            <div className="text-muted-foreground text-[14px] mt-1">Control which topics you see in your feed.</div>
+            <div className="text-gray-400 text-[14px] mt-1">Control which topics you see in your feed.</div>
           </div>
           <Chevron />
         </div>
@@ -850,7 +850,7 @@ export default function SettingsPage() {
         <div className={`p-5 flex items-center justify-between relative group ${!settings.recoveryQuestions ? 'cursor-not-allowed' : ''}`}>
           <div className={!settings.recoveryQuestions ? 'opacity-50' : ''}>
             <div className="font-semibold text-[15px]">Two-factor authentication</div>
-            <div className="text-muted-foreground text-[14px] mt-1">Two-factor authentication adds an extra layer of security by requiring a special code each time you log in. <a href="#" className="underline">Learn more</a></div>
+            <div className="text-gray-400 text-[14px] mt-1">Two-factor authentication adds an extra layer of security by requiring a special code each time you log in. <a href="#" className="underline">Learn more</a></div>
           </div>
           <div className={!settings.recoveryQuestions ? 'opacity-50 pointer-events-none' : ''}>
             <Toggle checked={settings.twoFactorAuth} onChange={(v) => settings.recoveryQuestions && updateSetting("twoFactorAuth", v)} />
@@ -866,11 +866,11 @@ export default function SettingsPage() {
 
       <div className="mt-10 mb-20">
         <h2 className="text-xl font-bold mb-4 px-2">Danger zone</h2>
-        <div className="border border-border rounded-2xl overflow-hidden bg-card">
-          <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/5">
+          <div className="p-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="font-semibold text-[15px]">Delete all selas</div>
-              <div className="text-muted-foreground text-[14px] mt-1">Permanently delete all your selas, reselas, and reselas with notes.</div>
+              <div className="text-gray-400 text-[14px] mt-1">Permanently delete all your selas, reselas, and reselas with notes.</div>
             </div>
             <button 
               className="shrink-0 bg-[#ED5F62] hover:bg-[#ED5F62]/90 text-white font-semibold py-2 px-5 rounded-lg transition-colors text-sm disabled:opacity-50"
@@ -883,7 +883,7 @@ export default function SettingsPage() {
           <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="font-semibold text-[15px]">Delete your account</div>
-              <div className="text-muted-foreground text-[14px] mt-1">Permanently delete your account and information</div>
+              <div className="text-gray-400 text-[14px] mt-1">Permanently delete your account and information</div>
             </div>
             <button 
               className="shrink-0 bg-[#ED5F62] hover:bg-[#ED5F62]/90 text-white font-semibold py-2 px-5 rounded-lg transition-colors text-sm disabled:opacity-50"
@@ -899,18 +899,18 @@ export default function SettingsPage() {
       {/* Edit Modal Overlay */}
       {editModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-card w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white/5 w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {editModal !== 'recovery' && (
-              <div className="flex items-center justify-between p-5 border-b border-border">
+              <div className="flex items-center justify-between p-5 border-b border-white/10">
                 <h3 className="font-bold text-lg capitalize">{editModal === 'cookies' ? 'Cookie Preferences' : `Edit ${editModal}`}</h3>
-                <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
+                <button onClick={closeModal} className="text-gray-400 hover:text-foreground">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
               </div>
             )}
             {editModal === 'recovery' && (
               <div className="flex justify-end p-4 pb-0">
-                <button onClick={closeModal} className="text-muted-foreground hover:text-foreground">
+                <button onClick={closeModal} className="text-gray-400 hover:text-foreground">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
               </div>
@@ -922,7 +922,7 @@ export default function SettingsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-semibold mb-1.5 block">Phone Number</label>
-                    <input type="tel" className="w-full p-2.5 bg-background border border-border rounded-lg outline-none focus:border-[#FF6719]" placeholder="+1 234 567 890" value={formData.phone || ''} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
+                    <input type="tel" className="w-full p-2.5 bg-[#09090b] border border-white/10 rounded-lg outline-none focus:border-[#FF6719]" placeholder="+1 234 567 890" value={formData.phone || ''} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
                   </div>
                   <button onClick={handleSaveProfile} disabled={isSubmitting} className="w-full mt-4 bg-[#FF6719] text-white font-semibold py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50">Save Phone</button>
                 </div>
@@ -933,10 +933,10 @@ export default function SettingsPage() {
                   <div>
                     <label className="text-sm font-semibold mb-1.5 block">Handle (Username)</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2.5 text-muted-foreground">@</span>
-                      <input type="text" className="w-full p-2.5 pl-8 bg-background border border-border rounded-lg outline-none focus:border-[#FF6719]" value={formData.username || ''} onChange={(e) => setFormData({...formData, username: e.target.value})} />
+                      <span className="absolute left-3 top-2.5 text-gray-400">@</span>
+                      <input type="text" className="w-full p-2.5 pl-8 bg-[#09090b] border border-white/10 rounded-lg outline-none focus:border-[#FF6719]" value={formData.username || ''} onChange={(e) => setFormData({...formData, username: e.target.value})} />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">You can only change your handle once every 45 days.</p>
+                    <p className="text-xs text-gray-400 mt-2">You can only change your handle once every 45 days.</p>
                   </div>
                   <button onClick={handleSaveProfile} disabled={isSubmitting} className="w-full mt-4 bg-[#FF6719] text-white font-semibold py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50">Save Handle</button>
                 </div>
@@ -948,18 +948,18 @@ export default function SettingsPage() {
                     <>
                       <div>
                         <label className="text-sm font-semibold mb-1.5 block">New Email Address</label>
-                        <input type="email" className="w-full p-2.5 bg-background border border-border rounded-lg outline-none focus:border-[#FF6719]" value={formData.email || ''} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                        <input type="email" className="w-full p-2.5 bg-[#09090b] border border-white/10 rounded-lg outline-none focus:border-[#FF6719]" value={formData.email || ''} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                       </div>
                       <button onClick={handleSaveEmailRequest} disabled={isSubmitting || !formData.email || formData.email === userData.email} className="w-full mt-4 bg-[#FF6719] text-white font-semibold py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50">Send Verification Code</button>
                     </>
                   ) : (
                     <>
-                      <div className="mb-2 text-sm text-muted-foreground text-center">
+                      <div className="mb-2 text-sm text-gray-400 text-center">
                         We sent a 6-digit code to <span className="font-semibold text-foreground">{formData.email}</span>. Check your backend console for the code!
                       </div>
                       <div>
                         <label className="text-sm font-semibold mb-1.5 block">Verification Code</label>
-                        <input type="text" maxLength={6} className="w-full p-2.5 text-center tracking-widest text-lg font-bold bg-background border border-border rounded-lg outline-none focus:border-[#FF6719]" placeholder="000000" value={formData.otp || ''} onChange={(e) => setFormData({...formData, otp: e.target.value})} />
+                        <input type="text" maxLength={6} className="w-full p-2.5 text-center tracking-widest text-lg font-bold bg-[#09090b] border border-white/10 rounded-lg outline-none focus:border-[#FF6719]" placeholder="000000" value={formData.otp || ''} onChange={(e) => setFormData({...formData, otp: e.target.value})} />
                       </div>
                       <button onClick={handleSaveEmailVerify} disabled={isSubmitting || !formData.otp || formData.otp.length !== 6} className="w-full mt-4 bg-[#FF6719] text-white font-semibold py-2.5 rounded-lg hover:opacity-90 disabled:opacity-50">Verify & Update Email</button>
                     </>
@@ -970,7 +970,7 @@ export default function SettingsPage() {
               {editModal === 'blocked' && (
                 <div className="p-4 sm:p-6 text-foreground max-h-[60vh] overflow-y-auto nice-scrollbar">
                   {blockedUsers.length === 0 ? (
-                    <div className="py-10 text-center text-muted-foreground">
+                    <div className="py-10 text-center text-gray-400">
                       <div className="font-bold text-foreground text-base mb-2">Nobody is blocked</div>
                       <div className="text-sm">You can block people by clicking the three dots on their profile, comments, or notes.</div>
                     </div>
@@ -979,7 +979,7 @@ export default function SettingsPage() {
                       {blockedUsers.map(user => (
                         <div key={user.username} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden flex-shrink-0">
                               {user.avatarUrl ? (
                                 <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                               ) : (
@@ -990,7 +990,7 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-bold text-[15px] leading-tight">{user.name}</span>
-                              <span className="text-muted-foreground text-[14px]">@{user.username}</span>
+                              <span className="text-gray-400 text-[14px]">@{user.username}</span>
                             </div>
                           </div>
                           <button 
@@ -998,7 +998,7 @@ export default function SettingsPage() {
                               toggleBlockUser(user);
                               addToast(`Unblocked @${user.username}`, "success");
                             }}
-                            className="px-4 py-1.5 rounded-full border border-border hover:bg-muted/50 transition-colors text-sm font-semibold"
+                            className="px-4 py-1.5 rounded-full border border-white/10 hover:bg-white/10/50 transition-colors text-sm font-semibold"
                           >
                             Unblock
                           </button>
@@ -1012,7 +1012,7 @@ export default function SettingsPage() {
               {editModal === 'muted' && (
                 <div className="p-4 sm:p-6 text-foreground max-h-[60vh] overflow-y-auto nice-scrollbar">
                   {mutedUsers.length === 0 ? (
-                    <div className="py-10 text-center text-muted-foreground">
+                    <div className="py-10 text-center text-gray-400">
                       <div className="font-bold text-foreground text-base mb-2">Nobody is muted</div>
                       <div className="text-sm">You can mute people by clicking the three dots on their profile, comments, or notes.</div>
                     </div>
@@ -1021,7 +1021,7 @@ export default function SettingsPage() {
                       {mutedUsers.map(user => (
                         <div key={user.username} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden flex-shrink-0">
                               {user.avatarUrl ? (
                                 <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                               ) : (
@@ -1032,7 +1032,7 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex flex-col">
                               <span className="font-bold text-[15px] leading-tight">{user.name}</span>
-                              <span className="text-muted-foreground text-[14px]">@{user.username}</span>
+                              <span className="text-gray-400 text-[14px]">@{user.username}</span>
                             </div>
                           </div>
                           <button 
@@ -1040,7 +1040,7 @@ export default function SettingsPage() {
                               toggleMuteUser(user);
                               addToast(`Unmuted @${user.username}`, "success");
                             }}
-                            className="px-4 py-1.5 rounded-full border border-border hover:bg-muted/50 transition-colors text-sm font-semibold"
+                            className="px-4 py-1.5 rounded-full border border-white/10 hover:bg-white/10/50 transition-colors text-sm font-semibold"
                           >
                             Unmute
                           </button>
@@ -1053,17 +1053,17 @@ export default function SettingsPage() {
 
               {editModal === 'interests' && (
                 <div className="max-h-[60vh] overflow-y-auto px-1">
-                  <div className="text-muted-foreground text-sm mb-6">Control which topics you see more or less of in your feed.</div>
+                  <div className="text-gray-400 text-sm mb-6">Control which topics you see more or less of in your feed.</div>
                   {INTERESTS_DATA.map((cat) => {
                     const currentStatus = settings.interests?.[cat.id] || null;
                     return (
                       <div key={cat.id} className="mb-2">
-                        <div className="flex items-center justify-between py-3 px-2 hover:bg-muted/30 rounded-xl transition-colors">
+                        <div className="flex items-center justify-between py-3 px-2 hover:bg-white/10/30 rounded-xl transition-colors">
                           <div 
                             className="flex items-center gap-3 cursor-pointer select-none flex-1"
                             onClick={() => setExpandedInterests(p => ({...p, [cat.id]: !p[cat.id]}))}
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-muted-foreground transition-transform duration-200 ${expandedInterests[cat.id] ? 'rotate-90' : ''}`}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-gray-400 transition-transform duration-200 ${expandedInterests[cat.id] ? 'rotate-90' : ''}`}>
                               <polyline points="9 18 15 12 9 6" />
                             </svg>
                             <span className="font-bold text-[15px]">{cat.label}</span>
@@ -1071,13 +1071,13 @@ export default function SettingsPage() {
                           <div className="flex items-center gap-2">
                             <button 
                               onClick={() => updateInterest(cat.id, currentStatus === 'down' ? null : 'down')}
-                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${currentStatus === 'down' ? 'bg-red-500/20 text-red-500' : 'text-muted-foreground hover:bg-muted'}`}
+                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${currentStatus === 'down' ? 'bg-red-500/20 text-red-500' : 'text-gray-400 hover:bg-white/10'}`}
                             >
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
                             </button>
                             <button 
                               onClick={() => updateInterest(cat.id, currentStatus === 'up' ? null : 'up')}
-                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${currentStatus === 'up' ? 'bg-green-500/20 text-green-500 border border-green-500' : 'text-muted-foreground hover:bg-muted'}`}
+                              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${currentStatus === 'up' ? 'bg-green-500/20 text-green-500 border border-green-500' : 'text-gray-400 hover:bg-white/10'}`}
                             >
                               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
                             </button>
@@ -1089,18 +1089,18 @@ export default function SettingsPage() {
                               const subId = `${cat.id}_${subItem.replace(/\s+/g, '_').toLowerCase()}`;
                               const subStatus = settings.interests?.[subId] || null;
                               return (
-                                <div key={subItem} className="flex items-center justify-between py-2 border-l-2 border-border pl-4 ml-1">
-                                  <span className="text-[14px] text-muted-foreground">{subItem}</span>
+                                <div key={subItem} className="flex items-center justify-between py-2 border-l-2 border-white/10 pl-4 ml-1">
+                                  <span className="text-[14px] text-gray-400">{subItem}</span>
                                   <div className="flex items-center gap-1">
                                     <button 
                                       onClick={() => updateInterest(subId, subStatus === 'down' ? null : 'down')}
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${subStatus === 'down' ? 'text-red-500' : 'text-muted-foreground/60 hover:text-foreground'}`}
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${subStatus === 'down' ? 'text-red-500' : 'text-gray-400/60 hover:text-foreground'}`}
                                     >
                                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
                                     </button>
                                     <button 
                                       onClick={() => updateInterest(subId, subStatus === 'up' ? null : 'up')}
-                                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${subStatus === 'up' ? 'text-green-500' : 'text-muted-foreground/60 hover:text-foreground'}`}
+                                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${subStatus === 'up' ? 'text-green-500' : 'text-gray-400/60 hover:text-foreground'}`}
                                     >
                                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
                                     </button>
@@ -1122,14 +1122,14 @@ export default function SettingsPage() {
                     {COOKIE_DATA.map((cookie) => {
                       const isChecked = settings.cookies?.[cookie.id] ?? true;
                       return (
-                        <div key={cookie.id} className="py-4 border-b border-border last:border-b-0 flex items-start justify-between">
+                        <div key={cookie.id} className="py-4 border-b border-white/10 last:border-b-0 flex items-start justify-between">
                           <div className="pr-6">
                             <div className="font-semibold text-[15px] text-foreground mb-1">{cookie.label}</div>
-                            <div className="flex items-center gap-1.5 text-muted-foreground text-[12px] font-bold tracking-wider mb-2">
+                            <div className="flex items-center gap-1.5 text-gray-400 text-[12px] font-bold tracking-wider mb-2">
                               {cookie.type}
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                             </div>
-                            <div className="text-muted-foreground text-[13px]">{cookie.desc}</div>
+                            <div className="text-gray-400 text-[13px]">{cookie.desc}</div>
                           </div>
                           <div className="pt-2 shrink-0">
                             <Checkbox 
@@ -1145,7 +1145,7 @@ export default function SettingsPage() {
                       );
                     })}
                   </div>
-                  <div className="p-5 border-t border-border flex justify-end gap-3 mt-auto">
+                  <div className="p-5 border-t border-white/10 flex justify-end gap-3 mt-auto">
                     <button 
                       onClick={() => {
                         const newCookies: any = {};
@@ -1175,11 +1175,11 @@ export default function SettingsPage() {
               {editModal === 'recovery' && (
                 <div className="flex flex-col">
                   <div className="mb-6">
-                    <div className="w-12 h-12 rounded-xl border border-border flex items-center justify-center mb-4">
+                    <div className="w-12 h-12 rounded-xl border border-white/10 flex items-center justify-center mb-4">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
                     </div>
                     <h3 className="font-bold text-2xl mb-2">Turn on recovery questions</h3>
-                    <p className="text-muted-foreground text-[15px]">Recovery questions help us verify your identity and log you back in if you ever lose access to your email or authenticator app. Please select three questions and type your answers below.</p>
+                    <p className="text-gray-400 text-[15px]">Recovery questions help us verify your identity and log you back in if you ever lose access to your email or authenticator app. Please select three questions and type your answers below.</p>
                   </div>
                   
                   <div className="space-y-4 max-h-[40vh] overflow-y-auto px-1">
@@ -1187,21 +1187,21 @@ export default function SettingsPage() {
                       <div key={num} className="space-y-2">
                         <label className="text-sm font-semibold">Question {num}</label>
                         <div className="relative">
-                          <select className="w-full p-3 pr-10 bg-background border border-border rounded-lg outline-none focus:border-[#FF6719] appearance-none cursor-pointer transition-colors hover:border-muted-foreground/50" defaultValue="" onChange={(e) => setFormData({...formData, [`q${num}`]: e.target.value})}>
+                          <select className="w-full p-3 pr-10 bg-[#09090b] border border-white/10 rounded-lg outline-none focus:border-[#FF6719] appearance-none cursor-pointer transition-colors hover:border-muted-foreground/50" defaultValue="" onChange={(e) => setFormData({...formData, [`q${num}`]: e.target.value})}>
                             <option value="" disabled>Select a question...</option>
                             <option value="city">In what city or town did your parents meet?</option>
                             <option value="teacher">What was your first teacher's last name?</option>
                             <option value="pet">What was the name of your first pet?</option>
                             <option value="childhood">What was your childhood nickname?</option>
                           </select>
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-muted-foreground">
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                           </div>
                         </div>
                         <input 
                           type="text" 
                           placeholder="Type your answer here..." 
-                          className="w-full p-3 bg-background border border-border rounded-lg outline-none focus:border-[#FF6719]"
+                          className="w-full p-3 bg-[#09090b] border border-white/10 rounded-lg outline-none focus:border-[#FF6719]"
                           value={formData[`a${num}`] || ''}
                           onChange={(e) => setFormData({...formData, [`a${num}`]: e.target.value})}
                         />
@@ -1221,7 +1221,7 @@ export default function SettingsPage() {
                       Save
                     </button>
                     <button 
-                      className="w-full bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-border text-white font-semibold py-3 rounded-xl transition-colors"
+                      className="w-full bg-[#1A1A1A] hover:bg-[#2A2A2A] border border-white/10 text-white font-semibold py-3 rounded-xl transition-colors"
                       onClick={closeModal}
                     >
                       Cancel
@@ -1243,7 +1243,7 @@ export default function SettingsPage() {
                     <label className="text-sm font-semibold mb-1.5 block">Type DELETE to confirm</label>
                     <input 
                       type="text" 
-                      className="w-full p-2.5 bg-background border border-border rounded-lg outline-none focus:border-red-500" 
+                      className="w-full p-2.5 bg-[#09090b] border border-white/10 rounded-lg outline-none focus:border-red-500" 
                       placeholder="DELETE" 
                       value={formData.deleteConfirmation || ''} 
                       onChange={(e) => setFormData({...formData, deleteConfirmation: e.target.value})} 
