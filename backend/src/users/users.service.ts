@@ -1,10 +1,14 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { Prisma, User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService
+  ) {}
 
   async findOne(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({ where: { email } });
@@ -205,7 +209,9 @@ export class UsersService {
       }
     });
 
-    return { message: 'OTP generated and sent' };
+    await this.emailService.sendEmailUpdateOtp(newEmail, otp);
+
+    return { message: 'OTP generated and sent to email' };
   }
 
   async verifyEmailUpdate(userId: string, otp: string) {

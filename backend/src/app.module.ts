@@ -17,9 +17,11 @@ import { BullModule } from '@nestjs/bullmq';
 import { AdsModule } from './ads/ads.module';
 import { SpacesModule } from './spaces/spaces.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
+    EmailModule,
     PrismaModule, 
     UsersModule, 
     AuthModule, 

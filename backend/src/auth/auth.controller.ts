@@ -21,4 +21,22 @@ export class AuthController {
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('send-registration-otp')
+  async sendRegistrationOtp(@Body('email') email: string) {
+    return this.authService.sendRegistrationOtp(email);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('forgot-password')
+  async forgotPassword(@Body('identifier') identifier: string) {
+    return this.authService.forgotPassword(identifier);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('reset-password')
+  async resetPassword(@Body() body: { email: string; otp: string; newPassword: string }) {
+    return this.authService.resetPassword(body);
+  }
 }
