@@ -45,8 +45,7 @@ export default function MobileBottomNav() {
   }
 
   return (
-    <nav className="sm:hidden fixed z-[100] w-full flex justify-center px-4 pointer-events-none" style={{ position: 'fixed', bottom: 'calc(16px + env(safe-area-inset-bottom))', left: 0, right: 0 }}>
-      <div className="flex items-center gap-2.5 w-full max-w-[380px] pointer-events-auto">
+    <nav className="sm:hidden fixed left-1/2 -translate-x-1/2 z-[999] w-[90%] max-w-[380px] flex items-center gap-2.5" style={{ bottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
         
         {/* Main Pill */}
         <div className="flex-1 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] flex items-center justify-around h-[54px] rounded-full px-2">
@@ -102,7 +101,6 @@ export default function MobileBottomNav() {
             )}
           </Link>
         )}
-      </div>
     </nav>
   );
 }
