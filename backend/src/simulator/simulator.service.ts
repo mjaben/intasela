@@ -23,7 +23,6 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   
   private timeoutRef: NodeJS.Timeout | null = null;
   private queueIntervalRef: NodeJS.Timeout | null = null;
-  private newsIntervalRef: NodeJS.Timeout | null = null;
   
   private normalUsers: any[] = [];
   private newsUsers: any[] = [];
@@ -32,6 +31,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   private scheduledQueue: ScheduledAction[] = [];
   private userCooldowns: Record<string, number> = {}; // username -> last action timestamp
   private newsNextPostTimes: Record<string, number> = {}; // username -> next post timestamp
+  private nextNormalUserPostTime = 0;
   private processedPostIds = new Set<number>();
 
   constructor(
@@ -42,6 +42,15 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    // TEMPORARY PROD DB CLEANUP
+    try {
+      this.logger.log('PROD CLEANUP: Purging all posts and related engagements...');
+      const result = await this.prisma.post.deleteMany({});
+      this.logger.log(`PROD CLEANUP: Deleted ${result.count} posts from production.`);
+    } catch (e) {
+      this.logger.error('PROD CLEANUP FAILED:', e);
+    }
+
     const isEnabled = process.env.SIMULATOR_ENABLED === 'true';
     this.logger.log(`Simulator initialization: enabled = ${isEnabled}`);
     
@@ -52,8 +61,11 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       // Load user lists
       await this.loadUsersList();
       
-      // Initialize news post schedules
+      // Initialize news post schedules (staggered 5 mins apart)
       this.initNewsSchedules();
+      
+      // Set first normal user post time to 2 minutes from now
+      this.nextNormalUserPostTime = Date.now() + 2 * 60 * 1000;
 
       // Start core organic loops
       this.startPostingLoop();
@@ -77,7 +89,6 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   onModuleDestroy() {
     if (this.timeoutRef) clearInterval(this.timeoutRef);
     if (this.queueIntervalRef) clearInterval(this.queueIntervalRef);
-    if (this.newsIntervalRef) clearInterval(this.newsIntervalRef);
   }
 
   private async loadUsersList() {
@@ -99,43 +110,49 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
 
   private initNewsSchedules() {
     const now = Date.now();
+    let index = 0;
     for (const u of this.newsUsers) {
-      // Stagger initial post times slightly over the next 10 minutes
-      const stagger = Math.floor(Math.random() * 10 * 60 * 1000);
-      this.newsNextPostTimes[u.username] = now + stagger;
+      // Stagger news page initial posts strictly 5 minutes apart from each other
+      this.newsNextPostTimes[u.username] = now + (index * 5 * 60 * 1000);
+      index++;
     }
   }
 
   private startPostingLoop() {
-    // Normal User Posting Loop (Every 2 minutes)
+    // Centralized Posting Check Loop (Every 30 seconds)
+    // Enforces concurrency rule: Only ONE post can be created globally at any given moment
     this.timeoutRef = setInterval(async () => {
       try {
-        if (this.normalUsers.length === 0) return;
-        const user = this.normalUsers[this.lastUserIndex];
-        this.lastUserIndex = (this.lastUserIndex + 1) % this.normalUsers.length;
-        
-        // Skip posting if user is a Reader (80% chance) or Quiet User (60% chance) to mirror real human distribution
-        const personality = this.getUserPersonality(user.username);
-        if (personality === 'Reader' && Math.random() < 0.8) {
-          this.logger.log(`[Posting Loop] Skipping post for Reader user: @${user.username}`);
-          return;
-        }
-        if (personality === 'Quiet' && Math.random() < 0.6) {
-          this.logger.log(`[Posting Loop] Skipping post for Quiet user: @${user.username}`);
-          return;
-        }
-
-        const postLog = await this.executePostAction(user, false);
-        this.logger.log(`[Posting Loop] ${postLog}`);
-      } catch (err) {
-        this.logger.error('Error in normal user posting loop:', err);
-      }
-    }, 2 * 60 * 1000);
-
-    // News Pages Posting Checker (Every 30 seconds)
-    this.newsIntervalRef = setInterval(async () => {
-      try {
         const now = Date.now();
+
+        // 1. Check Normal User Posting Schedule (Sequentially, every 2 minutes)
+        if (now >= this.nextNormalUserPostTime) {
+          if (this.normalUsers.length > 0) {
+            const user = this.normalUsers[this.lastUserIndex];
+            this.lastUserIndex = (this.lastUserIndex + 1) % this.normalUsers.length;
+            
+            // Handle skipping posts for Readers/Quiet users
+            const personality = this.getUserPersonality(user.username);
+            let shouldSkip = false;
+            if (personality === 'Reader' && Math.random() < 0.8) shouldSkip = true;
+            if (personality === 'Quiet' && Math.random() < 0.6) shouldSkip = true;
+            
+            if (shouldSkip) {
+              this.logger.log(`[Posting Loop] Skipping post for @${user.username} (personality-based skip)`);
+              // Still advance schedule by 2 minutes
+              this.nextNormalUserPostTime = now + 2 * 60 * 1000;
+              return; // Exit tick to prevent double posts
+            }
+
+            const postLog = await this.executePostAction(user, false);
+            this.logger.log(`[Posting Loop] ${postLog}`);
+            
+            this.nextNormalUserPostTime = now + 2 * 60 * 1000;
+            return; // Exit tick immediately to guarantee concurrency isolation
+          }
+        }
+
+        // 2. Check News Page Posting Schedules
         const intervals: Record<string, number> = {
           'naijanews360': 20 * 60 * 1000,
           'goal_nigeria': 25 * 60 * 1000,
@@ -156,13 +173,15 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
             this.logger.log(`[News Loop] ${postLog}`);
             
             const interval = intervals[u.username] || 30 * 60 * 1000;
-            // Add a little randomness (+/- 3 minutes)
+            // Add a little stagger randomness (+/- 3 minutes)
             const randomStagger = (Math.random() * 6 - 3) * 60 * 1000;
             this.newsNextPostTimes[u.username] = now + interval + randomStagger;
+            
+            return; // Exit tick immediately to ensure news post drops on its own
           }
         }
       } catch (err) {
-        this.logger.error('Error in news posting loop:', err);
+        this.logger.error('Error in centralized posting loop:', err);
       }
     }, 30 * 1000);
   }
