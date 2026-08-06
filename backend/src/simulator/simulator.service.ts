@@ -595,38 +595,42 @@ Rules:
 
     if (newsUsers.includes(user.username)) {
       try {
-        const queryMap: Record<string, string> = {
-          'naijanews360': 'Nigeria Breaking News',
-          'goal_nigeria': 'Nigeria Super Eagles Football',
-          'celeb_gossip': 'Nigeria Entertainment Nollywood Gossip',
-          'politics_nigeria': 'Nigeria Politics',
-          'cruise_nation': 'Nigeria Trending',
-          'afrobeat_news': 'Afrobeats Music Nigeria',
-          'food_daily': 'Nigeria Food Recipes',
-          'business_news': 'Nigeria Business Economy',
-          'trending_daily': 'Nigeria News',
-          'scholarship_shop': 'Scholarships Study Abroad Nigeria'
+        const queryMap: Record<string, { query: string; nicheDef: string }> = {
+          'naijanews360': { query: 'Nigeria News', nicheDef: 'General Nigerian News & Breaking Updates' },
+          'goal_nigeria': { query: 'Football Soccer', nicheDef: 'Football (Soccer) & Sports updates' },
+          'celeb_gossip': { query: 'Nigeria Entertainment Nollywood', nicheDef: 'Entertainment, Nollywood, & Celebrity Gossip' },
+          'politics_nigeria': { query: 'Nigeria Politics', nicheDef: 'Nigerian Politics, Government, & Elections' },
+          'cruise_nation': { query: 'Nigeria trending', nicheDef: 'Humor, Memes, & Viral Internet Trends' },
+          'afrobeat_news': { query: 'Afrobeats Music Nigeria', nicheDef: 'Nigerian Music Industry & Afrobeats' },
+          'food_daily': { query: 'Nigeria Food Recipes', nicheDef: 'Culinary Arts & Nigerian Cuisine' },
+          'business_news': { query: 'Nigeria Business Economy', nicheDef: 'Finance, Startups, & Nigerian Economy' },
+          'trending_daily': { query: 'Nigeria News', nicheDef: 'Viral Internet Culture & Breaking Hot Topics' },
+          'scholarship_shop': { query: 'Scholarships Study Abroad Nigeria', nicheDef: 'Education, Career Opportunities, & Scholarships' }
         };
-        const query = queryMap[user.username] || 'Nigeria News';
-        const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-NG&gl=NG&ceid=NG:en`;
+        const nicheData = queryMap[user.username] || { query: 'Nigeria News', nicheDef: 'General News' };
+        
+        // Append when:6h to strictly scrape news from the last 6 hours to avoid stale content
+        const url = `https://news.google.com/rss/search?q=${encodeURIComponent(nicheData.query + ' when:6h')}&hl=en-NG&gl=NG&ceid=NG:en`;
         const rssRes = await fetch(url);
         if (rssRes.ok) {
           const xml = await rssRes.text();
           const titles = [...xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>/g)].map(m => m[1]);
           if (titles.length > 0) {
             const headline = titles[Math.floor(Math.random() * Math.min(10, titles.length))];
-            systemPrompt = `You are a news reporter on the Intasela social media platform.
+            systemPrompt = `You are a niche reporter on the Intasela social media platform.
 Your profile details:
 - Name: ${user.firstName} ${user.lastName}
 - Username: @${user.username}
+- Your Strict Niche Focus: ${nicheData.nicheDef}
 
-You just found this breaking headline: "${headline.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}"
+You just found this recent breaking headline from the last 6 hours: "${headline.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}"
 
 Write a short, engaging news post (under 280 characters) summarizing or reporting this headline to your followers.
 Rules:
-1. Speak like a modern news blog (e.g. "JUST IN:", "Breaking:", or just an engaging statement).
-2. DO NOT use hashtags.
-3. DO NOT include any links or URLs. Just post the summary text.
+1. Speak in a tone appropriate for your specific niche (e.g., professional for business/politics, hype for afrobeats, gossipy for celeb, funny/savage for cruise nation).
+2. Make it sound like a fresh update ("JUST IN:", "Breaking:", etc.).
+3. DO NOT use hashtags.
+4. DO NOT include any links or URLs. Just post the summary text.
 `;
           }
         }
