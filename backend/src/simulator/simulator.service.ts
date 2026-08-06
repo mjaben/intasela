@@ -5,11 +5,34 @@ import { autoSeedSimulatorProfiles } from './simulator.seeder';
 import * as fs from 'fs';
 import * as path from 'path';
 
+interface ScheduledAction {
+  id: string;
+  postId: number;
+  postAuthorId: string;
+  actorId: string;
+  actorUsername: string;
+  type: 'LIKE' | 'REPLY' | 'RESELA' | 'QUOTE' | 'BOOKMARK';
+  executeAt: Date;
+  niche: string;
+}
+
 @Injectable()
 export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SimulatorService.name);
-  private timeoutRef: NodeJS.Timeout | null = null;
   private mockPostsData: Record<string, string[]> = {};
+  
+  private timeoutRef: NodeJS.Timeout | null = null;
+  private queueIntervalRef: NodeJS.Timeout | null = null;
+  private newsIntervalRef: NodeJS.Timeout | null = null;
+  
+  private normalUsers: any[] = [];
+  private newsUsers: any[] = [];
+  private lastUserIndex = 0;
+  
+  private scheduledQueue: ScheduledAction[] = [];
+  private userCooldowns: Record<string, number> = {}; // username -> last action timestamp
+  private newsNextPostTimes: Record<string, number> = {}; // username -> next post timestamp
+  private processedPostIds = new Set<number>();
 
   constructor(
     private prisma: PrismaService,
@@ -23,29 +46,409 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     this.logger.log(`Simulator initialization: enabled = ${isEnabled}`);
     
     if (isEnabled) {
-      // Auto-seed profiles if they don't exist
+      // Auto-seed profiles
       await autoSeedSimulatorProfiles(this.prisma, this.logger);
+      
+      // Load user lists
+      await this.loadUsersList();
+      
+      // Initialize news post schedules
+      this.initNewsSchedules();
 
-      // Schedule the first randomized tick
-      this.scheduleNextRun();
+      // Start core organic loops
+      this.startPostingLoop();
+      this.startQueueProcessingLoop();
+      
+      this.logger.log('Organic Engagement Simulator Engine successfully started.');
 
-      // Run a test tick on-demand 10 seconds after boot to verify everything compiles and works
-      setTimeout(() => {
+      // Verification on-demand post after boot
+      setTimeout(async () => {
         this.logger.log('Executing startup verification tick...');
-        this.runSimulationTick().catch(err => {
+        try {
+          const log = await this.runSimulationTick();
+          this.logger.log(`Startup verification complete: ${log}`);
+        } catch (err) {
           this.logger.error('Startup simulation tick failed:', err);
-        });
+        }
       }, 10000);
     }
   }
 
   onModuleDestroy() {
-    if (this.timeoutRef) {
-      clearTimeout(this.timeoutRef);
+    if (this.timeoutRef) clearInterval(this.timeoutRef);
+    if (this.queueIntervalRef) clearInterval(this.queueIntervalRef);
+    if (this.newsIntervalRef) clearInterval(this.newsIntervalRef);
+  }
+
+  private async loadUsersList() {
+    const allSimulated = await this.prisma.user.findMany({
+      where: { email: { endsWith: '@intasela.internal' } }
+    });
+    
+    const newsUsernames = [
+      'naijanews360', 'goal_nigeria', 'celeb_gossip', 'politics_nigeria', 
+      'cruise_nation', 'afrobeat_news', 'food_daily', 'business_news', 
+      'trending_daily', 'scholarship_shop'
+    ];
+    
+    this.normalUsers = allSimulated.filter(u => !newsUsernames.includes(u.username));
+    this.newsUsers = allSimulated.filter(u => newsUsernames.includes(u.username));
+    
+    this.logger.log(`Loaded ${this.normalUsers.length} normal users and ${this.newsUsers.length} news pages.`);
+  }
+
+  private initNewsSchedules() {
+    const now = Date.now();
+    for (const u of this.newsUsers) {
+      // Stagger initial post times slightly over the next 10 minutes
+      const stagger = Math.floor(Math.random() * 10 * 60 * 1000);
+      this.newsNextPostTimes[u.username] = now + stagger;
     }
   }
 
-  private loadMockPosts() {
+  private startPostingLoop() {
+    // Normal User Posting Loop (Every 2 minutes)
+    this.timeoutRef = setInterval(async () => {
+      try {
+        if (this.normalUsers.length === 0) return;
+        const user = this.normalUsers[this.lastUserIndex];
+        this.lastUserIndex = (this.lastUserIndex + 1) % this.normalUsers.length;
+        
+        // Skip posting if user is a Reader (80% chance) or Quiet User (60% chance) to mirror real human distribution
+        const personality = this.getUserPersonality(user.username);
+        if (personality === 'Reader' && Math.random() < 0.8) {
+          this.logger.log(`[Posting Loop] Skipping post for Reader user: @${user.username}`);
+          return;
+        }
+        if (personality === 'Quiet' && Math.random() < 0.6) {
+          this.logger.log(`[Posting Loop] Skipping post for Quiet user: @${user.username}`);
+          return;
+        }
+
+        const postLog = await this.executePostAction(user, false);
+        this.logger.log(`[Posting Loop] ${postLog}`);
+      } catch (err) {
+        this.logger.error('Error in normal user posting loop:', err);
+      }
+    }, 2 * 60 * 1000);
+
+    // News Pages Posting Checker (Every 30 seconds)
+    this.newsIntervalRef = setInterval(async () => {
+      try {
+        const now = Date.now();
+        const intervals: Record<string, number> = {
+          'naijanews360': 20 * 60 * 1000,
+          'goal_nigeria': 25 * 60 * 1000,
+          'celeb_gossip': 30 * 60 * 1000,
+          'politics_nigeria': 35 * 60 * 1000,
+          'cruise_nation': 40 * 60 * 1000,
+          'afrobeat_news': 45 * 60 * 1000,
+          'food_daily': 50 * 60 * 1000,
+          'business_news': 55 * 60 * 1000,
+          'trending_daily': 60 * 60 * 1000,
+          'scholarship_shop': 90 * 60 * 1000,
+        };
+
+        for (const u of this.newsUsers) {
+          const nextTime = this.newsNextPostTimes[u.username] || 0;
+          if (now >= nextTime) {
+            const postLog = await this.executePostAction(u, false);
+            this.logger.log(`[News Loop] ${postLog}`);
+            
+            const interval = intervals[u.username] || 30 * 60 * 1000;
+            // Add a little randomness (+/- 3 minutes)
+            const randomStagger = (Math.random() * 6 - 3) * 60 * 1000;
+            this.newsNextPostTimes[u.username] = now + interval + randomStagger;
+          }
+        }
+      } catch (err) {
+        this.logger.error('Error in news posting loop:', err);
+      }
+    }, 30 * 1000);
+  }
+
+  private startQueueProcessingLoop() {
+    this.queueIntervalRef = setInterval(async () => {
+      try {
+        const now = Date.now();
+        
+        // 1. Process scheduled actions
+        const readyActions = this.scheduledQueue.filter(a => now >= a.executeAt.getTime());
+        
+        for (const action of readyActions) {
+          this.scheduledQueue = this.scheduledQueue.filter(a => a.id !== action.id);
+          
+          // Cooldown check (30-90 seconds)
+          const lastActionTime = this.userCooldowns[action.actorUsername] || 0;
+          const cooldownPeriod = (30 + Math.random() * 60) * 1000;
+          
+          if (now - lastActionTime < cooldownPeriod) {
+            // Push back by 30 seconds to respect cooldown boundaries
+            action.executeAt = new Date(now + 30 * 1000);
+            this.scheduledQueue.push(action);
+            continue;
+          }
+
+          try {
+            const actorObj = [...this.normalUsers, ...this.newsUsers].find(u => u.id === action.actorId);
+            if (!actorObj) continue;
+
+            const postObj = await this.prisma.post.findUnique({
+              where: { id: action.postId },
+              include: { author: true }
+            });
+            if (!postObj) continue;
+
+            let logMsg = '';
+            if (action.type === 'LIKE') {
+              logMsg = await this.executeLikeAction(actorObj, postObj);
+            } else if (action.type === 'REPLY') {
+              logMsg = await this.executeReplyAction(actorObj, postObj);
+              
+              // 30% chance for news page to reply back on comments to their posts
+              const isNewsPost = this.newsUsers.some(u => u.id === postObj.authorId);
+              if (isNewsPost && Math.random() < 0.3) {
+                const replyObj = await this.prisma.post.findFirst({
+                  where: { authorId: actorObj.id, parentId: postObj.id },
+                  orderBy: { createdAt: 'desc' }
+                });
+                if (replyObj) {
+                  const delay = (1 + Math.random() * 2) * 60 * 1000;
+                  this.pushToQueue(replyObj.id, actorObj.id, postObj.author, 'REPLY', now + delay, action.niche);
+                }
+              }
+            } else if (action.type === 'RESELA') {
+              logMsg = await this.executeReSelaAction(actorObj, postObj);
+            } else if (action.type === 'QUOTE') {
+              logMsg = await this.executeQuoteAction(actorObj, postObj);
+            } else if (action.type === 'BOOKMARK') {
+              logMsg = await this.executeBookmarkAction(actorObj, postObj);
+            }
+
+            this.userCooldowns[action.actorUsername] = Date.now();
+            this.logger.log(`[Organic Queue Exec] ${logMsg}`);
+          } catch (execErr) {
+            this.logger.error(`Failed to execute queued action: ${execErr.message}`);
+          }
+        }
+
+        // 2. Scan and schedule engagements for new posts created by real users
+        const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+        const newPosts = await this.prisma.post.findMany({
+          where: {
+            createdAt: { gte: oneMinuteAgo },
+            parentId: null
+          },
+          include: { author: true }
+        });
+
+        for (const post of newPosts) {
+          if (!this.processedPostIds.has(post.id)) {
+            this.processedPostIds.add(post.id);
+            const isSimulated = post.author.email.endsWith('@intasela.internal');
+            if (!isSimulated) {
+              const niche = this.detectPostNiche(post.content);
+              this.scheduleEngagementWindow(post, niche, post.author.username);
+            }
+          }
+        }
+      } catch (err) {
+        this.logger.error('Error in queue processing loop:', err);
+      }
+    }, 15 * 1000);
+  }
+
+  private detectPostNiche(content: string): string {
+    const text = content.toLowerCase();
+    if (text.includes('sports') || text.includes('football') || text.includes('soccer') || text.includes('ball') || text.includes('goal')) return 'Sports';
+    if (text.includes('politics') || text.includes('vote') || text.includes('election') || text.includes('government')) return 'Politics';
+    if (text.includes('music') || text.includes('afrobeat') || text.includes('song') || text.includes('album')) return 'Music';
+    if (text.includes('business') || text.includes('economy') || text.includes('invest') || text.includes('naira') || text.includes('stock')) return 'Business';
+    if (text.includes('food') || text.includes('recipe') || text.includes('eat') || text.includes('chef') || text.includes('restaurant')) return 'Food';
+    if (text.includes('fashion') || text.includes('wear') || text.includes('style') || text.includes('streetwear')) return 'Fashion';
+    if (text.includes('study') || text.includes('scholarship') || text.includes('abroad') || text.includes('university') || text.includes('education')) return 'Education';
+    if (text.includes('joke') || text.includes('meme') || text.includes('cruise') || text.includes('funny')) return 'Trending';
+    return 'Hobbies';
+  }
+
+  private pushToQueue(postId: number, postAuthorId: string, actor: any, type: any, executeAtTimestamp: number, niche: string) {
+    const actionId = Math.random().toString(36).substring(7);
+    this.scheduledQueue.push({
+      id: actionId,
+      postId,
+      postAuthorId,
+      actorId: actor.id,
+      actorUsername: actor.username,
+      type,
+      executeAt: new Date(executeAtTimestamp),
+      niche
+    });
+  }
+
+  private getUserPersonality(username: string): 'Heavy' | 'Reader' | 'Social' | 'Amplifier' | 'Quiet' {
+    const heavy = ['chioma_tech', 'musa_crypto', 'ngozi_wellness', 'uche_technews', 'obinna_biz'];
+    const readers = ['emeka_fitness', 'sarah_literature', 'joy_visuals', 'funmi_startup', 'dami_lifestyle'];
+    const social = ['amina_cooks', 'tunde_marketing', 'dele_sports', 'grace_edu', 'kemi_afrobeats'];
+    const amplifiers = ['chinyere_travels', 'kunle_gaming', 'segun_fashion', 'victor_photo', 'bassey_sports'];
+    
+    if (heavy.includes(username)) return 'Heavy';
+    if (readers.includes(username)) return 'Reader';
+    if (social.includes(username)) return 'Social';
+    if (amplifiers.includes(username)) return 'Amplifier';
+    return 'Quiet';
+  }
+
+  private getInterestMatchScore(actor: any, niche: string): number {
+    let interests: string[] = [];
+    if (actor.interests) {
+      interests = Array.isArray(actor.interests) ? actor.interests : JSON.parse(actor.interests as string);
+    }
+    const lowerNiche = niche.toLowerCase();
+    let matches = 0;
+    for (const interest of interests) {
+      const lowerInt = interest.toLowerCase();
+      if (lowerInt.includes(lowerNiche) || lowerNiche.includes(lowerInt)) {
+        matches++;
+      }
+      if (lowerNiche === 'sports' && (lowerInt.includes('football') || lowerInt.includes('sports') || lowerInt.includes('fitness'))) matches++;
+      if (lowerNiche === 'politics' && (lowerInt.includes('politics') || lowerInt.includes('world news') || lowerInt.includes('economics'))) matches++;
+      if (lowerNiche === 'entertainment' && (lowerInt.includes('movies') || lowerInt.includes('music') || lowerInt.includes('celebrity') || lowerInt.includes('gaming'))) matches++;
+      if (lowerNiche === 'business' && (lowerInt.includes('investing') || lowerInt.includes('economy') || lowerInt.includes('entrepreneurship') || lowerInt.includes('startup'))) matches++;
+    }
+    return matches;
+  }
+
+  private getActionDelay(type: 'LIKE' | 'REPLY' | 'RESELA' | 'QUOTE' | 'BOOKMARK'): number {
+    const roll = Math.random();
+    let minutes = 0;
+    
+    if (type === 'LIKE') {
+      if (roll < 0.40) {
+        minutes = Math.random() * 10;
+      } else if (roll < 0.75) {
+        minutes = 10 + Math.random() * 15;
+      } else {
+        minutes = 25 + Math.random() * 35;
+      }
+    } else if (type === 'REPLY') {
+      if (roll < 0.10) {
+        minutes = Math.random() * 5;
+      } else if (roll < 0.50) {
+        minutes = 5 + Math.random() * 15;
+      } else if (roll < 0.85) {
+        minutes = 20 + Math.random() * 25;
+      } else {
+        minutes = 45 + Math.random() * 15;
+      }
+    } else if (type === 'RESELA' || type === 'QUOTE') {
+      minutes = 15 + Math.random() * 25;
+    } else if (type === 'BOOKMARK') {
+      minutes = 2 + Math.random() * 56;
+    }
+    
+    return minutes * 60 * 1000;
+  }
+
+  private scheduleEngagementWindow(post: any, niche: string, authorUsername: string) {
+    const now = Date.now();
+    const isNewsAuthor = this.newsUsers.some(u => u.username === authorUsername);
+    const eligibleActors = this.normalUsers.filter(u => u.username !== authorUsername);
+    
+    if (eligibleActors.length === 0) return;
+
+    const selectActors = (count: number, baseProb: number, weights: (actor: any) => number) => {
+      const candidates = eligibleActors.map(actor => {
+        let prob = baseProb + weights(actor);
+        const matchScore = this.getInterestMatchScore(actor, niche);
+        prob += matchScore * 0.3;
+        return { actor, prob };
+      });
+      return candidates
+        .sort((a, b) => b.prob - a.prob)
+        .slice(0, count)
+        .map(c => c.actor);
+    };
+
+    // 1. Likes (10 to 25 users)
+    const targetLikesCount = 10 + Math.floor(Math.random() * 16);
+    const likeActors = selectActors(targetLikesCount, 0.4, (actor) => {
+      const p = this.getUserPersonality(actor.username);
+      if (p === 'Social') return 0.2;
+      if (p === 'Reader') return 0.2;
+      if (p === 'Quiet') return -0.2;
+      return 0;
+    });
+    for (const actor of likeActors) {
+      this.pushToQueue(post.id, post.authorId, actor, 'LIKE', now + this.getActionDelay('LIKE'), niche);
+    }
+
+    // 2. Replies (2 to 6 users)
+    const targetRepliesCount = 2 + Math.floor(Math.random() * 5);
+    const replyActors = selectActors(targetRepliesCount, 0.1, (actor) => {
+      const p = this.getUserPersonality(actor.username);
+      if (p === 'Social') return 0.4;
+      if (p === 'Quiet') return -0.1;
+      if (p === 'Reader') return -0.1;
+      return 0;
+    });
+    for (const actor of replyActors) {
+      this.pushToQueue(post.id, post.authorId, actor, 'REPLY', now + this.getActionDelay('REPLY'), niche);
+    }
+
+    // 3. Reselas (1 to 4 users)
+    const targetReselasCount = 1 + Math.floor(Math.random() * 4);
+    const reselaActors = selectActors(targetReselasCount, 0.1, (actor) => {
+      const p = this.getUserPersonality(actor.username);
+      if (p === 'Amplifier') return 0.4;
+      if (p === 'Quiet') return -0.1;
+      return 0;
+    });
+    for (const actor of reselaActors) {
+      this.pushToQueue(post.id, post.authorId, actor, 'RESELA', now + this.getActionDelay('RESELA'), niche);
+    }
+
+    // 4. Bookmarks (2 to 5 users)
+    const targetBookmarksCount = 2 + Math.floor(Math.random() * 4);
+    const bookmarkActors = selectActors(targetBookmarksCount, 0.1, (actor) => {
+      const p = this.getUserPersonality(actor.username);
+      if (p === 'Reader') return 0.3;
+      if (p === 'Quiet') return -0.1;
+      return 0;
+    });
+    for (const actor of bookmarkActors) {
+      this.pushToQueue(post.id, post.authorId, actor, 'BOOKMARK', now + this.getActionDelay('BOOKMARK'), niche);
+    }
+
+    // 5. Resela with Note (Quote) - 5-10% chance
+    if (Math.random() < 0.10) {
+      const quoteActors = selectActors(1, 0.1, (actor) => {
+        const p = this.getUserPersonality(actor.username);
+        if (p === 'Amplifier') return 0.4;
+        return 0;
+      });
+      if (quoteActors.length > 0) {
+        const actor = quoteActors[0];
+        this.pushToQueue(post.id, post.authorId, actor, 'QUOTE', now + this.getActionDelay('QUOTE'), niche);
+      }
+    }
+
+    // 6. News Pages Likes / Bookmarks on relevant user posts
+    if (!isNewsAuthor) {
+      for (const newsUser of this.newsUsers) {
+        const matchScore = this.getInterestMatchScore(newsUser, niche);
+        if (matchScore > 0 && Math.random() < 0.4) {
+          this.pushToQueue(post.id, post.authorId, newsUser, 'LIKE', now + this.getActionDelay('LIKE'), niche);
+          if (Math.random() < 0.3) {
+            this.pushToQueue(post.id, post.authorId, newsUser, 'BOOKMARK', now + this.getActionDelay('BOOKMARK'), niche);
+          }
+        }
+      }
+    }
+
+    this.logger.log(`[Organic Engine] Scheduled ${likeActors.length} Likes, ${replyActors.length} Replies, ${reselaActors.length} ReSelas, ${bookmarkActors.length} Bookmarks for Post #${post.id} (Niche: ${niche}) over the next 60 minutes.`);
+  }
+
+  private async loadMockPosts() {
     try {
       const filePath = path.join(__dirname, 'data', 'mock-posts.json');
       if (fs.existsSync(filePath)) {
@@ -53,7 +456,6 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
         this.mockPostsData = JSON.parse(raw);
         this.logger.log('Successfully loaded mock-posts.json fallback data.');
       } else {
-        // Look in src/simulator/data/mock-posts.json if __dirname resolves differently
         const altPath = path.join(process.cwd(), 'src', 'simulator', 'data', 'mock-posts.json');
         if (fs.existsSync(altPath)) {
           const raw = fs.readFileSync(altPath, 'utf8');
@@ -68,228 +470,21 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private scheduleNextRun() {
-    if (this.timeoutRef) {
-      clearTimeout(this.timeoutRef);
-    }
-
-    // Determine current hour in West Africa Time (GMT+1) / server time
-    const lagosTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
-    const hour = lagosTime.getHours();
-
-    let delayMs = 4 * 60 * 1000; // default 4 mins (Normal)
-    let modeName = 'Normal';
-
-    // Circadian Rhythm Pacing
-    if ((hour >= 7 && hour <= 9) || (hour >= 18 && hour <= 22)) {
-      // Peak Hours (7AM-9AM, 6PM-10PM): 2 minutes
-      delayMs = 2 * 60 * 1000;
-      modeName = 'Peak';
-    } else if (hour >= 0 && hour <= 6) {
-      // Night Hours (12AM-6AM): 20 minutes (slower pacing to mimic sleep)
-      delayMs = 20 * 60 * 1000;
-      modeName = 'Night';
-    } else {
-      // Off-Peak/Day Hours: 5 minutes
-      delayMs = 5 * 60 * 1000;
-      modeName = 'Day';
-    }
-
-    this.logger.log(`[Circadian Rhythm] Current time: ${lagosTime.toLocaleTimeString()} (${modeName} Mode). Next tick in ${delayMs / 60000} minutes.`);
-    
-    this.timeoutRef = setTimeout(() => {
-      this.runSimulationTick()
-        .catch(err => this.logger.error('Error during scheduled simulation tick:', err))
-        .finally(() => this.scheduleNextRun());
-    }, delayMs);
-  }
-
-  /**
-   * Triggers a single simulation step on-demand
-   */
   async triggerSimulationOnDemand(): Promise<string> {
     this.logger.log('Manual simulator trigger received.');
     return await this.runSimulationTick();
   }
 
   private async runSimulationTick(): Promise<string> {
-    const simulatedUsers = await this.prisma.user.findMany({
-      where: { email: { endsWith: '@intasela.internal' } }
-    });
-
-    if (simulatedUsers.length === 0) {
-      return 'No simulated user profiles found in the database. Run the seeding script first.';
+    if (this.normalUsers.length === 0) {
+      await this.loadUsersList();
     }
-
-    let actionsTaken = 0;
-    const actionsLog: string[] = [];
-
-    // Engagement Cascade Logic: Find all posts created in the last 60 minutes
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const recentPosts = await this.prisma.post.findMany({
-      where: { 
-        createdAt: { gte: oneHourAgo },
-        parentId: null 
-      },
-      include: { author: true }
-    });
-
-    for (const post of recentPosts) {
-      // Determine deterministic targets based on post ID
-      const targetLikes = 15 + (post.id % 15); // 15 to 29
-      const targetReplies = 5 + (post.id % 10); // 5 to 14
-      const targetQuotes = 5 + (post.id % 6); // 5 to 10
-      const targetReSelas = 5 + (post.id % 6); // 5 to 10
-      const targetBookmarks = 5 + (post.id % 10); // 5 to 14
-
-      // Current counts
-      const likeCount = await this.prisma.engagement.count({ where: { postId: post.id, type: 'LIKE' } });
-      const replyCount = await this.prisma.post.count({ where: { parentId: post.id, quotedPostId: null } });
-      const quoteCount = await this.prisma.post.count({ where: { quotedPostId: post.id } });
-      const reselaCount = await this.prisma.engagement.count({ where: { postId: post.id, type: 'RESELA' } });
-      const bookmarkCount = await this.prisma.engagement.count({ where: { postId: post.id, type: 'BOOKMARK' } });
-
-      // Determine deficit
-      const deficits = [];
-      if (likeCount < targetLikes) deficits.push('LIKE');
-      if (replyCount < targetReplies) deficits.push('REPLY');
-      if (quoteCount < targetQuotes) deficits.push('QUOTE');
-      if (reselaCount < targetReSelas) deficits.push('RESELA');
-      if (bookmarkCount < targetBookmarks) deficits.push('BOOKMARK');
-
-      // Process deficits progressively (guaranteeing we find users who haven't acted yet)
-      if (deficits.length > 0) {
-        // Limit to max 3 deficits per tick per post to keep it looking natural
-        const actionsToProcess = deficits.sort(() => 0.5 - Math.random()).slice(0, 3);
-
-        for (const actionToTake of actionsToProcess) {
-          // Retrieve candidates who are not the post author
-          const potentialActors = simulatedUsers.filter(u => u.id !== post.authorId);
-          
-          // Query Follows table to see which candidates follow the post author
-          const followersOfAuthor = await this.prisma.follows.findMany({
-            where: {
-              followingId: post.authorId,
-              followerId: { in: potentialActors.map(u => u.id) }
-            }
-          });
-          const followerIds = followersOfAuthor.map(f => f.followerId);
-
-          // Partition candidates: followers first, then others (both shuffled)
-          const followers = potentialActors.filter(u => followerIds.includes(u.id)).sort(() => 0.5 - Math.random());
-          const nonFollowers = potentialActors.filter(u => !followerIds.includes(u.id)).sort(() => 0.5 - Math.random());
-          
-          const shuffledUsers = [...followers, ...nonFollowers];
-          let validUser = null;
-
-          // Find a user who hasn't done this specific action yet
-          for (const user of shuffledUsers) {
-            let alreadyDidIt = false;
-            
-            if (actionToTake === 'LIKE' || actionToTake === 'RESELA' || actionToTake === 'BOOKMARK') {
-              const count = await this.prisma.engagement.count({
-                where: { userId: user.id, postId: post.id, type: actionToTake as any }
-              });
-              if (count > 0) alreadyDidIt = true;
-            } else if (actionToTake === 'REPLY') {
-              const count = await this.prisma.post.count({
-                where: { authorId: user.id, parentId: post.id, quotedPostId: null }
-              });
-              if (count > 0) alreadyDidIt = true;
-            } else if (actionToTake === 'QUOTE') {
-              const count = await this.prisma.post.count({
-                where: { authorId: user.id, quotedPostId: post.id }
-              });
-              if (count > 0) alreadyDidIt = true;
-            }
-
-            if (!alreadyDidIt) {
-              validUser = user;
-              break;
-            }
-          }
-
-          if (validUser) {
-            try {
-              if (actionToTake === 'LIKE') actionsLog.push(await this.executeLikeAction(validUser, post));
-              else if (actionToTake === 'REPLY') actionsLog.push(await this.executeReplyAction(validUser, post));
-              else if (actionToTake === 'QUOTE') actionsLog.push(await this.executeQuoteAction(validUser, post));
-              else if (actionToTake === 'RESELA') actionsLog.push(await this.executeReSelaAction(validUser, post));
-              else if (actionToTake === 'BOOKMARK') actionsLog.push(await this.executeBookmarkAction(validUser, post));
-              actionsTaken++;
-            } catch(e) { this.logger.error(e); }
-          }
-        }
-      }
-
-      // Author Reply Logic
-      if (post.author.email.endsWith('@intasela.internal')) {
-        // If the author is a simulated user, they should reply to max 5 comments
-        const comments = await this.prisma.post.findMany({ 
-          where: { parentId: post.id, authorId: { not: post.authorId } },
-          include: { author: true }
-        });
-        if (comments.length > 0) {
-          const authorReplies = await this.prisma.post.count({ where: { parentId: post.id, authorId: post.authorId } });
-          if (authorReplies < 5 && Math.random() < 0.20) {
-            // Reply to a random comment
-            const commentToReply = comments[Math.floor(Math.random() * comments.length)];
-            try {
-              actionsLog.push(await this.executeReplyAction(post.author, commentToReply));
-              actionsTaken++;
-            } catch(e) { this.logger.error(e); }
-          }
-        }
-      }
+    if (this.normalUsers.length === 0) {
+      return 'No simulated users loaded yet.';
     }
-
-    // Guarantee EXACTLY 1 post on main feed per tick, biased by Weekend vs Weekday
-    const lagosTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
-    const dayOfWeek = lagosTime.getDay(); // 0 = Sunday, 6 = Saturday
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 5; // Friday, Saturday, Sunday
-
-    let selectedMainUser = null;
-    const weekendUsers = ['goal_nigeria', 'celeb_gossip', 'cruise_nation', 'afrobeat_news'];
-    const weekdayUsers = ['politics_nigeria', 'business_news', 'naijanews360', 'trending_daily', 'scholarship_shop', 'food_daily'];
-
-    // 80% chance to follow weekend/weekday bias
-    if (Math.random() < 0.8) {
-      const targetList = isWeekend ? weekendUsers : weekdayUsers;
-      const candidates = simulatedUsers.filter(u => targetList.includes(u.username));
-      if (candidates.length > 0) {
-        selectedMainUser = candidates[Math.floor(Math.random() * candidates.length)];
-      }
-    }
-
-    if (!selectedMainUser) {
-      selectedMainUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
-    }
-
-    actionsLog.push(await this.executePostAction(selectedMainUser, false));
-    actionsTaken++;
-
-    // Guarantee EXACTLY 1 post in a space per tick
-    const spaceUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
-    actionsLog.push(await this.executePostAction(spaceUser, true));
-    actionsTaken++;
-
-    // Guarantee EXACTLY 1 quote (ReSela with Note) per tick
-    if (recentPosts.length > 0) {
-      const quoteUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
-      const postToQuote = recentPosts[Math.floor(Math.random() * recentPosts.length)];
-      if (quoteUser.id !== postToQuote.authorId) {
-        try {
-          actionsLog.push(await this.executeQuoteAction(quoteUser, postToQuote));
-          actionsTaken++;
-        } catch(e) {}
-      }
-    }
-
-    if (actionsTaken === 0) {
-      return 'Tick processed, no actions were taken this round to maintain gradual pacing.';
-    }
-
-    return `Tick processed. Took ${actionsTaken} actions:\n` + actionsLog.join('\n');
+    const user = this.normalUsers[Math.floor(Math.random() * this.normalUsers.length)];
+    const log = await this.executePostAction(user, false);
+    return `Manual tick triggered: ${log}`;
   }
 
   private async executePostAction(user: any, forceSpace: boolean = false): Promise<string> {
@@ -362,6 +557,9 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     } catch (monError) {
       this.logger.error(`Failed to process monetization reward for post ${post.id}:`, monError);
     }
+
+    // Schedule the 60-minute organic engagement window
+    this.scheduleEngagementWindow(post, niche, user.username);
 
     if (spaceIdToPost) {
       return `Simulated User @${user.username} created post ${post.id} in Space "${spaceName}"`;

@@ -38,6 +38,16 @@ const SIMULATED_PROFILES = [
   { firstName: "Halima", lastName: "Danjuma", username: "halima_beauty", bio: "Beauty influencer & makeup artist. Sharing tutorials, reviews, and skincare routines. 💄✨", gender: "FEMALE", occupation: "Makeup Artist", country: "Nigeria", state: "FCT", nicheInterests: ["Beauty & Makeup", "Women's Fashion", "Visual Arts & Design", "Marketing & Advertising"] },
   { firstName: "Victor", lastName: "Johnson", username: "victor_photo", bio: "Street photographer, videographer, and visual storyteller. Capturing Nigerian city life. 📸🏙️", gender: "MALE", occupation: "Photographer", country: "Nigeria", state: "Lagos", nicheInterests: ["Photography", "Visual Arts & Design", "Travel", "Destinations"] },
   { firstName: "Grace", lastName: "Adeyemi", username: "grace_edu", bio: "Online learning enthusiast and professional development trainer. Helping you build career skills. 🎓✨", gender: "FEMALE", occupation: "Trainer", country: "Nigeria", state: "Oyo", nicheInterests: ["Online Learning", "Professional Development", "Job Searching & Careers", "Higher Education"] },
+  { firstName: "Kunle", lastName: "Oluwole", username: "kunle_cruise", bio: "Nigerian memes, trend watcher, and cruise director. Fun is my middle name! 🤣🍿", gender: "MALE", occupation: "Content Creator", country: "Nigeria", state: "Lagos", nicheInterests: ["Comedy", "Trending", "Entertainment"] },
+  { firstName: "Kemi", lastName: "Adegoke", username: "kemi_afrobeats", bio: "Proud music head, Wizkid FC, and Afrobeats expert. Let's debate charts! 🎶🔥", gender: "FEMALE", occupation: "Music Blogger", country: "Nigeria", state: "Oyo", nicheInterests: ["Music", "Entertainment"] },
+  { firstName: "Ibrahim", lastName: "Bala", username: "ibrahim_politics", bio: "Political commentator and governance analyst. Keeping an eye on political Nigeria. 🗳️👀", gender: "MALE", occupation: "Analyst", country: "Nigeria", state: "FCT", nicheInterests: ["Politics News", "World News"] },
+  { firstName: "Fola", lastName: "Dada", username: "fola_foodie", bio: "Eats first, talks later. Nigerian jollof, local spots, and rich reviews. 🥘😋", gender: "FEMALE", occupation: "Food Critic", country: "Nigeria", state: "Lagos", nicheInterests: ["Cooking & Recipes", "Restaurants"] },
+  { firstName: "Obinna", lastName: "Nwachukwu", username: "obinna_biz", bio: "Startup founder, tech marketer, and financial strategist. 📈💻", gender: "MALE", occupation: "Founder", country: "Nigeria", state: "Enugu", nicheInterests: ["Entrepreneurship", "Investing & Stocks"] },
+  { firstName: "Tolani", lastName: "Sule", username: "tolani_scholarships", bio: "Connecting bright minds with global academic opportunities. Study abroad advocate! ✈️🎓", gender: "FEMALE", occupation: "Admissions Coach", country: "Nigeria", state: "Lagos", nicheInterests: ["Higher Education", "Online Learning"] },
+  { firstName: "Damilola", lastName: "Akin", username: "dami_lifestyle", bio: "Sharing standard lifestyle tips, fitness routines, and everyday vibes. ✨🏃‍♀️", gender: "FEMALE", occupation: "Lifestyle Vlogger", country: "Nigeria", state: "Ogun", nicheInterests: ["Fitness & Exercise", "Mental Health"] },
+  { firstName: "Bassey", lastName: "Effiong", username: "bassey_sports", bio: "Football is life. Weekend match day updates, Premier League & Super Eagles talk. ⚽📈", gender: "MALE", occupation: "Sports Writer", country: "Nigeria", state: "Cross River", nicheInterests: ["Football (Soccer)", "Sports News"] },
+  { firstName: "Tari", lastName: "Ebi", username: "tari_movies", bio: "Nollywood critic and movie buff. Rating Nollywood, Hollywood & cinema stories. 🎬🍿", gender: "FEMALE", occupation: "Movie Critic", country: "Nigeria", state: "Rivers", nicheInterests: ["Movies & TV", "Visual Arts & Design"] },
+  { firstName: "Chijioke", lastName: "Opara", username: "chiji_invests", bio: "Wealth builder, crypto trader, and finance enthusiast. nigerian startup builder. 🪙📊", gender: "MALE", occupation: "Crypto Analyst", country: "Nigeria", state: "Abia", nicheInterests: ["Cryptocurrency & Blockchain", "Investing & Stocks"] },
   // 10 News Users
   { firstName: "Naija", lastName: "News 360", username: "naijanews360", bio: "24/7 breaking news, politics, and top stories across Nigeria. 🇳🇬📰", gender: "OTHER", occupation: "News Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["News", "World News", "Politics News"] },
   { firstName: "Goal", lastName: "Nigeria", username: "goal_nigeria", bio: "Your home for football news, Super Eagles updates, and sports analysis. ⚽🇳🇬", gender: "OTHER", occupation: "Sports Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Sports News", "Football (Soccer)", "News"] },
@@ -57,7 +67,7 @@ export async function autoSeedSimulatorProfiles(prisma: any, logger: Logger) {
       where: { email: { endsWith: '@intasela.internal' } }
     });
 
-    if (existingCount >= 30) {
+    if (existingCount >= 40) {
       logger.log('Simulated profiles already exist. Skipping auto-seed.');
       return;
     }
