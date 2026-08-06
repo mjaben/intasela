@@ -34,27 +34,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="h-[100dvh] overscroll-y-contain overflow-hidden" suppressHydrationWarning>
       <head>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1173851541726956" crossOrigin="anonymous"></script>
       </head>
-      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased bg-background text-foreground overscroll-none`} suppressHydrationWarning>
-        <div className="min-h-[100dvh] flex flex-col items-center w-full relative">
+      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased h-[100dvh] bg-background text-foreground overflow-y-auto overscroll-y-contain`} suppressHydrationWarning>
+        <div className="relative min-h-full flex flex-col w-full">
           <MobileHeader />
           <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0">
             <SidebarNav />
             
-            <main className="flex-1 min-w-0 pb-[120px] sm:pb-0 flex flex-col overflow-x-hidden">
+            <main className="flex-1 min-w-0 pb-32 sm:pb-0 flex flex-col overflow-x-hidden">
               {children}
             </main>
 
             <RightSidebar />
           </div>
+          
+          <MobileFAB />
+          <MobileBottomNav />
+          <ToastProvider />
+          <MediaViewerModal />
         </div>
-        <MobileFAB />
-        <MobileBottomNav />
-        <ToastProvider />
-        <MediaViewerModal />
       </body>
     </html>
   );
