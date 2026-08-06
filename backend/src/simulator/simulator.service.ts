@@ -498,6 +498,21 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async executePostAction(user: any, forceSpace: boolean = false): Promise<string> {
+    // Strict Database-Level Rate Limit check:
+    // Only allow one main post globally every 2 minutes across the entire platform.
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const recentGlobalPost = await this.prisma.post.findFirst({
+      where: { 
+        parentId: null,
+        createdAt: { gte: twoMinutesAgo }
+      }
+    });
+
+    if (recentGlobalPost) {
+      this.logger.log(`[Rate Limit] Skipping post creation for @${user.username}. Another main post was created recently (${recentGlobalPost.createdAt.toLocaleTimeString()}).`);
+      return `Rate limit active. Post skipped.`;
+    }
+
     // Determine interests
     let interests: string[] = [];
     if (user.interests) {
