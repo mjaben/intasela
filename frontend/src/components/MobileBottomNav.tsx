@@ -41,52 +41,63 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <nav className="sm:hidden fixed bottom-0 left-0 right-0 w-full z-[100] pb-[env(safe-area-inset-bottom)]" style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-      <div className="bg-[#1A2517]/90 backdrop-blur-xl border-t border-[#ACC8A2]/20 shadow-[0_-10px_40px_rgba(0,0,0,0.4)] flex items-center justify-around px-2 h-[65px] w-full">
-        {navItems.map((item) => {
-          if (item.name === "Activity" && !isAuthenticated) return null;
-          const isActive = pathname === item.href || (item.name === "Profile" && pathname.startsWith("/@"));
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex flex-col items-center justify-center w-14 h-full relative transition-all duration-300 ease-out ${
-                isActive ? "text-[#ACC8A2] -translate-y-1" : "text-white/50 hover:text-[#ACC8A2]/80"
-              }`}
-            >
-              <div className="w-[26px] h-[26px] flex items-center justify-center relative transition-transform duration-300">
-                {item.icon ? (
-                  <img 
-                    src={item.icon} 
-                    alt={item.name} 
-                    className={`w-full h-full object-contain transition-all duration-300 ${isActive ? "" : "brightness-[200] opacity-50 grayscale"}`} 
-                    style={isActive ? { filter: 'drop-shadow(0px 0px 8px rgba(172,200,162,0.6))' } : {}}
-                  />
-                ) : (
-                  <div className={`${isActive ? "text-[#ACC8A2]" : "opacity-60"}`}>{item.svg}</div>
-                )}
-                
-                {item.name === "Activity" && unreadCount > 0 && (
-                  <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 border-2 border-[#1A2517] min-w-[20px] flex justify-center shadow-md animate-pulse">
-                    {unreadCount > 20 ? "20+" : unreadCount}
-                  </div>
-                )}
-              </div>
-              
-              <span 
-                className={`text-[10px] font-bold mt-1.5 transition-all duration-300 ${
-                  isActive ? "opacity-100 max-h-4 translate-y-0" : "opacity-0 max-h-0 -translate-y-2 overflow-hidden"
+    <nav className="sm:hidden fixed z-[100] w-full flex justify-center px-4 pointer-events-none" style={{ position: 'fixed', bottom: '24px', left: 0, right: 0 }}>
+      <div className="flex items-center gap-3 w-full max-w-[400px] pointer-events-auto">
+        
+        {/* Main Pill */}
+        <div className="flex-1 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-around h-[65px] rounded-full px-2">
+          {navItems.filter(item => item.name !== "Activity").map((item) => {
+            const isActive = pathname === item.href || (item.name === "Profile" && pathname.startsWith("/@"));
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center justify-center relative transition-all duration-300 ease-out h-[48px] ${
+                  isActive ? "bg-black dark:bg-[#ACC8A2] rounded-full px-5 gap-2.5 shadow-md" : "w-[48px] rounded-full hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
-                {item.name}
-              </span>
-              
-              {isActive && (
-                <div className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#ACC8A2] shadow-[0_0_8px_#ACC8A2]" />
+                <div className={`w-[22px] h-[22px] flex items-center justify-center relative transition-all duration-300 ${isActive ? "scale-100" : "scale-[0.85] opacity-60"}`}>
+                  {item.icon ? (
+                    <img 
+                      src={item.icon} 
+                      alt={item.name} 
+                      className={`w-full h-full object-contain ${isActive ? "brightness-0 invert dark:brightness-[20]" : "dark:invert"}`} 
+                    />
+                  ) : (
+                    <div className={`${isActive ? "text-white dark:text-[#1A2517]" : "text-black dark:text-[#ACC8A2]"}`}>{item.svg}</div>
+                  )}
+                </div>
+                
+                {isActive && (
+                  <span className="text-[13px] font-bold text-white dark:text-[#1A2517] tracking-wide whitespace-nowrap">
+                    {item.name}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Activity Pill */}
+        {isAuthenticated && (
+          <Link
+            href="/activity"
+            className="w-[65px] h-[65px] shrink-0 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] rounded-full flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95"
+          >
+            <div className="w-[26px] h-[26px] relative flex items-center justify-center">
+              {navItems.find(i => i.name === 'Activity')?.icon ? (
+                <img src={navItems.find(i => i.name === 'Activity')?.icon} className="w-full h-full object-contain opacity-60 dark:invert" />
+              ) : (
+                <div className="opacity-60 dark:text-[#ACC8A2]">{navItems.find(i => i.name === 'Activity')?.svg}</div>
               )}
-            </Link>
-          );
-        })}
+            </div>
+            {unreadCount > 0 && (
+              <div className="absolute top-2 right-2 translate-x-1/2 -translate-y-1/3 bg-red-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full z-10 border-[2.5px] border-white dark:border-[#1A2517] min-w-[22px] flex justify-center shadow-lg animate-pulse">
+                {unreadCount > 20 ? "20+" : unreadCount}
+              </div>
+            )}
+          </Link>
+        )}
       </div>
     </nav>
   );

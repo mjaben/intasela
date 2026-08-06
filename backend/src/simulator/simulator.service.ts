@@ -138,23 +138,53 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       if (reselaCount < targetReSelas) deficits.push('RESELA');
       if (bookmarkCount < targetBookmarks) deficits.push('BOOKMARK');
 
-      // Randomly decide to act on this post (25% chance per tick to ensure spreading out)
-      if (deficits.length > 0 && Math.random() < 0.25) {
-        // Pick a random deficit
-        const actionToTake = deficits[Math.floor(Math.random() * deficits.length)];
-        
-        // Pick a random user who isn't the author
-        const potentialUsers = simulatedUsers.filter(u => u.id !== post.authorId);
-        if (potentialUsers.length > 0) {
-          const user = potentialUsers[Math.floor(Math.random() * potentialUsers.length)];
-          try {
-            if (actionToTake === 'LIKE') actionsLog.push(await this.executeLikeAction(user, post));
-            else if (actionToTake === 'REPLY') actionsLog.push(await this.executeReplyAction(user, post));
-            else if (actionToTake === 'QUOTE') actionsLog.push(await this.executeQuoteAction(user, post));
-            else if (actionToTake === 'RESELA') actionsLog.push(await this.executeReSelaAction(user, post));
-            else if (actionToTake === 'BOOKMARK') actionsLog.push(await this.executeBookmarkAction(user, post));
-            actionsTaken++;
-          } catch(e) { this.logger.error(e); }
+      // Process deficits progressively (guaranteeing we find users who haven't acted yet)
+      if (deficits.length > 0) {
+        // Limit to max 3 deficits per tick per post to keep it looking natural
+        const actionsToProcess = deficits.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+        for (const actionToTake of actionsToProcess) {
+          // Shuffle potential users
+          const shuffledUsers = [...simulatedUsers.filter(u => u.id !== post.authorId)].sort(() => 0.5 - Math.random());
+          let validUser = null;
+
+          // Find a user who hasn't done this specific action yet
+          for (const user of shuffledUsers) {
+            let alreadyDidIt = false;
+            
+            if (actionToTake === 'LIKE' || actionToTake === 'RESELA' || actionToTake === 'BOOKMARK') {
+              const count = await this.prisma.engagement.count({
+                where: { userId: user.id, postId: post.id, type: actionToTake as any }
+              });
+              if (count > 0) alreadyDidIt = true;
+            } else if (actionToTake === 'REPLY') {
+              const count = await this.prisma.post.count({
+                where: { authorId: user.id, parentId: post.id, quotedPostId: null }
+              });
+              if (count > 0) alreadyDidIt = true;
+            } else if (actionToTake === 'QUOTE') {
+              const count = await this.prisma.post.count({
+                where: { authorId: user.id, quotedPostId: post.id }
+              });
+              if (count > 0) alreadyDidIt = true;
+            }
+
+            if (!alreadyDidIt) {
+              validUser = user;
+              break;
+            }
+          }
+
+          if (validUser) {
+            try {
+              if (actionToTake === 'LIKE') actionsLog.push(await this.executeLikeAction(validUser, post));
+              else if (actionToTake === 'REPLY') actionsLog.push(await this.executeReplyAction(validUser, post));
+              else if (actionToTake === 'QUOTE') actionsLog.push(await this.executeQuoteAction(validUser, post));
+              else if (actionToTake === 'RESELA') actionsLog.push(await this.executeReSelaAction(validUser, post));
+              else if (actionToTake === 'BOOKMARK') actionsLog.push(await this.executeBookmarkAction(validUser, post));
+              actionsTaken++;
+            } catch(e) { this.logger.error(e); }
+          }
         }
       }
 
