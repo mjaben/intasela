@@ -109,16 +109,20 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     const user = simulatedUsers[userIndex];
 
     // Roll random action
-    // 50% Post, 20% Reply, 20% Like, 10% Re-Sela
+    // 35% Post, 20% Reply, 20% Like, 10% Re-Sela, 10% Quote, 5% Join Space
     const rand = Math.random();
-    if (rand < 0.50) {
+    if (rand < 0.35) {
       return await this.executePostAction(user);
-    } else if (rand < 0.70) {
+    } else if (rand < 0.55) {
       return await this.executeReplyAction(user);
-    } else if (rand < 0.90) {
+    } else if (rand < 0.75) {
       return await this.executeLikeAction(user);
-    } else {
+    } else if (rand < 0.85) {
       return await this.executeReSelaAction(user);
+    } else if (rand < 0.95) {
+      return await this.executeQuoteAction(user);
+    } else {
+      return await this.executeJoinSpaceAction(user);
     }
   }
 
@@ -136,7 +140,26 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     const randomInterest = interests[Math.floor(Math.random() * interests.length)];
     const niche = this.mapInterestToNiche(randomInterest);
     
-    this.logger.log(`Simulated user ${user.username} is writing a new post in niche: ${niche}`);
+    let spaceIdToPost: string | null = null;
+    let spaceName = '';
+    
+    // 30% chance to post in a joined space instead of public feed
+    if (Math.random() < 0.30) {
+      const userSpaces = await this.prisma.spaceMember.findMany({
+        where: { userId: user.id, status: 'ACTIVE' },
+        include: { space: true }
+      });
+      if (userSpaces.length > 0) {
+        const selectedSpace = userSpaces[Math.floor(Math.random() * userSpaces.length)];
+        spaceIdToPost = selectedSpace.spaceId;
+        spaceName = selectedSpace.space.name;
+        this.logger.log(`Simulated user ${user.username} is writing a new post in Space: ${spaceName}`);
+      }
+    }
+
+    if (!spaceIdToPost) {
+      this.logger.log(`Simulated user ${user.username} is writing a new post in niche: ${niche}`);
+    }
 
     let content = '';
     
@@ -160,6 +183,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       data: {
         content,
         authorId: user.id,
+        spaceId: spaceIdToPost,
         approvalStatus: 'APPROVED',
         status: 'PUBLISHED'
       }
@@ -174,6 +198,9 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Failed to process monetization reward for post ${post.id}:`, monError);
     }
 
+    if (spaceIdToPost) {
+      return `Simulated User @${user.username} created post ${post.id} in Space "${spaceName}"`;
+    }
     return `Simulated User @${user.username} created post ${post.id} in niche ${niche}`;
   }
 
@@ -351,6 +378,97 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return `Simulated User @${user.username} re-sela'd post ${targetPost.id}`;
   }
 
+  private async executeQuoteAction(user: any): Promise<string> {
+    const targetPost = await this.prisma.post.findFirst({
+      where: { authorId: { not: user.id } },
+      orderBy: { createdAt: 'desc' },
+      include: { author: true }
+    });
+
+    if (!targetPost) {
+      return 'No target post to quote.';
+    }
+
+    this.logger.log(`Simulated user ${user.username} is quoting (Re-Sela with note) post ${targetPost.id}`);
+
+    let quoteContent = '';
+
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        quoteContent = await this.generateQuoteWithOpenAI(user, targetPost);
+      } catch (err) {
+        this.logger.error(`OpenAI quote generation failed: ${err.message}. Falling back to templates.`);
+      }
+    }
+
+    if (!quoteContent) {
+      const templates = [
+        "This is incredibly accurate. 👇",
+        "Had to share this one.",
+        "Couldn't agree more with this.",
+        "Take a look at this!",
+        "Interesting thoughts here.",
+        "This deserves more attention."
+      ];
+      quoteContent = templates[Math.floor(Math.random() * templates.length)];
+    }
+
+    // Create the quote post
+    const quote = await this.prisma.post.create({
+      data: {
+        content: quoteContent,
+        authorId: user.id,
+        quotedPostId: targetPost.id,
+        approvalStatus: 'APPROVED',
+        status: 'PUBLISHED'
+      }
+    });
+
+    // Create Notification
+    await this.prisma.notification.create({
+      data: {
+        recipientId: targetPost.authorId,
+        actorId: user.id,
+        type: 'RESELA', // Using RESELA type for quotes as well for now
+        postId: quote.id
+      }
+    }).catch(err => this.logger.error('Failed to create quote notification:', err));
+
+    return `Simulated User @${user.username} quoted post ${targetPost.id}`;
+  }
+
+  private async executeJoinSpaceAction(user: any): Promise<string> {
+    // Find a random PUBLIC space the user is not a member of
+    const spaces = await this.prisma.space.findMany({
+      where: {
+        type: 'PUBLIC',
+        members: {
+          none: { userId: user.id }
+        }
+      },
+      take: 50
+    });
+
+    if (spaces.length === 0) {
+      return 'No public spaces available to join.';
+    }
+
+    const randomSpace = spaces[Math.floor(Math.random() * spaces.length)];
+
+    await this.prisma.spaceMember.create({
+      data: {
+        spaceId: randomSpace.id,
+        userId: user.id,
+        role: 'MEMBER',
+        status: 'ACTIVE',
+        hasApprovedPost: true
+      }
+    });
+
+    this.logger.log(`Simulated user ${user.username} joined space ${randomSpace.name}`);
+    return `Simulated User @${user.username} joined Space "${randomSpace.name}"`;
+  }
+
   private mapInterestToNiche(interest: string): string {
     const techInterests = ["Programming & Software", "Artificial Intelligence", "Gadgets & Consumer Tech", "Technology News", "Science News", "Space & Astronomy"];
     const businessInterests = ["Entrepreneurship", "Investing & Stocks", "Marketing & Advertising", "Small Business", "Economics", "Cryptocurrency & Blockchain"];
@@ -440,6 +558,52 @@ Rules:
         { role: 'system', content: systemPrompt }
       ],
       max_tokens: 80,
+      temperature: 0.8
+    };
+
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`OpenAI API responded with status ${res.status}: ${errorText}`);
+    }
+
+    const data: any = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() || '';
+  }
+
+  private async generateQuoteWithOpenAI(user: any, targetPost: any): Promise<string> {
+    const systemPrompt = `You are a real user on the Intasela social media platform.
+Your profile details:
+- Name: ${user.firstName} ${user.lastName}
+- Username: @${user.username}
+- Bio: ${user.bio}
+
+You are quoting (retweeting with a note) a post by ${targetPost.author.firstName} (@${targetPost.author.username}).
+Their post content:
+"${targetPost.content}"
+
+Write a natural, conversational, and short note (under 100 characters) to accompany the quoted post.
+Rules:
+1. Add your own brief thought, opinion, or endorsement of their post.
+2. Keep it casual and conversational.
+3. DO NOT use hashtags.
+4. DO NOT quote their username unless necessary.
+`;
+
+    const body = {
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt }
+      ],
+      max_tokens: 60,
       temperature: 0.8
     };
 

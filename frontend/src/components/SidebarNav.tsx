@@ -177,11 +177,7 @@ export default function SidebarNav() {
                   router.push(getNavHref(item));
                 }
               }}
-              className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-4 py-2.5 rounded-lg transition-all font-medium text-[14px] relative cursor-pointer ${
-                (item.name === "Business" ? pathname.startsWith("/ads") : item.href === "/" ? pathname === "/" : pathname.startsWith(item.href))
-                  ? 'bg-[#ACC8A2]/10 text-[#ACC8A2] font-bold border-l-2 border-[#ACC8A2]'
-                  : 'hover:bg-accent hover:text-foreground text-muted-foreground'
-              }`}
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-4 py-2.5 rounded-lg transition-all font-medium text-[14px] relative cursor-pointer hover:bg-accent hover:text-foreground text-muted-foreground`}
               title={isCollapsed ? item.name : undefined}
             >
               <div className="flex items-center gap-3">

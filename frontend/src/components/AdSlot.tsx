@@ -24,10 +24,15 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
         const headers: any = {};
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
+
         // Get decision from Ad Engine
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/ads/decide`, {
-          headers
+          headers,
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         
         if (!res.ok) throw new Error("Failed to fetch ad decision");
         const data = await res.json();

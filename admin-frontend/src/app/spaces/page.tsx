@@ -60,7 +60,13 @@ export default function SpacesPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/spaces`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-id": adminId },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          type: formData.type,
+          coverUrl: formData.coverUrl,
+          postApprovalMode: formData.postApprovalMode
+        })
       });
       if (res.ok) {
         fetchSpaces();

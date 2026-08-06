@@ -38,12 +38,12 @@ export default function RootLayout({
       <head>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1173851541726956" crossOrigin="anonymous"></script>
       </head>
-      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased h-[100dvh] bg-background text-foreground flex flex-col items-center overflow-hidden`} suppressHydrationWarning>
+      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-screen bg-background text-foreground flex flex-col items-center`} suppressHydrationWarning>
         <MobileHeader />
-        <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0 overflow-hidden">
+        <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0">
           <SidebarNav />
           
-          <main className="flex-1 min-w-0 pb-[80px] sm:pb-0 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <main className="flex-1 min-w-0 pb-[80px] sm:pb-0 flex flex-col overflow-x-hidden">
             {children}
           </main>
 
