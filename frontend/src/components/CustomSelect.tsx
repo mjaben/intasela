@@ -36,11 +36,11 @@ export default function CustomSelect({ label, value, onChange, options, placehol
 
   return (
     <div className={`relative ${disabled ? 'opacity-50 pointer-events-none' : ''}`} ref={containerRef}>
-      {label && <label className="block text-sm font-medium text-gray-300 mb-1">{label} {required && <span className="text-red-500">*</span>}</label>}
+      {label && <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">{label} {required && <span className="text-red-500">*</span>}</label>}
       
       <div 
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white flex justify-between items-center cursor-pointer min-h-[42px] focus-within:border-[#ACC8A2]"
+        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white flex justify-between items-center cursor-pointer min-h-[40px] focus-within:border-[#ACC8A2]/50 focus-within:ring-1 focus-within:ring-[#ACC8A2]/20 transition-all"
       >
         <span className={displayValue ? "text-white" : "text-gray-400"}>
           {displayValue || placeholder}
@@ -49,7 +49,7 @@ export default function CustomSelect({ label, value, onChange, options, placehol
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-[#09090b] border border-gray-700 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar flex flex-col">
+        <div className="absolute z-10 w-full mt-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto custom-scrollbar flex flex-col animate-in zoom-in-95 fade-in duration-200">
           <div className="p-1">
             {options.map((opt, i) => {
               const optValue = typeof opt === 'string' ? opt : opt.value;
@@ -58,7 +58,7 @@ export default function CustomSelect({ label, value, onChange, options, placehol
                 <div 
                   key={i} 
                   onClick={() => handleSelect(optValue)}
-                  className={`px-3 py-2 text-sm cursor-pointer rounded ${value === optValue ? 'bg-[#ACC8A2] text-[#1A2517] font-medium' : 'text-gray-200 hover:bg-gray-800'}`}
+                  className={`px-3 py-2.5 text-sm cursor-pointer rounded-lg transition-colors ${value === optValue ? 'bg-[#ACC8A2] text-[#1A2517] font-bold' : 'text-gray-200 hover:bg-white/10'}`}
                 >
                   {optLabel}
                 </div>

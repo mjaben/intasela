@@ -131,7 +131,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="flex-1 min-h-screen p-8 flex flex-col items-center justify-center text-gray-400 bg-[#09090b]">
+      <div className="flex-1 min-h-screen p-8 flex flex-col items-center justify-center text-gray-400 bg-background">
         <h2 className="text-2xl font-bold mb-2 text-white">Profile not found</h2>
         <p>The user @{username} doesn't exist or may have been deleted.</p>
         <button onClick={() => router.push('/')} className="mt-6 text-[#ACC8A2] hover:underline font-bold">
@@ -153,9 +153,9 @@ export default function ProfilePage() {
     : null;
 
   return (
-    <main className="flex-1 min-h-screen pb-20 relative bg-[#09090b]">
+    <main className="flex-1 min-h-screen relative bg-background">
       {/* Substack-style Cover / Profile Header Area */}
-      <div className="w-full bg-gradient-to-b from-white/10 to-[#09090b] relative px-6 py-12 border-b border-white/10 flex justify-between items-center">
+      <div className="w-full bg-gradient-to-b from-white/10 to-background relative px-6 py-12 border-b border-white/10 flex justify-between items-center">
         
         {/* Left Side: Profile Info & Action */}
         <div className="flex-1 max-w-xl z-10 pr-6">
@@ -230,7 +230,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Right Side: Avatar inside the cover */}
-        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#09090b] bg-white/5 overflow-hidden flex-shrink-0 z-10 shadow-lg relative">
+        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background bg-white/5 overflow-hidden flex-shrink-0 z-10 shadow-lg relative">
           <img 
             src={profile.avatarUrl || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile.username}`} 
             alt={profile.name} 

@@ -54,7 +54,7 @@ export default function PostDetail() {
   }
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-background pb-20">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center gap-6 px-4 py-2 bg-background/80 backdrop-blur-md">
         <button 

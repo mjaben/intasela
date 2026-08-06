@@ -72,7 +72,7 @@ export default function ActivityPage() {
   });
 
   return (
-    <main className="flex-1 min-h-screen pb-20 sm:pb-0">
+    <main className="flex-1 min-h-screen">
       <div className="sticky top-0 z-10 flex flex-col bg-background/80 backdrop-blur-md">
         <div className="p-4 border-b border-border">
           <h1 className="text-xl font-bold">Activity</h1>

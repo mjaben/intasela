@@ -617,7 +617,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="relative">
                   <select 
-                    className="bg-[#09090b] border border-white/10 text-foreground font-semibold text-[14px] rounded-lg pl-3 pr-10 py-2 outline-none cursor-pointer hover:border-muted-foreground/50 transition-colors appearance-none focus:border-[#FF6719]"
+                    className="bg-background border border-white/10 text-foreground font-semibold text-[14px] rounded-lg pl-3 pr-10 py-2 outline-none cursor-pointer hover:border-muted-foreground/50 transition-colors appearance-none focus:border-[#FF6719]"
                     value={settings.notifications?.messaging?.allowRequestsFrom || 'Everyone'}
                     onChange={(e) => updateMessageRequest(e.target.value)}
                   >

@@ -9,7 +9,7 @@ import SearchableOccupationSelect from "@/components/SearchableOccupationSelect"
 import CustomSelect from "@/components/CustomSelect";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
@@ -216,23 +216,18 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-w-lg bg-black/40 backdrop-blur-3xl p-6 sm:p-10 rounded-[2rem] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-y-auto max-h-[90vh] custom-scrollbar">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Create Account</h1>
-        <p className="text-white/70">Join Intasela and start connecting</p>
+    <div className="w-full h-full max-h-full sm:h-auto sm:max-h-[85vh] bg-black/40 backdrop-blur-3xl p-5 sm:p-10 rounded-[2rem] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col min-h-0">
+      <div className="text-center mb-4 shrink-0">
+        <h1 className="text-2xl font-bold text-white mb-3 tracking-tight">Create an account</h1>
+        <p className="text-white/70 text-sm">Join Intasela and start connecting</p>
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex justify-between mb-2">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <div 
-              key={s} 
-              className={`text-xs font-bold ${s === step ? 'text-[#ACC8A2]' : s < step ? 'text-white/70' : 'text-white/30'}`}
-            >
-              Step {s}
-            </div>
-          ))}
+      <div className="mb-4 shrink-0">
+        <div className="flex justify-between items-end mb-2">
+          <div className="text-sm font-bold text-[#ACC8A2]">
+            Step {step} of 5
+          </div>
         </div>
         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
           <div 
@@ -242,25 +237,25 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <div className="min-h-[44px] mb-2">
-        {error && (
-          <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-100 text-sm text-center font-medium">
-            {error}
-          </div>
-        )}
-      </div>
+      {error && (
+        <div className="mb-4 flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-medium animate-in slide-in-from-top-2 fade-in duration-300">
+          <AlertCircle size={16} className="shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto custom-scrollbar overscroll-y-contain pr-1 sm:pr-3 pb-2 space-y-4">
         {step === 1 && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">First Name <span className="text-red-500">*</span></label>
-                <Input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
+                <Input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Last Name <span className="text-red-500">*</span></label>
-                <Input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
+                <Input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
               </div>
             </div>
             
@@ -268,18 +263,18 @@ export default function RegisterPage() {
               <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Username <span className="text-red-500">*</span></label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 font-medium">@</span>
-                <Input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe" className="pl-8 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" required />
+                <Input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe" className="pl-8 h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" required />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Email <span className="text-red-500">*</span></label>
-              <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
+              <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Phone Number (Optional)</label>
-              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+1234567890" className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
+              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+1234567890" className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
             </div>
           </div>
         )}
@@ -380,7 +375,7 @@ export default function RegisterPage() {
                     className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
                       formData.interests.includes(interest) 
                       ? "bg-[#ACC8A2] text-[#1A2517] border-[#ACC8A2]" 
-                      : "bg-[#09090b] text-gray-400 border-gray-700 hover:border-gray-500 hover:text-gray-200"
+                      : "bg-white/5 text-gray-300 border-white/10 hover:bg-white/10 hover:border-white/20 hover:text-white"
                     }`}
                   >
                     {interest}
@@ -476,13 +471,15 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div className="flex gap-4 mt-8">
+        </div>
+        
+        <div className="flex gap-4 pt-4 mt-2 shrink-0 border-t border-white/10">
           {step > 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
-              className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/5 hover:text-white rounded-full h-12 font-bold"
+              className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/5 hover:text-white rounded-full h-10 font-bold"
             >
               Back
             </Button>
@@ -490,14 +487,19 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-[#ACC8A2] text-[#1A2517] hover:bg-white transition-colors rounded-full h-12 font-bold text-[15px] shadow-[0_4px_14px_rgba(172,200,162,0.4)]"
+            className="flex-1 bg-[#ACC8A2] text-[#1A2517] hover:bg-white transition-all transform hover:scale-[1.02] active:scale-95 rounded-full h-10 font-bold text-[15px] shadow-[0_4px_14px_rgba(172,200,162,0.4)] flex items-center justify-center gap-2"
           >
-            {loading ? "Loading..." : step < 4 ? "Continue" : step === 4 ? "Send Code" : "Create Account"}
+            {loading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                {step === 4 ? "Sending..." : step === 5 ? "Creating Account..." : "Processing..."}
+              </>
+            ) : step < 4 ? "Continue" : step === 4 ? "Send Code" : "Create Account"}
           </Button>
         </div>
       </form>
 
-      <div className="mt-8 text-center">
+      <div className="mt-4 text-center pb-2 shrink-0">
         <p className="text-white/60 text-sm">
           Already have an account?{" "}
           <Link href="/login" className="text-[#ACC8A2] hover:text-white transition-colors font-bold ml-1">

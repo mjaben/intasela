@@ -59,8 +59,8 @@ export default function CreatorStudioPage() {
   const progressPercent = Math.min((balance / threshold) * 100, 100);
 
   return (
-    <main className="flex-1 min-h-screen pb-20 sm:pb-0 bg-[#09090b] flex flex-col w-full text-white">
-      <div className="sticky top-0 z-10 flex flex-col bg-[#09090b]/80 backdrop-blur-xl border-b border-white/10">
+    <main className="flex-1 min-h-screen bg-background flex flex-col w-full text-white">
+      <div className="sticky top-0 z-10 flex flex-col bg-background/80 backdrop-blur-xl border-b border-white/10">
         <div className="p-4 flex flex-col md:flex-row md:items-center justify-between max-w-5xl mx-auto w-full gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">

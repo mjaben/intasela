@@ -4,6 +4,7 @@ html, body {
   overscroll-behavior-y: contain;
   height: 100dvh;
   overflow-y: auto;
+  background-color: var(--background);
 }
 :root {
   --background: #0f150e;

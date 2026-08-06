@@ -61,12 +61,12 @@ export default function SearchableOccupationSelect({ value, onChange }: Props) {
 
   return (
     <div className="relative" ref={containerRef}>
-      <label className="block text-sm font-medium text-gray-300 mb-1">Occupation (Optional)</label>
+      <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Occupation (Optional)</label>
       
       {!isOther ? (
         <div 
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white flex justify-between items-center cursor-pointer min-h-[42px]"
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white flex justify-between items-center cursor-pointer min-h-[40px] focus-within:border-[#ACC8A2]/50 focus-within:ring-1 focus-within:ring-[#ACC8A2]/20 transition-all"
         >
           <span className={value ? "text-white" : "text-gray-400"}>
             {value || "Select Occupation..."}
@@ -80,7 +80,7 @@ export default function SearchableOccupationSelect({ value, onChange }: Props) {
             value={value} 
             onChange={(e) => onChange(e.target.value)} 
             placeholder="Type your occupation..."
-            className="w-full bg-[#09090b] border border-[#ACC8A2] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#ACC8A2]" 
+            className="w-full bg-white/5 border border-[#ACC8A2]/50 ring-1 ring-[#ACC8A2]/20 rounded-xl px-4 py-2 text-white h-[40px] focus:outline-none transition-all" 
             autoFocus
           />
           <button 
@@ -94,14 +94,14 @@ export default function SearchableOccupationSelect({ value, onChange }: Props) {
       )}
 
       {isOpen && !isOther && (
-        <div className="absolute z-10 w-full mt-1 bg-[#09090b] border border-gray-700 rounded-lg shadow-lg max-h-60 flex flex-col">
-          <div className="p-2 border-b border-gray-700">
+        <div className="absolute z-10 w-full mt-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl max-h-60 flex flex-col animate-in zoom-in-95 fade-in duration-200">
+          <div className="p-2 border-b border-white/10">
             <input 
               type="text" 
               placeholder="Search..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#18181b] border border-gray-700 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#ACC8A2]"
+              className="w-full bg-white/10 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#ACC8A2]/50 focus:ring-1 focus:ring-[#ACC8A2]/20 transition-all"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
@@ -111,7 +111,7 @@ export default function SearchableOccupationSelect({ value, onChange }: Props) {
                 <div 
                   key={occ} 
                   onClick={() => handleSelect(occ)}
-                  className="px-3 py-2 hover:bg-gray-800 text-sm text-gray-200 cursor-pointer rounded"
+                  className="px-3 py-2.5 hover:bg-white/10 text-sm text-gray-200 cursor-pointer rounded-lg transition-colors"
                 >
                   {occ}
                 </div>

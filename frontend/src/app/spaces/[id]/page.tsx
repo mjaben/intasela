@@ -273,7 +273,7 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
   const isAppealed = space.members && space.members.length > 0 && space.members[0].status === 'APPEALED';
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen pb-20 relative">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen relative">
       <div className="relative h-48 sm:h-64 w-full bg-muted">
         {space.coverUrl ? (
           <Image src={space.coverUrl} alt={space.name} layout="fill" objectFit="cover" />

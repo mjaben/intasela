@@ -40,9 +40,6 @@ export default function MobileBottomNav() {
     }
   ];
 
-  if (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password') {
-    return null;
-  }
 
   return (
     <nav className="sm:hidden fixed left-1/2 -translate-x-1/2 z-[999] w-[92%] max-w-[380px] flex items-center gap-2.5" style={{ bottom: 'calc(24px + env(safe-area-inset-bottom))' }}>
@@ -64,10 +61,10 @@ export default function MobileBottomNav() {
                     <img 
                       src={item.icon} 
                       alt={item.name} 
-                      className={`w-full h-full object-contain ${isActive ? "brightness-0 invert dark:brightness-[20]" : "dark:invert"}`} 
+                      className={`w-full h-full object-contain ${isActive ? "brightness-0 invert dark:invert-0" : "brightness-0 invert-0 dark:invert"}`} 
                     />
                   ) : (
-                    <div className={`${isActive ? "text-white dark:text-[#1A2517]" : "text-black dark:text-[#ACC8A2]"}`}>{item.svg}</div>
+                    <div className={`${isActive ? "text-white dark:text-[#1A2517]" : "text-black dark:text-white"}`}>{item.svg}</div>
                   )}
                 </div>
                 
@@ -89,9 +86,9 @@ export default function MobileBottomNav() {
           >
             <div className="w-[20px] h-[20px] relative flex items-center justify-center">
               {navItems.find(i => i.name === 'Activity')?.icon ? (
-                <img src={navItems.find(i => i.name === 'Activity')?.icon} className="w-full h-full object-contain opacity-60 dark:invert" />
+                <img src={navItems.find(i => i.name === 'Activity')?.icon} className="w-full h-full object-contain brightness-0 invert-0 dark:invert opacity-60" />
               ) : (
-                <div className="opacity-60 dark:text-[#ACC8A2]">{navItems.find(i => i.name === 'Activity')?.svg}</div>
+                <div className="opacity-60 text-black dark:text-white">{navItems.find(i => i.name === 'Activity')?.svg}</div>
               )}
             </div>
             {unreadCount > 0 && (
