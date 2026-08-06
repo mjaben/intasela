@@ -287,8 +287,8 @@ function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
   const adSlotId = slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '5819377787';
 
   return (
-    <div className={`w-full ${isFilled ? 'my-4 flex flex-col items-center justify-center overflow-hidden' : 'hidden'}`}>
-      <span className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center">Advertisement</span>
+    <div className={`w-full my-4 flex flex-col items-center justify-center overflow-hidden ${pushedRef.current && !isFilled ? 'min-h-0' : 'min-h-[90px]'}`}>
+      <span className={`text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center ${!isFilled ? 'hidden' : 'block'}`}>Advertisement</span>
       <div ref={containerRef} className="w-full min-w-[250px] max-w-full overflow-hidden block">
         <ins ref={insRef}
              className="adsbygoogle"

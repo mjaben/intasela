@@ -73,11 +73,10 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       clearTimeout(this.timeoutRef);
     }
 
-    const minMin = Number(process.env.SIMULATOR_MIN_INTERVAL_MINUTES) || 20;
-    const maxMin = Number(process.env.SIMULATOR_MAX_INTERVAL_MINUTES) || 60;
-    const delayMs = (Math.random() * (maxMin - minMin) + minMin) * 60 * 1000;
+    // User explicitly requested 1 post cycle every 4 minutes to lower volume and avoid spam.
+    const delayMs = 4 * 60 * 1000;
 
-    this.logger.log(`Scheduling next simulator action in ${(delayMs / 60000).toFixed(2)} minutes.`);
+    this.logger.log(`Scheduling next simulator action in 4 minutes.`);
     this.timeoutRef = setTimeout(() => {
       this.runSimulationTick()
         .catch(err => this.logger.error('Error during scheduled simulation tick:', err))
@@ -209,15 +208,26 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // Still roll a chance for global random actions (like creating new posts)
-    if (Math.random() < 0.3) {
-      const user = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
-      if (Math.random() < 0.8) {
-        actionsLog.push(await this.executePostAction(user));
-      } else {
-        actionsLog.push(await this.executeJoinSpaceAction(user));
+    // Guarantee EXACTLY 1 post on main feed per tick
+    const mainUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
+    actionsLog.push(await this.executePostAction(mainUser, false));
+    actionsTaken++;
+
+    // Guarantee EXACTLY 1 post in a space per tick
+    const spaceUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
+    actionsLog.push(await this.executePostAction(spaceUser, true));
+    actionsTaken++;
+
+    // Guarantee EXACTLY 1 quote (ReSela with Note) per tick
+    if (recentPosts.length > 0) {
+      const quoteUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
+      const postToQuote = recentPosts[Math.floor(Math.random() * recentPosts.length)];
+      if (quoteUser.id !== postToQuote.authorId) {
+        try {
+          actionsLog.push(await this.executeQuoteAction(quoteUser, postToQuote));
+          actionsTaken++;
+        } catch(e) {}
       }
-      actionsTaken++;
     }
 
     if (actionsTaken === 0) {
@@ -227,7 +237,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return `Tick processed. Took ${actionsTaken} actions:\n` + actionsLog.join('\n');
   }
 
-  private async executePostAction(user: any): Promise<string> {
+  private async executePostAction(user: any, forceSpace: boolean = false): Promise<string> {
     // Determine interests
     let interests: string[] = [];
     if (user.interests) {
@@ -244,8 +254,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     let spaceIdToPost: string | null = null;
     let spaceName = '';
     
-    // 30% chance to post in a joined space instead of public feed
-    if (Math.random() < 0.30) {
+    if (forceSpace) {
       const userSpaces = await this.prisma.spaceMember.findMany({
         where: { userId: user.id, status: 'ACTIVE' },
         include: { space: true }
@@ -255,10 +264,10 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
         spaceIdToPost = selectedSpace.spaceId;
         spaceName = selectedSpace.space.name;
         this.logger.log(`Simulated user ${user.username} is writing a new post in Space: ${spaceName}`);
+      } else {
+        return `Simulated user ${user.username} has no spaces to post in. Skipping space post.`;
       }
-    }
-
-    if (!spaceIdToPost) {
+    } else {
       this.logger.log(`Simulated user ${user.username} is writing a new post in niche: ${niche}`);
     }
 
