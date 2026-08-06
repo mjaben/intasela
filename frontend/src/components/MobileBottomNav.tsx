@@ -41,39 +41,53 @@ export default function MobileBottomNav() {
   ];
 
   return (
-    <nav className="sm:hidden fixed bottom-0 left-0 right-0 h-[60px] bg-background/95 backdrop-blur-md border-t border-border z-50 flex items-center justify-around px-2">
-      {navItems.map((item) => {
-        if (item.name === "Activity" && !isAuthenticated) return null;
-        const isActive = pathname === item.href || (item.name === "Profile" && pathname.startsWith("/@"));
-        return (
-          <Link
-            key={item.name}
-            href={item.href}
-            className={`flex flex-col items-center justify-center w-12 h-12 relative transition-colors ${
-              isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <div className="w-[24px] h-[24px] flex items-center justify-center relative">
-              {item.icon ? (
-                <img 
-                  src={item.icon} 
-                  alt={item.name} 
-                  className={`w-full h-full object-contain ${isActive ? "" : "invert opacity-70"}`} 
-                />
-              ) : (
-                <div className={`${isActive ? "text-primary" : "opacity-70"}`}>{item.svg}</div>
-              )}
+    <nav className="sm:hidden fixed bottom-0 left-0 right-0 w-full z-[100] pb-[env(safe-area-inset-bottom)]" style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
+      <div className="bg-[#1A2517]/90 backdrop-blur-xl border-t border-[#ACC8A2]/20 shadow-[0_-10px_40px_rgba(0,0,0,0.4)] flex items-center justify-around px-2 h-[65px] w-full">
+        {navItems.map((item) => {
+          if (item.name === "Activity" && !isAuthenticated) return null;
+          const isActive = pathname === item.href || (item.name === "Profile" && pathname.startsWith("/@"));
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex flex-col items-center justify-center w-14 h-full relative transition-all duration-300 ease-out ${
+                isActive ? "text-[#ACC8A2] -translate-y-1" : "text-white/50 hover:text-[#ACC8A2]/80"
+              }`}
+            >
+              <div className="w-[26px] h-[26px] flex items-center justify-center relative transition-transform duration-300">
+                {item.icon ? (
+                  <img 
+                    src={item.icon} 
+                    alt={item.name} 
+                    className={`w-full h-full object-contain transition-all duration-300 ${isActive ? "" : "brightness-[200] opacity-50 grayscale"}`} 
+                    style={isActive ? { filter: 'drop-shadow(0px 0px 8px rgba(172,200,162,0.6))' } : {}}
+                  />
+                ) : (
+                  <div className={`${isActive ? "text-[#ACC8A2]" : "opacity-60"}`}>{item.svg}</div>
+                )}
+                
+                {item.name === "Activity" && unreadCount > 0 && (
+                  <div className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 border-2 border-[#1A2517] min-w-[20px] flex justify-center shadow-md animate-pulse">
+                    {unreadCount > 20 ? "20+" : unreadCount}
+                  </div>
+                )}
+              </div>
               
-              {item.name === "Activity" && unreadCount > 0 && (
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 border border-background min-w-[18px] flex justify-center">
-                  {unreadCount > 20 ? "20+" : unreadCount}
-                </div>
+              <span 
+                className={`text-[10px] font-bold mt-1.5 transition-all duration-300 ${
+                  isActive ? "opacity-100 max-h-4 translate-y-0" : "opacity-0 max-h-0 -translate-y-2 overflow-hidden"
+                }`}
+              >
+                {item.name}
+              </span>
+              
+              {isActive && (
+                <div className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#ACC8A2] shadow-[0_0_8px_#ACC8A2]" />
               )}
-            </div>
-            <span className="text-[10px] font-medium mt-1">{item.name}</span>
-          </Link>
-        );
-      })}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
