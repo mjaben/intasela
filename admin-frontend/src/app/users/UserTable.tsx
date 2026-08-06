@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { assignUserRole } from "./actions";
+import { assignUserRole, bulkDeleteUsers } from "./actions";
 import ReasonModal from "@/components/ReasonModal";
 
 type User = {
@@ -28,8 +28,17 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
   const [isPending, startTransition] = useTransition();
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   
-  const [modalState, setModalState] = useState<{ isOpen: boolean; userId: string; currentStatus: boolean; title: string }>({
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  
+  const [modalState, setModalState] = useState<{ 
+    isOpen: boolean; 
+    actionType: "TOGGLE_MOD" | "BULK_DELETE";
+    userId: string; 
+    currentStatus: boolean; 
+    title: string 
+  }>({
     isOpen: false,
+    actionType: "TOGGLE_MOD",
     userId: "",
     currentStatus: false,
     title: ""
@@ -38,30 +47,87 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
   const requestSpaceModToggle = (userId: string, currentStatus: boolean) => {
     setModalState({
       isOpen: true,
+      actionType: "TOGGLE_MOD",
       userId,
       currentStatus,
       title: "Reason for modifying Space Mod status"
     });
   };
 
-  const handleConfirmSpaceModToggle = (reason: string) => {
-    const { userId, currentStatus } = modalState;
+  const requestBulkDelete = () => {
+    if (selectedUserIds.length === 0) return;
+    setModalState({
+      isOpen: true,
+      actionType: "BULK_DELETE",
+      userId: "",
+      currentStatus: false,
+      title: `Reason for deleting ${selectedUserIds.length} user(s)`
+    });
+  };
+
+  const handleConfirmAction = (reason: string) => {
+    const { actionType, userId, currentStatus } = modalState;
     setModalState(prev => ({ ...prev, isOpen: false }));
     
     startTransition(async () => {
-      await assignUserRole(userId, !currentStatus, reason);
+      if (actionType === "TOGGLE_MOD") {
+        await assignUserRole(userId, !currentStatus, reason);
+      } else if (actionType === "BULK_DELETE") {
+        const res = await bulkDeleteUsers(selectedUserIds, reason);
+        if (res.success) {
+          setSelectedUserIds([]);
+        }
+      }
     });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.length === initialUsers.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(initialUsers.map(u => u.id));
+    }
+  };
+
+  const toggleSelectUser = (id: string) => {
+    setSelectedUserIds(prev => 
+      prev.includes(id) ? prev.filter(uid => uid !== id) : [...prev, id]
+    );
   };
 
   return (
     <div className="w-full">
       <UserFilters />
       
+      {selectedUserIds.length > 0 && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4 flex items-center justify-between">
+          <span className="text-red-400 font-medium text-sm">
+            {selectedUserIds.length} user(s) selected
+          </span>
+          <button 
+            onClick={requestBulkDelete}
+            disabled={isPending}
+            className="bg-red-600 hover:bg-red-500 text-white px-4 py-1.5 rounded text-sm font-semibold transition-colors disabled:opacity-50"
+          >
+            Delete Selected
+          </button>
+        </div>
+      )}
+      
       <div className="bg-brand-card rounded-xl shadow-md border border-brand-border/30 overflow-hidden">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left text-sm text-gray-300">
             <thead className="text-[11px] text-gray-400 uppercase bg-brand-bg/50 tracking-wider">
               <tr>
+                <th className="px-4 py-4 w-10">
+                  <input 
+                    type="checkbox" 
+                    className="rounded bg-brand-bg border-gray-600 text-red-500 focus:ring-red-500 cursor-pointer"
+                    checked={initialUsers.length > 0 && selectedUserIds.length === initialUsers.length}
+                    onChange={toggleSelectAll}
+                    disabled={isPending || initialUsers.length === 0}
+                  />
+                </th>
                 <th className="px-6 py-4 font-semibold">User</th>
                 <th className="px-6 py-4 font-semibold">Contact</th>
                 <th className="px-6 py-4 font-semibold">Status & Balance</th>
@@ -72,7 +138,7 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
             <tbody className="divide-y divide-brand-border/30">
               {initialUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-24 text-center">
+                  <td colSpan={6} className="px-6 py-24 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-500">
                       <svg className="w-16 h-16 mb-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                       {totalSystemUsers === 0 ? (
@@ -91,7 +157,16 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
                 </tr>
               ) : (
                 initialUsers.map((user) => (
-                  <tr key={user.id} className={`hover:bg-brand-border/10 transition-colors ${user.isSuspended || user.isShadowBanned ? 'opacity-70' : ''}`}>
+                  <tr key={user.id} className={`hover:bg-brand-border/10 transition-colors ${user.isSuspended || user.isShadowBanned ? 'opacity-70' : ''} ${selectedUserIds.includes(user.id) ? 'bg-red-500/5' : ''}`}>
+                    <td className="px-4 py-4">
+                      <input 
+                        type="checkbox"
+                        className="rounded bg-brand-bg border-gray-600 text-red-500 focus:ring-red-500 cursor-pointer"
+                        checked={selectedUserIds.includes(user.id)}
+                        onChange={() => toggleSelectUser(user.id)}
+                        disabled={isPending}
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded bg-gray-800 flex items-center justify-center font-bold text-xs text-brand">
@@ -154,7 +229,7 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
         <ReasonModal 
           isOpen={modalState.isOpen}
           title={modalState.title}
-          onConfirm={handleConfirmSpaceModToggle}
+          onConfirm={handleConfirmAction}
           onCancel={() => setModalState(prev => ({ ...prev, isOpen: false }))}
         />
 

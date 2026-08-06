@@ -35,3 +35,37 @@ export async function assignUserRole(userId: string, isSpaceMod: boolean, reason
     return { success: false, error: "Failed to assign role" };
   }
 }
+
+export async function bulkDeleteUsers(userIds: string[], reason: string) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
+    
+    if (!hasPermission(user.permissions, "MANAGE_USERS", user.role)) {
+      throw new Error("Missing permission: MANAGE_USERS");
+    }
+
+    // Prisma's deleteMany will trigger Cascade deletes for posts, selas, etc. if configured properly
+    await prisma.user.deleteMany({
+      where: {
+        id: { in: userIds }
+      }
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "DELETE",
+        resourceType: "/users/bulk",
+        requestPayload: { userIds, reason },
+        success: true
+      }
+    });
+
+    revalidatePath("/users");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete users:", error);
+    return { success: false, error: "Failed to delete users" };
+  }
+}

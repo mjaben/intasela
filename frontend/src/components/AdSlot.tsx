@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { AdUnit } from "next-google-adsense";
 import { useUserStore } from "@/store/useUserStore";
 
 interface AdSlotProps {
@@ -192,10 +191,6 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
 
   // --- RENDER GOOGLE ADSENSE FALLBACK ---
   const isVertical = format === "vertical";
-  const dummySize = isVertical ? "LARGE_RECTANGLE" : (format === "horizontal" ? "LEADERBOARD" : "BANNER");
-  
-  // NOTE: In production, you would use actual slotIds from AdSense.
-  // For development, next-google-adsense will render a dummy block.
   
   if (process.env.NODE_ENV === 'development') {
     return (
@@ -206,15 +201,33 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
   }
   
   return (
+    <AdSenseNative slotId={slotId} format={format} />
+  );
+}
+
+// Native AdSense component to replace next-google-adsense
+function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
+  useEffect(() => {
+    try {
+      // @ts-ignore
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+      console.error("AdSense error:", e);
+    }
+  }, []);
+
+  const adSlotId = slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '5819377787';
+
+  return (
     <div className={`w-full my-4 flex flex-col items-center justify-center overflow-hidden min-h-[50px]`}>
       <span className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center">Advertisement</span>
       <div className="w-full max-w-full overflow-x-auto no-scrollbar flex justify-center">
-        <AdUnit 
-          key={slotId}
-          publisherId="pub-1173851541726956"
-          slotId={slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '0000000000'}
-          layout={format === 'in-feed' ? 'in-article' : 'display'}
-        />
+        <ins className="adsbygoogle"
+             style={{ display: "block" }}
+             data-ad-client="ca-pub-1173851541726956"
+             data-ad-slot={adSlotId}
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
       </div>
     </div>
   );
