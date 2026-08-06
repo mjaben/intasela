@@ -20,18 +20,14 @@ function ExploreContent() {
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [suggestedUsers, setSuggestedUsers] = useState<any[]>([]);
 
-  const ALL_TRENDING_TOPICS = [
-    { topic: "#CreatorEconomy", posts: "12.5K selas" },
-    { topic: "Web3 Monetization", posts: "8,432 selas" },
-    { topic: "#TechTwitter", posts: "5,210 selas" },
-    { topic: "NextJS 15", posts: "3,100 selas" },
-    { topic: "Nigeria Election", posts: "45K selas" },
-    { topic: "#Afrobeats", posts: "22K selas" },
-    { topic: "Lagos Traffic", posts: "1,200 selas" },
-    { topic: "Premier League", posts: "98K selas" },
-    { topic: "#EndSARS", posts: "500K selas" },
-    { topic: "Bitcoin", posts: "88K selas" }
-  ];
+  const [trendingTopics, setTrendingTopics] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts/trending/topics`)
+      .then(res => res.json())
+      .then(data => setTrendingTopics(Array.isArray(data) ? data : []))
+      .catch(e => console.error(e));
+  }, []);
 
   // Advanced search states
   const [advAllWords, setAdvAllWords] = useState("");
@@ -268,13 +264,17 @@ function ExploreContent() {
                 <p className="text-gray-400 text-sm mb-6">Search for topics or click Advanced Search to find specific posts.</p>
               
                 <div className="space-y-2">
-                  {ALL_TRENDING_TOPICS.map((item, i) => (
-                    <div key={i} onClick={() => router.push(`/explore?q=${encodeURIComponent(item.topic)}`)} className="cursor-pointer hover:bg-white/5 rounded-xl px-6 py-3 transition-colors">
-                      <div className="text-[13px] text-gray-400 mb-1 font-mono uppercase tracking-wider">{i + 1} · Trending</div>
-                      <div className="font-bold text-[16px] text-white tracking-tight">{item.topic}</div>
-                      <div className="text-[13px] text-gray-500 mt-1">{item.posts}</div>
-                    </div>
-                  ))}
+                  {trendingTopics.length > 0 ? (
+                    trendingTopics.map((item, i) => (
+                      <div key={i} onClick={() => router.push(`/explore?q=${encodeURIComponent(item.topic)}`)} className="cursor-pointer hover:bg-white/5 rounded-xl px-6 py-3 transition-colors">
+                        <div className="text-[13px] text-gray-400 mb-1 font-mono uppercase tracking-wider">{i + 1} · Trending</div>
+                        <div className="font-bold text-[16px] text-white tracking-tight">{item.topic}</div>
+                        <div className="text-[13px] text-gray-500 mt-1">{item.count} {item.count === 1 ? 'sela' : 'selas'}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-6 py-4 text-center text-sm text-gray-500">No trending topics right now.</div>
+                  )}
                 </div>
               </div>
             ) : (exploreTab === "For You") ? (
@@ -282,13 +282,17 @@ function ExploreContent() {
                 <div className="p-6 border-b border-white/10">
                   <h2 className="text-xl font-bold mb-4 text-white tracking-tight">Trending</h2>
                   <div className="space-y-2">
-                    {ALL_TRENDING_TOPICS.slice(0, 5).map((item, i) => (
-                      <div key={i} onClick={() => router.push(`/explore?q=${encodeURIComponent(item.topic)}`)} className="cursor-pointer hover:bg-white/5 rounded-xl px-6 py-3 transition-colors">
-                        <div className="text-[12px] text-gray-400 mb-1 font-mono uppercase tracking-wider">Trending</div>
-                        <div className="font-bold text-[15px] text-white">{item.topic}</div>
-                        <div className="text-[13px] text-gray-500 mt-1">{item.posts}</div>
-                      </div>
-                    ))}
+                    {trendingTopics.length > 0 ? (
+                      trendingTopics.slice(0, 5).map((item, i) => (
+                        <div key={i} onClick={() => router.push(`/explore?q=${encodeURIComponent(item.topic)}`)} className="cursor-pointer hover:bg-white/5 rounded-xl px-6 py-3 transition-colors">
+                          <div className="text-[12px] text-gray-400 mb-1 font-mono uppercase tracking-wider">Trending</div>
+                          <div className="font-bold text-[15px] text-white">{item.topic}</div>
+                          <div className="text-[13px] text-gray-500 mt-1">{item.count} {item.count === 1 ? 'sela' : 'selas'}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-6 py-4 text-center text-sm text-gray-500">No trending topics right now.</div>
+                    )}
                   </div>
                 </div>
 

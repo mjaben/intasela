@@ -928,34 +928,69 @@ export class PostsService {
       orderBy: { createdAt: 'desc' }
     });
 
-    const hashtagCount: Record<string, { display: string, count: number }> = {};
-    const hashtagRegex = /#[\w]+/g;
+    const topicCount: Record<string, { display: string, count: number }> = {};
+    const stopWords = new Set([
+      'the', 'and', 'that', 'have', 'for', 'not', 'with', 'you', 'this', 'but',
+      'his', 'from', 'they', 'say', 'her', 'she', 'will', 'one', 'all', 'would',
+      'there', 'their', 'what', 'out', 'about', 'who', 'get', 'which', 'when',
+      'make', 'can', 'like', 'time', 'just', 'him', 'know', 'take', 'people',
+      'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other',
+      'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think',
+      'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first',
+      'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give',
+      'day', 'most', 'are', 'was', 'were', 'been', 'has', 'had', 'does',
+      'did', 'doing', 'here', 'why', 'where', 'much', 'many', 'very', 'really',
+      'should', 'would', 'could', 'might', 'must', 'shall', 'will', 'from',
+      'they', 'we', 'he', 'it', 'me', 'my', 'mine', 'yours', 'ours', 'theirs',
+      'their', 'those', 'these', 'that', 'this', 'then', 'than', 'there',
+      'when', 'where', 'why', 'how', 'what', 'who', 'whom', 'whose', 'which',
+      'some', 'any', 'many', 'few', 'much', 'more', 'most', 'less', 'least',
+      'such', 'own', 'same', 'so', 'too', 'very', 'just', 'even', 'only',
+      'also', 'well', 'yes', 'no', 'not', 'never', 'always', 'often', 'sometimes'
+    ]);
 
     for (const post of recentPosts) {
       if (!post.content) continue;
-      const matches = post.content.match(hashtagRegex);
-      if (matches) {
-        const uniqueTags = [...new Set(matches)]; // Keep original case
-        const seenLower = new Set<string>();
-        for (const tag of uniqueTags) {
-          const lower = tag.toLowerCase();
-          if (!seenLower.has(lower)) {
-            seenLower.add(lower);
-            if (!hashtagCount[lower]) {
-              hashtagCount[lower] = { display: tag, count: 0 };
-            }
-            hashtagCount[lower].count++;
+      
+      // Extract hashtags
+      const hashtagRegex = /#[\w]+/g;
+      const hashtags = post.content.match(hashtagRegex) || [];
+      
+      // Extract words (3+ characters, ignoring mentions and urls)
+      const cleanContent = post.content
+        .replace(/https?:\/\/\S+/g, '') // remove urls
+        .replace(/@\w+/g, '') // remove mentions
+        .replace(/[^\w\s#]/g, ''); // remove punctuation (keep hashtags and words)
+        
+      const words = cleanContent.split(/\s+/).filter(w => w.length > 3 && !w.startsWith('#'));
+      
+      const allTopics = [...hashtags, ...words];
+      
+      const uniqueTopics = [...new Set(allTopics)]; 
+      const seenLower = new Set<string>();
+      
+      for (const topic of uniqueTopics) {
+        const lower = topic.toLowerCase();
+        
+        // Skip stop words and numbers
+        if (stopWords.has(lower) || /^\d+$/.test(lower)) continue;
+        
+        if (!seenLower.has(lower)) {
+          seenLower.add(lower);
+          if (!topicCount[lower]) {
+            topicCount[lower] = { display: topic, count: 0 };
           }
+          topicCount[lower].count++;
         }
       }
     }
 
-    const sorted = Object.values(hashtagCount)
+    const sorted = Object.values(topicCount)
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5)
+      .slice(0, 10)
       .map(item => ({
         topic: item.display,
-        posts: `${item.count} selas`
+        count: item.count
       }));
 
     return sorted;
