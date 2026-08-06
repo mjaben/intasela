@@ -61,9 +61,9 @@ export default function BookmarksPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-[#09090b]">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen">
       {/* Top Header */}
-      <header className="sticky top-0 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/10 z-10 flex items-center px-4 py-4">
+      <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border z-10 flex items-center px-4 py-4">
         <h1 className="text-xl font-extrabold text-white tracking-tight">Bookmarks</h1>
         <div className="ml-2 text-sm text-gray-400 mt-1">@{useUserStore.getState().user?.username}</div>
       </header>
@@ -82,7 +82,7 @@ export default function BookmarksPage() {
             {activeTab === tab && (
               <motion.div
                 layoutId="bookmarkTabIndicator"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+                className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
               />
             )}
           </button>

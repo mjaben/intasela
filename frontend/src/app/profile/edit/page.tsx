@@ -116,7 +116,7 @@ export default function EditProfilePage() {
   if (initialLoading) {
     return (
       <div className="flex-1 min-h-screen p-8 flex justify-center mt-10">
-        <div className="animate-spin w-8 h-8 border-4 border-[#3BC492] border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-4 border-[#ACC8A2] border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -192,7 +192,7 @@ export default function EditProfilePage() {
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="A short description about yourself..."
-              className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 min-h-[100px] outline-none focus:border-[#3BC492] transition-colors resize-none text-[15px]"
+              className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 min-h-[100px] outline-none focus:border-[#ACC8A2] transition-colors resize-none text-[15px]"
               maxLength={160}
             />
             <div className="text-right text-xs text-gray-400">
@@ -209,7 +209,7 @@ export default function EditProfilePage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                 placeholder="username"
-                className="w-full bg-[#09090b] border border-white/10 rounded-xl pl-9 pr-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
+                className="w-full bg-[#09090b] border border-white/10 rounded-xl pl-9 pr-4 py-3 outline-none focus:border-[#ACC8A2] transition-colors text-[15px]"
                 maxLength={20}
               />
             </div>
@@ -224,7 +224,7 @@ export default function EditProfilePage() {
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 placeholder="e.g. Nigeria"
-                className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
+                className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#ACC8A2] transition-colors text-[15px]"
               />
             </div>
             <div className="flex flex-col gap-2 flex-1">
@@ -234,7 +234,7 @@ export default function EditProfilePage() {
                 value={state}
                 onChange={(e) => setState(e.target.value)}
                 placeholder="e.g. Lagos"
-                className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#3BC492] transition-colors text-[15px]"
+                className="w-full bg-[#09090b] border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-[#ACC8A2] transition-colors text-[15px]"
               />
             </div>
           </div>
@@ -243,7 +243,7 @@ export default function EditProfilePage() {
             <button 
               type="submit"
               disabled={loading || uploading}
-              className="px-8 py-3 rounded-full bg-[#3BC492] text-white font-bold hover:opacity-90 transition-opacity disabled:opacity-50 text-[15px]"
+              className="px-8 py-3 rounded-full bg-[#ACC8A2] text-[#1A2517] font-bold hover:opacity-90 transition-opacity disabled:opacity-50 text-[15px]"
             >
               {loading || uploading ? "Saving changes..." : "Save profile"}
             </button>

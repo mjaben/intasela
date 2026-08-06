@@ -46,16 +46,16 @@ export default function TabbedAnalyticsChart() {
             <YAxis stroke="#6B7280" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value} />
             <Tooltip 
               contentStyle={{ backgroundColor: '#151921', borderColor: '#1F2937', color: '#F3F4F6', borderRadius: '8px', fontSize: '12px' }}
-              itemStyle={{ color: '#3BC492' }}
+              itemStyle={{ color: '#ACC8A2' }}
             />
             <Line 
               key={activeTab}
               type="monotone" 
               dataKey={activeTab} 
-              stroke="#3BC492" 
+              stroke="#ACC8A2" 
               strokeWidth={3} 
-              dot={{ r: 4, fill: '#151921', stroke: '#3BC492', strokeWidth: 2 }}
-              activeDot={{ r: 6, fill: '#3BC492' }}
+              dot={{ r: 4, fill: '#151921', stroke: '#ACC8A2', strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: '#ACC8A2' }}
               animationDuration={500}
             />
           </LineChart>

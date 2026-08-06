@@ -191,8 +191,8 @@ function ExploreContent() {
   };
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen pb-20 sm:pb-0 overflow-x-hidden bg-[#09090b]">
-      <div className="sticky top-0 z-30 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 flex flex-col gap-3">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen pb-20 sm:pb-0 overflow-x-hidden">
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border px-4 py-3 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-white">Explore</h1>
           <button 
@@ -216,7 +216,7 @@ function ExploreContent() {
               }
             }}
             placeholder="Search Intasela..." 
-            className="w-full bg-white/5 text-white rounded-xl py-2.5 pl-4 pr-4 border border-white/10 focus:outline-none focus:border-[#3BC492] transition-colors text-sm placeholder-gray-500"
+            className="w-full bg-white/5 text-white rounded-xl py-2.5 pl-4 pr-4 border border-white/10 focus:outline-none focus:border-[#ACC8A2] transition-colors text-sm placeholder-gray-500"
           />
         </div>
 
@@ -232,7 +232,7 @@ function ExploreContent() {
                 {activeTab === tab && (
                   <motion.div
                     layoutId="exploreSearchTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
                   />
                 )}
               </button>
@@ -248,7 +248,7 @@ function ExploreContent() {
                 {exploreTab === tab && (
                   <motion.div
                     layoutId="exploreTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
                   />
                 )}
               </button>
@@ -386,32 +386,32 @@ function ExploreContent() {
                 <h3 className="font-bold text-xl mb-6">Words</h3>
                 <div className="grid grid-cols-[1fr] gap-2">
                   <label className="text-sm font-medium">All of these words</label>
-                  <input type="text" value={advAllWords} onChange={e => setAdvAllWords(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advAllWords} onChange={e => setAdvAllWords(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: what's happening · contains both "what's" and "happening"</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">This exact phrase</label>
-                  <input type="text" value={advExactPhrase} onChange={e => setAdvExactPhrase(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advExactPhrase} onChange={e => setAdvExactPhrase(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: happy hour · contains the exact phrase "happy hour"</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">Any of these words</label>
-                  <input type="text" value={advAnyWords} onChange={e => setAdvAnyWords(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advAnyWords} onChange={e => setAdvAnyWords(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: cats dogs · contains either "cats" or "dogs" (or both)</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">None of these words</label>
-                  <input type="text" value={advNoneWords} onChange={e => setAdvNoneWords(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advNoneWords} onChange={e => setAdvNoneWords(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: cats dogs · does not contain "cats" and does not contain "dogs"</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">These hashtags</label>
-                  <input type="text" value={advHashtags} onChange={e => setAdvHashtags(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advHashtags} onChange={e => setAdvHashtags(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: #ThrowbackThursday · contains the hashtag #ThrowbackThursday</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">Language</label>
-                  <select value={advLanguage} onChange={e => setAdvLanguage(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none appearance-none transition-colors">
+                  <select value={advLanguage} onChange={e => setAdvLanguage(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none appearance-none transition-colors">
                     <option value="any">Any language</option>
                     <option value="en">English</option>
                     <option value="fr">French</option>
@@ -424,17 +424,17 @@ function ExploreContent() {
                 <h3 className="font-bold text-xl mb-6">Accounts</h3>
                 <div className="grid grid-cols-[1fr] gap-2">
                   <label className="text-sm font-medium">From these accounts</label>
-                  <input type="text" value={advFromAccount} onChange={e => setAdvFromAccount(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advFromAccount} onChange={e => setAdvFromAccount(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: @intasela · sent from @intasela</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">To these accounts</label>
-                  <input type="text" value={advToAccount} onChange={e => setAdvToAccount(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advToAccount} onChange={e => setAdvToAccount(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: @intasela · sent in reply to @intasela</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">Mentioning these accounts</label>
-                  <input type="text" value={advMentioningAccount} onChange={e => setAdvMentioningAccount(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="text" value={advMentioningAccount} onChange={e => setAdvMentioningAccount(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: @intasela · mentions @intasela</p>
                 </div>
               </div>
@@ -449,7 +449,7 @@ function ExploreContent() {
                     <button 
                       type="button" 
                       onClick={() => setAdvRepliesToggle(!advRepliesToggle)}
-                      className={`w-10 h-5 rounded-full relative transition-colors ${advRepliesToggle ? 'bg-[#3BC492]' : 'bg-white/10'}`}
+                      className={`w-10 h-5 rounded-full relative transition-colors ${advRepliesToggle ? 'bg-[#ACC8A2]' : 'bg-white/10'}`}
                     >
                       <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform ${advRepliesToggle ? 'left-[22px]' : 'left-0.5'}`} />
                     </button>
@@ -458,7 +458,7 @@ function ExploreContent() {
                     <div className="space-y-4 pt-2">
                       <div onClick={() => setAdvRepliesType('include')} className="flex items-center justify-between cursor-pointer group">
                         <span className="text-[15px]">Include replies and original posts</span>
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advRepliesType === 'include' ? 'bg-[#3BC492]' : 'border-2 border-gray-500 group-hover:bg-[#3BC492]/10 group-hover:border-[#3BC492]'}`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advRepliesType === 'include' ? 'bg-[#ACC8A2]' : 'border-2 border-gray-500 group-hover:bg-[#ACC8A2]/10 group-hover:border-[#ACC8A2]'}`}>
                           {advRepliesType === 'include' && (
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" className="text-black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           )}
@@ -466,7 +466,7 @@ function ExploreContent() {
                       </div>
                       <div onClick={() => setAdvRepliesType('only')} className="flex items-center justify-between cursor-pointer group">
                         <span className="text-[15px]">Only show replies</span>
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advRepliesType === 'only' ? 'bg-[#3BC492]' : 'border-2 border-gray-500 group-hover:bg-[#3BC492]/10 group-hover:border-[#3BC492]'}`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advRepliesType === 'only' ? 'bg-[#ACC8A2]' : 'border-2 border-gray-500 group-hover:bg-[#ACC8A2]/10 group-hover:border-[#ACC8A2]'}`}>
                           {advRepliesType === 'only' && (
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" className="text-black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           )}
@@ -482,7 +482,7 @@ function ExploreContent() {
                     <button 
                       type="button" 
                       onClick={() => setAdvLinksToggle(!advLinksToggle)}
-                      className={`w-10 h-5 rounded-full relative transition-colors ${advLinksToggle ? 'bg-[#3BC492]' : 'bg-white/10'}`}
+                      className={`w-10 h-5 rounded-full relative transition-colors ${advLinksToggle ? 'bg-[#ACC8A2]' : 'bg-white/10'}`}
                     >
                       <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform ${advLinksToggle ? 'left-[22px]' : 'left-0.5'}`} />
                     </button>
@@ -491,7 +491,7 @@ function ExploreContent() {
                     <div className="space-y-4 pt-2">
                       <div onClick={() => setAdvLinksType('include')} className="flex items-center justify-between cursor-pointer group">
                         <span className="text-[15px]">Include posts with links</span>
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advLinksType === 'include' ? 'bg-[#3BC492]' : 'border-2 border-gray-500 group-hover:bg-[#3BC492]/10 group-hover:border-[#3BC492]'}`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advLinksType === 'include' ? 'bg-[#ACC8A2]' : 'border-2 border-gray-500 group-hover:bg-[#ACC8A2]/10 group-hover:border-[#ACC8A2]'}`}>
                           {advLinksType === 'include' && (
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" className="text-black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           )}
@@ -499,7 +499,7 @@ function ExploreContent() {
                       </div>
                       <div onClick={() => setAdvLinksType('only')} className="flex items-center justify-between cursor-pointer group">
                         <span className="text-[15px]">Only show posts with links</span>
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advLinksType === 'only' ? 'bg-[#3BC492]' : 'border-2 border-gray-500 group-hover:bg-[#3BC492]/10 group-hover:border-[#3BC492]'}`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${advLinksType === 'only' ? 'bg-[#ACC8A2]' : 'border-2 border-gray-500 group-hover:bg-[#ACC8A2]/10 group-hover:border-[#ACC8A2]'}`}>
                           {advLinksType === 'only' && (
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" className="text-black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           )}
@@ -515,17 +515,17 @@ function ExploreContent() {
                 <h3 className="font-bold text-xl mb-6">Engagement</h3>
                 <div className="grid grid-cols-[1fr] gap-2">
                   <label className="text-sm font-medium">Minimum replies</label>
-                  <input type="number" min="0" value={advMinReplies} onChange={e => setAdvMinReplies(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="number" min="0" value={advMinReplies} onChange={e => setAdvMinReplies(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: 280 · posts with at least 280 replies</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">Minimum Likes</label>
-                  <input type="number" min="0" value={advMinLikes} onChange={e => setAdvMinLikes(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="number" min="0" value={advMinLikes} onChange={e => setAdvMinLikes(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: 280 · posts with at least 280 Likes</p>
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">Minimum reposts</label>
-                  <input type="number" min="0" value={advMinReposts} onChange={e => setAdvMinReposts(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-colors" />
+                  <input type="number" min="0" value={advMinReposts} onChange={e => setAdvMinReposts(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-colors" />
                   <p className="text-xs text-gray-400">Example: 280 · posts with at least 280 reposts</p>
                 </div>
               </div>
@@ -535,18 +535,18 @@ function ExploreContent() {
                 <h3 className="font-bold text-xl mb-6">Dates</h3>
                 <div className="grid grid-cols-[1fr] gap-2">
                   <label className="text-sm font-medium">From</label>
-                  <input type="date" value={advDateFrom} onChange={e => setAdvDateFrom(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-[colors,color] dark:[color-scheme:dark]" />
+                  <input type="date" value={advDateFrom} onChange={e => setAdvDateFrom(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-[colors,color] dark:[color-scheme:dark]" />
                 </div>
                 <div className="grid grid-cols-[1fr] gap-2 mt-4">
                   <label className="text-sm font-medium">To</label>
-                  <input type="date" value={advDateTo} onChange={e => setAdvDateTo(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#3BC492] focus:ring-1 focus:ring-[#3BC492] outline-none transition-[colors,color] dark:[color-scheme:dark]" />
+                  <input type="date" value={advDateTo} onChange={e => setAdvDateTo(e.target.value)} className="w-full bg-white/5 text-white rounded-xl px-3 py-3 border border-white/10 focus:border-[#ACC8A2] focus:ring-1 focus:ring-[#ACC8A2] outline-none transition-[colors,color] dark:[color-scheme:dark]" />
                 </div>
               </div>
 
             </form>
             
             <div className="p-4 border-t border-white/10 bg-[#18181b] flex justify-end sticky bottom-0">
-              <button onClick={handleAdvancedSearch} type="button" className="bg-[#3BC492] text-black font-bold py-2.5 px-8 rounded-full hover:bg-[#2fa076] transition-colors shadow-lg">
+              <button onClick={handleAdvancedSearch} type="button" className="bg-[#ACC8A2] text-[#1A2517] font-bold py-2.5 px-8 rounded-full hover:bg-[#9bb891] transition-colors shadow-lg">
                 Search
               </button>
             </div>

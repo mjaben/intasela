@@ -66,28 +66,28 @@ export default function Home() {
   return (
     <div className="w-full max-w-[650px] mx-auto min-h-screen">
       {/* Top Header */}
-      <header className="sticky top-0 bg-[#0f0f0f]/95 backdrop-blur-md border-b border-gray-800 z-30 flex">
+      <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border z-30 flex">
         <button 
           onClick={() => setActiveTab("For you")}
-          className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-gray-900/50 relative ${activeTab === "For you" ? "text-white" : "text-gray-400 font-medium"}`}
+          className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-accent/50 relative ${activeTab === "For you" ? "text-white" : "text-gray-400 font-medium"}`}
         >
           For you
           {activeTab === "For you" && (
             <motion.div
               layoutId="homeTabIndicator"
-              className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-16"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-16"
             />
           )}
         </button>
         <button 
           onClick={() => setActiveTab("Following")}
-          className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-gray-900/50 relative ${activeTab === "Following" ? "text-white" : "text-gray-400 font-medium"}`}
+          className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-accent/50 relative ${activeTab === "Following" ? "text-white" : "text-gray-400 font-medium"}`}
         >
           Following
           {activeTab === "Following" && (
             <motion.div
               layoutId="homeTabIndicator"
-              className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-20"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-20"
             />
           )}
         </button>
@@ -106,7 +106,7 @@ export default function Home() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             <p className="text-gray-400 mb-4">Log in to join the conversation and start earning!</p>
-            <a href="/login" className="bg-[#3BC492] text-black font-bold px-6 py-2 rounded-full inline-block">Log In</a>
+            <a href="/login" className="bg-[#ACC8A2] text-[#1A2517] font-bold px-6 py-2 rounded-full inline-block">Log In</a>
           </div>
         ) : null}
       </div>

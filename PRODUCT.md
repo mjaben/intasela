@@ -22,6 +22,6 @@ Social networking environment, accessible via web browsers on desktop and mobile
 Refer to DESIGN.md for comprehensive UI/UX rules, including theming, typography, and glassmorphism requirements.
 
 ## Brand Commitments
-- Primary Brand Color: `#3BC492`
+- Primary Brand Colors: Deep olive `#1A2517` and soft sage `#ACC8A2`
 - Typography: `Geist Sans` (Admin), `Geist Mono` (Frontend)
 - Style: Deep darks, glassmorphism, fluid micro-animations.

@@ -80,7 +80,7 @@ export default function SearchableOccupationSelect({ value, onChange }: Props) {
             value={value} 
             onChange={(e) => onChange(e.target.value)} 
             placeholder="Type your occupation..."
-            className="w-full bg-[#09090b] border border-[#3BC492] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#3BC492]" 
+            className="w-full bg-[#09090b] border border-[#ACC8A2] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#ACC8A2]" 
             autoFocus
           />
           <button 
@@ -101,7 +101,7 @@ export default function SearchableOccupationSelect({ value, onChange }: Props) {
               placeholder="Search..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#18181b] border border-gray-700 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#3BC492]"
+              className="w-full bg-[#18181b] border border-gray-700 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#ACC8A2]"
               onClick={(e) => e.stopPropagation()}
             />
           </div>

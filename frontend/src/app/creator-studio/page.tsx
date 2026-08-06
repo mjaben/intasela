@@ -189,7 +189,7 @@ export default function CreatorStudioPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
                 <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider font-mono mb-2">Period Earnings</h3>
-                <p className="text-3xl font-bold text-[#3BC492] tracking-tight">
+                <p className="text-3xl font-bold text-[#ACC8A2] tracking-tight">
                   {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(data?.periodEarned || 0)}
                 </p>
               </div>
@@ -217,7 +217,7 @@ export default function CreatorStudioPage() {
                       <div key={item.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-colors">
                         <div className="flex-1 min-w-0 pr-4">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#3BC492] bg-[#3BC492]/10 px-2 py-0.5 rounded border border-[#3BC492]/20">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#ACC8A2] bg-[#ACC8A2]/10 px-2 py-0.5 rounded border border-[#ACC8A2]/20">
                               {item.type}
                             </span>
                             <p className="text-foreground font-medium truncate">
@@ -231,8 +231,8 @@ export default function CreatorStudioPage() {
                             })}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 bg-[#3BC492]/10 px-3 py-1.5 rounded-full border border-[#3BC492]/20 shrink-0">
-                          <span className="text-[#3BC492] font-bold text-sm">
+                        <div className="flex items-center gap-1 bg-[#ACC8A2]/10 px-3 py-1.5 rounded-full border border-[#ACC8A2]/20 shrink-0">
+                          <span className="text-[#ACC8A2] font-bold text-sm">
                             +{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(item.amount || 0)}
                           </span>
                         </div>
@@ -310,7 +310,7 @@ export default function CreatorStudioPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Views Metric */}
                     <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
-                      <div className="w-12 h-12 rounded-full bg-[#3BC492]/10 flex items-center justify-center mb-4 text-[#3BC492] border border-[#3BC492]/20">
+                      <div className="w-12 h-12 rounded-full bg-[#ACC8A2]/10 flex items-center justify-center mb-4 text-[#ACC8A2] border border-[#ACC8A2]/20">
                         <div 
                           className="w-[20px] h-[20px] bg-current"
                           style={{
@@ -331,10 +331,10 @@ export default function CreatorStudioPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Eligible</span>
-                          <span className="font-semibold text-[#3BC492]">{data.metrics.eligibleViews.toLocaleString()}</span>
+                          <span className="font-semibold text-[#ACC8A2]">{data.metrics.eligibleViews.toLocaleString()}</span>
                         </div>
                         <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                           <div className="h-full bg-[#3BC492]" style={{ width: `${(data.metrics.eligibleViews / Math.max(data.metrics.totalViews, 1)) * 100}%` }} />
+                           <div className="h-full bg-[#ACC8A2]" style={{ width: `${(data.metrics.eligibleViews / Math.max(data.metrics.totalViews, 1)) * 100}%` }} />
                         </div>
                       </div>
                     </div>
@@ -362,17 +362,17 @@ export default function CreatorStudioPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Eligible</span>
-                          <span className="font-semibold text-[#3BC492]">{data.metrics.eligibleComments.toLocaleString()}</span>
+                          <span className="font-semibold text-[#ACC8A2]">{data.metrics.eligibleComments.toLocaleString()}</span>
                         </div>
                         <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                           <div className="h-full bg-[#3BC492]" style={{ width: `${(data.metrics.eligibleComments / Math.max(data.metrics.totalComments, 1)) * 100}%` }} />
+                           <div className="h-full bg-[#ACC8A2]" style={{ width: `${(data.metrics.eligibleComments / Math.max(data.metrics.totalComments, 1)) * 100}%` }} />
                         </div>
                       </div>
                     </div>
 
                     {/* Posts Metric */}
                     <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
-                      <div className="w-12 h-12 rounded-full bg-[#3BC492]/10 flex items-center justify-center mb-4 text-[#3BC492] border border-[#3BC492]/20">
+                      <div className="w-12 h-12 rounded-full bg-[#ACC8A2]/10 flex items-center justify-center mb-4 text-[#ACC8A2] border border-[#ACC8A2]/20">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                       </div>
                       <h3 className="text-muted-foreground font-medium mb-1">Total Selas</h3>
@@ -381,10 +381,10 @@ export default function CreatorStudioPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Eligible</span>
-                          <span className="font-semibold text-[#3BC492]">{data.metrics.eligiblePosts.toLocaleString()}</span>
+                          <span className="font-semibold text-[#ACC8A2]">{data.metrics.eligiblePosts.toLocaleString()}</span>
                         </div>
                         <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                           <div className="h-full bg-[#3BC492]" style={{ width: `${(data.metrics.eligiblePosts / Math.max(data.metrics.totalPosts, 1)) * 100}%` }} />
+                           <div className="h-full bg-[#ACC8A2]" style={{ width: `${(data.metrics.eligiblePosts / Math.max(data.metrics.totalPosts, 1)) * 100}%` }} />
                         </div>
                       </div>
                     </div>

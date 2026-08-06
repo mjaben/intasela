@@ -503,13 +503,13 @@ export default function PostCard({
                     {author.name}
                   </span>
                   {authorRole === 'MODERATOR' && (
-                    <span className="text-[9px] bg-[#3BC492]/20 text-[#3BC492] border border-[#3BC492]/30 px-1 rounded font-bold uppercase tracking-wider mr-1" title="Space Moderator">
+                    <span className="text-[9px] bg-[#ACC8A2]/20 text-[#ACC8A2] border border-[#ACC8A2]/30 px-1 rounded font-bold uppercase tracking-wider mr-1" title="Space Moderator">
                       Mod
                     </span>
                   )}
                   {space && (
                     <span 
-                      className="text-xs bg-[#3BC492]/10 text-[#3BC492] px-1.5 py-0.5 rounded cursor-pointer hover:bg-[#3BC492]/20 transition-colors whitespace-nowrap truncate max-w-[100px] sm:max-w-[150px]"
+                      className="text-xs bg-[#ACC8A2]/10 text-[#ACC8A2] px-1.5 py-0.5 rounded cursor-pointer hover:bg-[#ACC8A2]/20 transition-colors whitespace-nowrap truncate max-w-[100px] sm:max-w-[150px]"
                       onClick={(e) => { e.stopPropagation(); router.push(`/spaces/${space.id}`); }}
                     >
                       in {space.name}
@@ -600,7 +600,7 @@ export default function PostCard({
                                 setShowOptionsMenu(false);
                                 router.push(`/ads/campaigns/new?postId=${id}`);
                               }}
-                              className="w-full px-2.5 py-2 hover:bg-[#3BC492]/10 text-left rounded-lg text-[#3BC492] font-medium flex items-center gap-2.5 transition-colors text-[13px]"
+                              className="w-full px-2.5 py-2 hover:bg-[#ACC8A2]/10 text-left rounded-lg text-[#ACC8A2] font-medium flex items-center gap-2.5 transition-colors text-[13px]"
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                               Boost Sela
@@ -744,7 +744,7 @@ export default function PostCard({
                       <div key={opt.id} className="relative h-10 w-full overflow-hidden rounded-md border border-border bg-background">
                         {(hasVotedAny || isExpired) && (
                           <div 
-                            className={`absolute left-0 top-0 h-full opacity-30 transition-all duration-500 ease-out ${opt.hasVoted || isWinner ? 'bg-[#3BC492]' : 'bg-muted-foreground'}`}
+                            className={`absolute left-0 top-0 h-full opacity-30 transition-all duration-500 ease-out ${opt.hasVoted || isWinner ? 'bg-[#ACC8A2]' : 'bg-muted-foreground'}`}
                             style={{ width: `${percentage}%` }}
                           />
                         )}
@@ -784,7 +784,7 @@ export default function PostCard({
                         >
                           <span className="flex items-center gap-2 z-10">
                             {opt.text}
-                            {opt.hasVoted && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3BC492" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
+                            {opt.hasVoted && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ACC8A2" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
                           </span>
                           {(hasVotedAny || isExpired) && (
                             <span className="font-bold z-10 text-xs">{percentage}%</span>

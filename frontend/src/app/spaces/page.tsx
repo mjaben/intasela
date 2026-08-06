@@ -51,7 +51,7 @@ export default function SpacesPage() {
           {activeTab === "Explore" && (
             <motion.div
               layoutId="spacesTabIndicator"
-              className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+              className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
             />
           )}
         </button>
@@ -64,7 +64,7 @@ export default function SpacesPage() {
             {activeTab === "My Spaces" && (
               <motion.div
                 layoutId="spacesTabIndicator"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+                className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
               />
             )}
           </button>

@@ -14,11 +14,12 @@ const config: Config = {
       },
       colors: {
         brand: {
-          DEFAULT: '#3BC492', // Intasela Green
-          hover: '#31A378',
-          bg: '#0B0E14',      // Deep dark background
-          card: '#151921',    // Slightly lighter card background
-          border: '#1F2937',  // Very faint border
+          DEFAULT: '#ACC8A2', // Soft Sage
+          hover: '#9BB891',
+          olive: '#1A2517',   // Deep Olive
+          bg: '#0F150E',      // Deep dark olive background
+          card: '#1A2517',    // Deep olive card background
+          border: '#283724',  // Faint olive border
         }
       },
       backgroundImage: {

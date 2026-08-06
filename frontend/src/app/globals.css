@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f0f0f;
+  --background: #0f150e;
   --foreground: #f3f4f6;
-  --card: #1a1a1a;
+  --card: #1A2517;
   --card-foreground: #f3f4f6;
-  --border: #262626;
-  --primary: #3bc492;
-  --primary-foreground: #000000;
-  --muted: #262626;
-  --muted-foreground: #a3a3a3;
-  --accent: #1e1e1e;
+  --border: #283724;
+  --primary: #ACC8A2;
+  --primary-foreground: #1A2517;
+  --muted: #212c1f;
+  --muted-foreground: #a1b899;
+  --accent: #253322;
   --accent-foreground: #f3f4f6;
+  --deep-olive: #1A2517;
+  --soft-sage: #ACC8A2;
 }
 
 @theme inline {
@@ -26,6 +28,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-deep-olive: var(--deep-olive);
+  --color-soft-sage: var(--soft-sage);
   
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
@@ -42,23 +46,19 @@ html {
   /* Removed overflow-x: clip to prevent breaking fixed positioning on mobile */
 }
 
-/* Base Scrollbar Styling for Dark Theme */
+/* Hide scrollbars globally across all browsers */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  display: none;
+  width: 0px;
+  height: 0px;
 }
 
-/* Hide scrollbar completely utility */
+* {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Hide scrollbar utility class for specific elements */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

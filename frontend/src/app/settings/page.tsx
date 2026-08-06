@@ -355,7 +355,7 @@ export default function SettingsPage() {
   const Toggle = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
     <div 
       onClick={() => onChange(!checked)}
-      className={`w-[44px] h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out ${checked ? 'bg-[#3BC492]' : 'bg-white/20'}`}
+      className={`w-[44px] h-6 rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out ${checked ? 'bg-[#ACC8A2]' : 'bg-white/20'}`}
     >
       <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
     </div>
@@ -382,10 +382,10 @@ export default function SettingsPage() {
   const Checkbox = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
     <div 
       onClick={() => onChange(!checked)}
-      className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors duration-200 ${checked ? 'bg-[#3BC492]' : 'bg-white/20'}`}
+      className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors duration-200 ${checked ? 'bg-[#ACC8A2]' : 'bg-white/20'}`}
     >
       {checked && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A2517" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
       )}
@@ -393,7 +393,7 @@ export default function SettingsPage() {
   );
 
   const ActionButton = ({ label, primary = false, onClick }: { label: string, primary?: boolean, onClick?: () => void }) => (
-    <button onClick={onClick} className={`px-4 py-1.5 rounded-xl font-semibold text-[14px] transition-colors ${primary ? 'bg-[#3BC492] text-black hover:opacity-90' : 'bg-white/10 text-white hover:bg-white/20'}`}>
+    <button onClick={onClick} className={`px-4 py-1.5 rounded-xl font-semibold text-[14px] transition-colors ${primary ? 'bg-[#ACC8A2] text-[#1A2517] hover:opacity-90' : 'bg-white/10 text-white hover:bg-white/20'}`}>
       {label}
     </button>
   );

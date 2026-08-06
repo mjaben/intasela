@@ -360,7 +360,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
       {!hideInline && (
         <div 
           onClick={() => openComposer('CREATE')}
-          className="flex items-center gap-3 p-4 bg-transparent border border-white/20 rounded-xl cursor-text hover:border-white/30 transition-colors shadow-sm"
+          className="flex items-center gap-3 p-4 bg-transparent border border-white/20 rounded-xl cursor-text hover:border-white/30 transition-colors shadow-sm mb-6"
         >
           <UserAvatar src={user?.avatarUrl} fallback={user?.username} />
           <span className="text-gray-400 font-medium text-[15px]">Drop your thought...</span>
@@ -413,7 +413,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                           <button
                             type="button"
                             onClick={() => setIsSpaceDropdownOpen(!isSpaceDropdownOpen)}
-                            className="flex items-center gap-1.5 bg-[#262626]/80 hover:bg-[#333333] text-xs font-medium text-[#3BC492] px-3 py-1 rounded-full border border-[#3BC492]/20 transition-colors"
+                            className="flex items-center gap-1.5 bg-[#262626]/80 hover:bg-[#333333] text-xs font-medium text-[#ACC8A2] px-3 py-1 rounded-full border border-[#ACC8A2]/20 transition-colors"
                           >
                             {selectedSpaceId ? spaces.find(s => s.id === selectedSpaceId)?.name : "Public Feed"}
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${isSpaceDropdownOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
@@ -427,7 +427,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                                   <button
                                     type="button"
                                     onClick={() => { setSelectedSpaceId(null); setIsSpaceDropdownOpen(false); }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${!selectedSpaceId ? 'bg-[#3BC492]/10 text-[#3BC492]' : 'text-gray-300 hover:bg-white/5'}`}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${!selectedSpaceId ? 'bg-[#ACC8A2]/10 text-[#ACC8A2]' : 'text-gray-300 hover:bg-white/5'}`}
                                   >
                                     Public Feed
                                     {!selectedSpaceId && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -437,7 +437,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                                       key={s.id}
                                       type="button"
                                       onClick={() => { setSelectedSpaceId(s.id); setIsSpaceDropdownOpen(false); }}
-                                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${selectedSpaceId === s.id ? 'bg-[#3BC492]/10 text-[#3BC492]' : 'text-gray-300 hover:bg-white/5'}`}
+                                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${selectedSpaceId === s.id ? 'bg-[#ACC8A2]/10 text-[#ACC8A2]' : 'text-gray-300 hover:bg-white/5'}`}
                                     >
                                       <span className="truncate pr-2">{s.name}</span>
                                       {selectedSpaceId === s.id && <svg className="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
@@ -454,7 +454,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                     {/* Drafts Button */}
                     <button 
                       onClick={showDrafts ? () => setShowDrafts(false) : fetchDrafts}
-                      className="text-[14px] font-medium text-[#3BC492] hover:text-[#2fa076] transition-colors absolute right-0 top-0"
+                      className="text-[14px] font-medium text-[#ACC8A2] hover:text-[#9bb891] transition-colors absolute right-0 top-0"
                     >
                       {showDrafts ? 'Back' : 'Drafts'}
                     </button>
@@ -550,7 +550,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                         <div className="absolute inset-0 bg-black/60 rounded-lg flex flex-col items-center justify-center z-20 backdrop-blur-sm">
                           {uploadProgress === 100 ? (
                             <div className="flex flex-col items-center gap-3">
-                              <svg className="animate-spin h-6 w-6 text-[#3BC492]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <svg className="animate-spin h-6 w-6 text-[#ACC8A2]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
@@ -561,7 +561,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                               <span className="text-white font-medium text-sm mb-2">{uploadProgress}%</span>
                               <div className="w-[50%] h-1.5 bg-gray-800 rounded-full overflow-hidden">
                                 <div 
-                                  className="h-full bg-[#3BC492] transition-all duration-300 ease-out" 
+                                  className="h-full bg-[#ACC8A2] transition-all duration-300 ease-out" 
                                   style={{ width: `${uploadProgress}%` }}
                                 />
                               </div>
@@ -590,7 +590,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                               newOpts[i] = e.target.value;
                               setPollOptions(newOpts);
                             }}
-                            className="w-full bg-transparent border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#3BC492] text-[15px]"
+                            className="w-full bg-transparent border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#ACC8A2] text-[15px]"
                           />
                           {i > 1 && (
                             <button onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))} className="absolute right-3 text-gray-500 hover:text-red-500">
@@ -600,7 +600,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                         </div>
                       ))}
                       {pollOptions.length < 4 && (
-                        <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-[#3BC492] hover:text-[#2fa076] text-[15px] p-2 flex items-center gap-1 transition-colors w-full rounded-md hover:bg-[#3BC492]/10 justify-center border border-dashed border-[#3BC492]/30">
+                        <button onClick={() => setPollOptions([...pollOptions, ''])} className="text-[#ACC8A2] hover:text-[#9bb891] text-[15px] p-2 flex items-center gap-1 transition-colors w-full rounded-md hover:bg-[#ACC8A2]/10 justify-center border border-dashed border-[#ACC8A2]/30">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
                           Add Choice
                         </button>
@@ -611,7 +611,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                       <select 
                         value={pollDurationDays} 
                         onChange={e => setPollDurationDays(Number(e.target.value))}
-                        className="bg-transparent text-white border border-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-[#3BC492]"
+                        className="bg-transparent text-white border border-gray-700 rounded-md px-2 py-1 text-sm focus:outline-none focus:border-[#ACC8A2]"
                       >
                         <option value={1}>1 Day</option>
                         <option value={3}>3 Days</option>
@@ -637,7 +637,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                           type="datetime-local" 
                           value={scheduledFor}
                           onChange={(e) => setScheduledFor(e.target.value)}
-                          className="w-full bg-transparent border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#3BC492] text-[15px]"
+                          className="w-full bg-transparent border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#ACC8A2] text-[15px]"
                         />
                         <p className="text-gray-500 text-xs mt-1.5">Scheduled posts will be published at this exact time in your local timezone.</p>
                       </div>
@@ -687,7 +687,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                   <button 
                     type="button" 
                     onClick={() => { setShowPoll(!showPoll); setShowSchedule(false); }}
-                    className={`p-2 rounded-full transition-colors ${showPoll ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    className={`p-2 rounded-full transition-colors ${showPoll ? 'text-[#ACC8A2] bg-[#ACC8A2]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     title="Poll"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -697,7 +697,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                   <button 
                     type="button" 
                     onClick={() => { setShowSchedule(!showSchedule); setShowPoll(false); }}
-                    className={`p-2 rounded-full transition-colors ${showSchedule ? 'text-[#3BC492] bg-[#3BC492]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    className={`p-2 rounded-full transition-colors ${showSchedule ? 'text-[#ACC8A2] bg-[#ACC8A2]/10' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
                     title="Schedule"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"></path></svg>
@@ -725,7 +725,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                     className={`px-6 py-2 rounded-full font-bold transition-colors flex items-center gap-2 ${
                       loading || uploadingMedia || (!content.trim() && uploadedMediaData.length === 0) 
                         ? "bg-[#262626] text-gray-500 cursor-not-allowed" 
-                        : "bg-[#3BC492] hover:bg-[#2fa076] text-black"
+                        : "bg-[#ACC8A2] hover:bg-[#9bb891] text-[#1A2517]"
                     }`}
                   >
                     {loading && (

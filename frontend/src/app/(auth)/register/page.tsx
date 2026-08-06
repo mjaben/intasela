@@ -224,7 +224,7 @@ export default function RegisterPage() {
         {/* Progress Bar */}
         <div className="w-full bg-gray-800 h-2 rounded-full mt-4">
           <div 
-            className="bg-[#3BC492] h-2 rounded-full transition-all duration-300"
+            className="bg-[#ACC8A2] h-2 rounded-full transition-all duration-300"
             style={{ width: `${(step / 5) * 100}%` }}
           />
         </div>
@@ -361,7 +361,7 @@ export default function RegisterPage() {
                     onClick={() => handleInterestToggle(interest)}
                     className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors border ${
                       formData.interests.includes(interest) 
-                      ? "bg-[#3BC492] text-black border-[#3BC492]" 
+                      ? "bg-[#ACC8A2] text-[#1A2517] border-[#ACC8A2]" 
                       : "bg-[#09090b] text-gray-400 border-gray-700 hover:border-gray-500 hover:text-gray-200"
                     }`}
                   >
@@ -406,17 +406,17 @@ export default function RegisterPage() {
                     if (score >= level) {
                       if (score <= 2) bg = "bg-red-500";
                       else if (score <= 4) bg = "bg-yellow-500";
-                      else bg = "bg-[#3BC492]";
+                      else bg = "bg-[#ACC8A2]";
                     }
                     return <div key={level} className={`flex-1 rounded-full ${bg} transition-colors duration-300`} />
                   })}
                 </div>
                 <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-xs">
-                  <span className={formData.password.length >= 8 ? "text-[#3BC492]" : "text-gray-500"}>✓ Min 8 characters</span>
-                  <span className={/[A-Z]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One uppercase</span>
-                  <span className={/[a-z]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One lowercase</span>
-                  <span className={/[0-9]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One number</span>
-                  <span className={/[^A-Za-z0-9]/.test(formData.password) ? "text-[#3BC492]" : "text-gray-500"}>✓ One special char</span>
+                  <span className={formData.password.length >= 8 ? "text-[#ACC8A2]" : "text-gray-500"}>✓ Min 8 characters</span>
+                  <span className={/[A-Z]/.test(formData.password) ? "text-[#ACC8A2]" : "text-gray-500"}>✓ One uppercase</span>
+                  <span className={/[a-z]/.test(formData.password) ? "text-[#ACC8A2]" : "text-gray-500"}>✓ One lowercase</span>
+                  <span className={/[0-9]/.test(formData.password) ? "text-[#ACC8A2]" : "text-gray-500"}>✓ One number</span>
+                  <span className={/[^A-Za-z0-9]/.test(formData.password) ? "text-[#ACC8A2]" : "text-gray-500"}>✓ One special char</span>
                 </div>
               </div>
             </div>
@@ -451,7 +451,7 @@ export default function RegisterPage() {
                   setError(err.message);
                 }
               }}
-              className="w-full mt-4 py-2 text-sm text-[#3BC492] hover:underline transition-colors"
+              className="w-full mt-4 py-2 text-sm text-[#ACC8A2] hover:underline transition-colors"
             >
               Didn't receive the code? Resend
             </button>
@@ -482,7 +482,7 @@ export default function RegisterPage() {
       <div className="mt-6 text-center">
         <p className="text-gray-400 text-sm">
           Already have an account?{" "}
-          <Link href="/login" className="text-[#3BC492] hover:underline font-medium">
+          <Link href="/login" className="text-[#ACC8A2] hover:underline font-medium">
             Log in
           </Link>
         </p>

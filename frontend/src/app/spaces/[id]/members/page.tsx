@@ -348,7 +348,7 @@ export default function SpaceMembersPage({ params }: { params: Promise<{ id: str
                         : editingPermissions.permissions.filter(p => p !== perm.id);
                       setEditingPermissions({ ...editingPermissions, permissions: newPerms });
                     }}
-                    className="w-5 h-5 rounded-md border-border bg-white/5 text-[#3BC492] focus:ring-[#3BC492]/50 transition-colors cursor-pointer"
+                    className="w-5 h-5 rounded-md border-border bg-white/5 text-[#ACC8A2] focus:ring-[#ACC8A2]/50 transition-colors cursor-pointer"
                   />
                   <span className="text-[15px] font-medium ml-1">{perm.label}</span>
                 </label>

@@ -278,7 +278,7 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
         {space.coverUrl ? (
           <Image src={space.coverUrl} alt={space.name} layout="fill" objectFit="cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-tr from-[#3BC492]/20 to-primary/10"></div>
+          <div className="w-full h-full bg-gradient-to-tr from-[#ACC8A2]/20 to-primary/10"></div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
@@ -335,7 +335,7 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
                 <button 
                   onClick={handleJoinRequest}
                   disabled={isPending}
-                  className="bg-[#3BC492] text-black font-bold px-6 py-2 rounded-full hover:bg-[#3BC492]/90 disabled:opacity-50"
+                  className="bg-[#ACC8A2] text-[#1A2517] font-bold px-6 py-2 rounded-full hover:bg-[#ACC8A2]/90 disabled:opacity-50"
                 >
                   {isPending ? "Pending..." : "Join Space"}
                 </button>
@@ -404,7 +404,7 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
           >
             Pending Approvals
             {pendingPosts.length > 0 && (
-              <span className="bg-[#3BC492] text-black text-[10px] px-1.5 py-0.5 rounded-full">{pendingPosts.length}</span>
+              <span className="bg-[#ACC8A2] text-[#1A2517] text-[10px] px-1.5 py-0.5 rounded-full">{pendingPosts.length}</span>
             )}
           </button>
         </div>

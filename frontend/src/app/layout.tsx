@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "Intasela",
   description: "Premium Social Network and Creator Economy Platform",
   manifest: "/manifest.json",
-  themeColor: "#3BC492",
+  themeColor: "#ACC8A2",
 };
 
 export const viewport: Viewport = {

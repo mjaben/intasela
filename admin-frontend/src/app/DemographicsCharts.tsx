@@ -14,7 +14,7 @@ const locationData = [
   { name: 'Rivers', value: 1600 },
 ];
 
-const COLORS = ['#3BC492', '#288865', '#164d39', '#8cdfc0'];
+const COLORS = ['#ACC8A2', '#8EA985', '#6A8262', '#1A2517'];
 
 export default function DemographicsCharts() {
   return (
@@ -40,7 +40,7 @@ export default function DemographicsCharts() {
               </Pie>
               <Tooltip 
                 contentStyle={{ backgroundColor: '#151921', borderColor: '#1F2937', color: '#F3F4F6', borderRadius: '8px', fontSize: '12px' }}
-                itemStyle={{ color: '#3BC492' }}
+                itemStyle={{ color: '#ACC8A2' }}
               />
               <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', color: '#9CA3AF' }} />
             </PieChart>
@@ -69,7 +69,7 @@ export default function DemographicsCharts() {
               </Pie>
               <Tooltip 
                 contentStyle={{ backgroundColor: '#151921', borderColor: '#1F2937', color: '#F3F4F6', borderRadius: '8px', fontSize: '12px' }}
-                itemStyle={{ color: '#3BC492' }}
+                itemStyle={{ color: '#ACC8A2' }}
               />
               <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', color: '#9CA3AF' }} />
             </PieChart>

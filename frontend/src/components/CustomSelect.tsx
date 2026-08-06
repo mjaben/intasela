@@ -40,7 +40,7 @@ export default function CustomSelect({ label, value, onChange, options, placehol
       
       <div 
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white flex justify-between items-center cursor-pointer min-h-[42px] focus-within:border-[#3BC492]"
+        className="w-full bg-[#09090b] border border-gray-700 rounded-lg px-4 py-2 text-white flex justify-between items-center cursor-pointer min-h-[42px] focus-within:border-[#ACC8A2]"
       >
         <span className={displayValue ? "text-white" : "text-gray-400"}>
           {displayValue || placeholder}
@@ -58,7 +58,7 @@ export default function CustomSelect({ label, value, onChange, options, placehol
                 <div 
                   key={i} 
                   onClick={() => handleSelect(optValue)}
-                  className={`px-3 py-2 text-sm cursor-pointer rounded ${value === optValue ? 'bg-[#3BC492] text-black font-medium' : 'text-gray-200 hover:bg-gray-800'}`}
+                  className={`px-3 py-2 text-sm cursor-pointer rounded ${value === optValue ? 'bg-[#ACC8A2] text-[#1A2517] font-medium' : 'text-gray-200 hover:bg-gray-800'}`}
                 >
                   {optLabel}
                 </div>

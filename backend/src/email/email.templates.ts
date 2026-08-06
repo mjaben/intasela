@@ -1,6 +1,6 @@
 /**
  * Intasela HTML Email Templates
- * Branded with Intasela styling (#3BC492 primary accent, dark theme)
+ * Branded with Intasela styling (#ACC8A2 soft sage, #1A2517 deep olive, dark theme)
  */
 
 const baseEmailLayout = (title: string, content: string) => `
@@ -14,22 +14,22 @@ const baseEmailLayout = (title: string, content: string) => `
     body {
       margin: 0;
       padding: 0;
-      background-color: #09090b;
+      background-color: #0f150e;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       color: #f4f4f5;
     }
     .wrapper {
       width: 100%;
       table-layout: fixed;
-      background-color: #09090b;
+      background-color: #0f150e;
       padding: 40px 0;
     }
     .main {
       margin: 0 auto;
       width: 100%;
       max-width: 560px;
-      background-color: #18181b;
-      border: 1px solid #27272a;
+      background-color: #1A2517;
+      border: 1px solid #283724;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
@@ -37,8 +37,8 @@ const baseEmailLayout = (title: string, content: string) => `
     .header {
       padding: 32px 32px 24px 32px;
       text-align: center;
-      border-bottom: 1px solid #27272a;
-      background: linear-gradient(180deg, rgba(59, 196, 146, 0.08) 0%, rgba(24, 24, 27, 0) 100%);
+      border-bottom: 1px solid #283724;
+      background: linear-gradient(180deg, rgba(172, 200, 162, 0.08) 0%, rgba(26, 37, 23, 0) 100%);
     }
     .brand-logo {
       display: inline-flex;
@@ -49,9 +49,9 @@ const baseEmailLayout = (title: string, content: string) => `
     .logo-badge {
       width: 36px;
       height: 36px;
-      background-color: #3BC492;
+      background-color: #ACC8A2;
       border-radius: 8px;
-      color: #000000;
+      color: #1A2517;
       font-weight: 800;
       font-size: 18px;
       line-height: 36px;
@@ -79,31 +79,31 @@ const baseEmailLayout = (title: string, content: string) => `
     .text {
       font-size: 15px;
       line-height: 1.6;
-      color: #a1a1aa;
+      color: #a1b899;
       margin-top: 0;
       margin-bottom: 24px;
     }
     .otp-box {
-      background-color: #09090b;
-      border: 1px solid #3BC492;
+      background-color: #0f150e;
+      border: 1px solid #ACC8A2;
       border-radius: 12px;
       padding: 20px;
       text-align: center;
       margin: 28px 0;
-      box-shadow: 0 0 15px rgba(59, 196, 146, 0.15);
+      box-shadow: 0 0 15px rgba(172, 200, 162, 0.15);
     }
     .otp-code {
       font-family: 'Courier New', Courier, monospace;
       font-size: 36px;
       font-weight: 800;
       letter-spacing: 8px;
-      color: #3BC492;
+      color: #ACC8A2;
       margin: 0;
     }
     .btn {
       display: inline-block;
-      background-color: #3BC492;
-      color: #000000;
+      background-color: #ACC8A2;
+      color: #1A2517;
       font-weight: 700;
       font-size: 15px;
       padding: 14px 28px;
@@ -115,8 +115,8 @@ const baseEmailLayout = (title: string, content: string) => `
     .footer {
       padding: 24px 32px;
       text-align: center;
-      border-top: 1px solid #27272a;
-      background-color: #121215;
+      border-top: 1px solid #283724;
+      background-color: #141c12;
     }
     .footer-text {
       font-size: 12px;
@@ -165,7 +165,7 @@ export const welcomeEmailTemplate = (name: string) => {
     <h1 class="title">Welcome to Intasela, ${name}! 🎉</h1>
     <p class="text">We're excited to have you on board. Intasela is your home to create, connect, build communities in Spaces, and earn from your content.</p>
     <p class="text">Here is what you can do right away:</p>
-    <ul style="color: #a1a1aa; font-size: 15px; line-height: 1.8; padding-left: 20px; margin-bottom: 28px;">
+    <ul style="color: #a1b899; font-size: 15px; line-height: 1.8; padding-left: 20px; margin-bottom: 28px;">
       <li><strong style="color: #ffffff;">Create Selas:</strong> Share your thoughts, images, and videos.</li>
       <li><strong style="color: #ffffff;">Join Spaces:</strong> Discover vibrant creator communities.</li>
       <li><strong style="color: #ffffff;">Monetize:</strong> Earn revenue directly in your Creator Wallet as users engage.</li>
@@ -206,11 +206,11 @@ export const payoutNotificationTemplate = (amount: number, status: string) => {
   const content = `
     <h1 class="title">Payout Update</h1>
     <p class="text">Your withdrawal request status has been updated:</p>
-    <div style="background-color: #09090b; border: 1px solid #27272a; border-radius: 12px; padding: 20px; margin: 24px 0;">
+    <div style="background-color: #0f150e; border: 1px solid #283724; border-radius: 12px; padding: 20px; margin: 24px 0;">
       <div style="font-size: 13px; color: #71717a; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Amount</div>
       <div style="font-size: 28px; font-weight: 800; color: #ffffff; margin: 4px 0 12px 0;">${formattedAmount}</div>
       <div style="font-size: 13px; color: #71717a; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Status</div>
-      <div style="font-size: 16px; font-weight: 700; color: ${status === 'COMPLETED' ? '#3BC492' : '#f59e0b'}; margin-top: 4px;">${status}</div>
+      <div style="font-size: 16px; font-weight: 700; color: ${status === 'COMPLETED' ? '#ACC8A2' : '#f59e0b'}; margin-top: 4px;">${status}</div>
     </div>
     <p class="text">You can track your earnings and transaction history at any time in your Creator Studio.</p>
   `;

@@ -134,7 +134,7 @@ export default function ProfilePage() {
       <div className="flex-1 min-h-screen p-8 flex flex-col items-center justify-center text-gray-400 bg-[#09090b]">
         <h2 className="text-2xl font-bold mb-2 text-white">Profile not found</h2>
         <p>The user @{username} doesn't exist or may have been deleted.</p>
-        <button onClick={() => router.push('/')} className="mt-6 text-[#3BC492] hover:underline font-bold">
+        <button onClick={() => router.push('/')} className="mt-6 text-[#ACC8A2] hover:underline font-bold">
           Go back home
         </button>
       </div>
@@ -221,7 +221,7 @@ export default function ProfilePage() {
                   }
                 }}
                 disabled={followLoading}
-                className={`px-8 py-2 rounded-full font-bold transition-opacity text-[15px] ${isFollowing ? 'border border-white/10 text-white hover:bg-red-500/10 hover:text-red-500 hover:border-red-500' : 'bg-[#3BC492] text-black hover:opacity-90'}`}
+                className={`px-8 py-2 rounded-full font-bold transition-opacity text-[15px] ${isFollowing ? 'border border-white/10 text-white hover:bg-red-500/10 hover:text-red-500 hover:border-red-500' : 'bg-[#ACC8A2] text-[#1A2517] hover:opacity-90'}`}
               >
                 {isFollowing ? 'Following' : (profile.isFollower ? 'Follow Back' : 'Follow')}
               </button>
@@ -258,7 +258,7 @@ export default function ProfilePage() {
             {activeTab === tab.id && (
               <motion.div
                 layoutId="profileTabIndicator"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-[#3BC492] rounded-t-full mx-auto w-12"
+                className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
               />
             )}
           </button>

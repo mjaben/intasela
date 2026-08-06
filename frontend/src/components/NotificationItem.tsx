@@ -89,7 +89,7 @@ export default function NotificationItem({ notification }: { notification: any }
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-2">
           {((notification.type === 'SPACE_INVITE' || notification.type === 'SPACE_ROLE_UPDATE') && notification.actorId === notification.recipientId) ? (
-            <div className="w-8 h-8 rounded-full bg-[#3BC492] flex items-center justify-center font-bold text-black text-sm">
+            <div className="w-8 h-8 rounded-full bg-[#ACC8A2] flex items-center justify-center font-bold text-[#1A2517] text-sm">
               In
             </div>
           ) : notification.actor.avatarUrl ? (

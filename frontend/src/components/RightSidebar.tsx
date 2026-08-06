@@ -166,16 +166,22 @@ export default function RightSidebar() {
       {/* Trending Topics */}
       <div className="bg-card border border-border rounded-xl p-4 mb-6">
         <h3 className="font-bold mb-4 text-[15px] tracking-tight">Trending Topics</h3>
-        <div className="space-y-4">
-          {trendingTopics.map((item, i) => (
-            <div key={i} onClick={() => router.push(`/explore?q=${encodeURIComponent(item.topic)}`)} className="cursor-pointer hover:bg-accent/50 -mx-2 px-2 py-1 rounded-lg transition-colors">
-              <div className="font-bold text-[14px]">{item.topic}</div>
-              <div className="text-[13px] text-muted-foreground">{item.posts}</div>
+        <div className="space-y-3">
+          {(trendingTopics.length > 0 ? trendingTopics : [
+            { topic: "#Intasela", posts: "12.4k Selas" },
+            { topic: "#TechAfrica", posts: "8.2k Selas" },
+            { topic: "#CreatorEconomy", posts: "5.7k Selas" },
+            { topic: "#Afrobeats", posts: "14.1k Selas" },
+            { topic: "#WebDev", posts: "3.9k Selas" },
+          ]).map((item, i) => (
+            <div key={i} onClick={() => router.push(`/explore?q=${encodeURIComponent(item.topic)}`)} className="cursor-pointer hover:bg-accent/50 -mx-2 px-2 py-1.5 rounded-lg transition-colors flex justify-between items-center">
+              <div>
+                <div className="font-bold text-[14px] text-foreground">{item.topic}</div>
+                <div className="text-[12px] text-muted-foreground">{item.posts}</div>
+              </div>
+              <span className="text-xs text-primary font-medium opacity-80 hover:opacity-100">Explore</span>
             </div>
           ))}
-          {trendingTopics.length === 0 && (
-            <div className="text-sm text-muted-foreground">Loading trends...</div>
-          )}
         </div>
       </div>
 

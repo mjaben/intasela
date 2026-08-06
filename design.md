@@ -18,7 +18,7 @@
 - **Shape & Padding**: Fully rounded pills (`rounded-full`) or highly rounded rectangles (`rounded-2xl`). Generous padding, e.g., `px-6 py-3`.
 - **Typography inside Toasts**: `text-sm font-medium`.
 - **Colors**: 
-  - Success: Subtle green accents (e.g., text `#3BC492` or an icon).
+  - Success: Subtle sage accents (e.g., text `#ACC8A2` or an icon).
   - Error: Red accents (e.g., text `red-400` or `red-500`).
 - **Animation**: Must use `animate-in slide-in-from-bottom-5 fade-in duration-300` for entry, and corresponding exit animations.
 - **System**: Always use the global `useToastStore` (`addToast(message, type)`).
@@ -39,22 +39,23 @@
   - Content: `animate-in zoom-in-95 fade-in duration-200`.
 
 ## 4. Theming, Colors, & Glassmorphism
-- **Backgrounds**: Deep, rich darks. Primary application background is `#000000` or `#09090b` (zinc-950).
-- **Elevated Surfaces (Cards/Modals/Dropdowns)**: `#18181b` (zinc-900) or `#262626` (neutral-800).
+- **Backgrounds**: Deep, rich darks tinted with deep olive. Primary application background is `#10170E` or deep olive `#1A2517`.
+- **Elevated Surfaces (Cards/Modals/Dropdowns)**: Deep olive `#1A2517` or `#18181b` (zinc-900).
 - **Brand Accents**: 
-  - Primary Green: `#3BC492`
-  - Secondary/Hover: Opacity-based variants (e.g., `bg-[#3BC492]/10` for subtle active states, `hover:bg-[#3BC492]/20`).
-- **Gradients**: Use subtle radial or linear gradients for empty states or covers (e.g., `bg-gradient-to-tr from-[#3BC492]/20 to-primary/10`).
-- **Borders**: Avoid solid gray borders. Rely on translucent white (`border-white/5` or `border-border/50`) to blend cleanly with deep dark backgrounds.
+  - Primary Soft Sage: `#ACC8A2`
+  - Deep Olive: `#1A2517`
+  - Secondary/Hover: Opacity-based variants (e.g., `bg-[#ACC8A2]/10` for subtle active states, `hover:bg-[#ACC8A2]/20`).
+- **Gradients**: Use subtle radial or linear gradients for empty states or covers (e.g., `bg-gradient-to-tr from-[#ACC8A2]/20 to-primary/10`).
+- **Borders**: Avoid solid gray borders. Rely on translucent white (`border-white/5` or `border-border/50`) or deep olive border lines.
 
 ## 5. UI Components & Inputs
 - **Buttons**:
-  - Primary actions: Solid brand color (`bg-[#3BC492] text-black font-bold`) or highly stylized glass pills (`bg-[#3BC492]/10 border border-[#3BC492]/20 text-[#3BC492]`).
+  - Primary actions: Solid brand color (`bg-[#ACC8A2] text-[#1A2517] font-bold`) or highly stylized glass pills (`bg-[#ACC8A2]/10 border border-[#ACC8A2]/20 text-[#ACC8A2]`).
   - Shape: Heavily rounded (`rounded-full`).
   - Interactions: `transition-all transform hover:scale-[1.02] active:scale-95`.
 - **Inputs & Textareas**:
   - Background: `bg-white/5` or `bg-black/50`.
-  - Border: Transparent by default, transitioning to `border-[#3BC492]/50` on focus with `ring-1 ring-[#3BC492]/50`.
+  - Border: Transparent by default, transitioning to `border-[#ACC8A2]/50` on focus with `ring-1 ring-[#ACC8A2]/50`.
   - Shape: `rounded-xl` or `rounded-2xl`.
 - **Dropdowns & Selects**: 
   - Avoid native `<select>` tags.
