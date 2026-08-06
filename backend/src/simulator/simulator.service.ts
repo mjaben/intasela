@@ -889,16 +889,16 @@ Rules:
     if (newsUsers.includes(user.username)) {
       try {
         const queryMap: Record<string, { query: string; nicheDef: string }> = {
-          'naijanews360': { query: 'Nigeria News', nicheDef: 'General Nigerian News & Breaking Updates' },
-          'goal_nigeria': { query: 'Football Soccer', nicheDef: 'Football (Soccer) & Sports updates' },
-          'celeb_gossip': { query: 'Nigeria Entertainment Nollywood', nicheDef: 'Entertainment, Nollywood, & Celebrity Gossip' },
-          'politics_nigeria': { query: 'Nigeria Politics', nicheDef: 'Nigerian Politics, Government, & Elections' },
-          'cruise_nation': { query: 'Nigeria trending', nicheDef: 'Humor, Memes, & Viral Internet Trends' },
-          'afrobeat_news': { query: 'Afrobeats Music Nigeria', nicheDef: 'Nigerian Music Industry & Afrobeats' },
-          'food_daily': { query: 'Nigeria Food Recipes', nicheDef: 'Culinary Arts & Nigerian Cuisine' },
-          'business_news': { query: 'Nigeria Business Economy', nicheDef: 'Finance, Startups, & Nigerian Economy' },
-          'trending_daily': { query: 'Nigeria News', nicheDef: 'Viral Internet Culture & Breaking Hot Topics' },
-          'scholarship_shop': { query: 'Scholarships Study Abroad Nigeria', nicheDef: 'Education, Career Opportunities, & Scholarships' }
+          'naijanews360': { query: 'Nigeria "breaking news" OR "societal happenings" OR "national news"', nicheDef: 'General Nigerian News & Breaking Updates' },
+          'goal_nigeria': { query: 'football OR soccer OR "Super Eagles" OR "Premier League" Nigeria', nicheDef: 'Football (Soccer) & Sports updates' },
+          'celeb_gossip': { query: 'Nollywood OR "celebrity gossip" OR "pop culture" Nigeria', nicheDef: 'Entertainment, Nollywood, & Celebrity Gossip' },
+          'politics_nigeria': { query: 'politics OR election OR government OR policy Nigeria', nicheDef: 'Nigerian Politics, Government, & Elections' },
+          'cruise_nation': { query: 'trending OR viral OR comedy OR memes Nigeria', nicheDef: 'Humor, Memes, & Viral Internet Trends' },
+          'afrobeat_news': { query: 'Afrobeats OR music OR concert OR album Nigeria', nicheDef: 'Nigerian Music Industry & Afrobeats' },
+          'food_daily': { query: 'food OR recipe OR restaurant OR cuisine Nigeria', nicheDef: 'Culinary Arts & Nigerian Cuisine' },
+          'business_news': { query: 'finance OR economy OR startup OR investment OR stock Nigeria', nicheDef: 'Finance, Startups, & Nigerian Economy' },
+          'trending_daily': { query: 'trending OR viral OR controversy OR hot topic Nigeria', nicheDef: 'Viral Internet Culture & Hot Topics' },
+          'scholarship_shop': { query: 'scholarship OR "study abroad" OR "career advice" OR "job vacancy" Nigeria', nicheDef: 'Education, Career Opportunities, & Scholarships' }
         };
         const nicheData = queryMap[user.username] || { query: 'Nigeria News', nicheDef: 'General News' };
         
@@ -931,14 +931,16 @@ Your profile details:
 
 Personality Guide: ${personalityPrompt}
 
-You just found this recent breaking headline: "${headline.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}"
+You just found this recent headline: "${headline.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}"
 
-Write a short, engaging news post (under 280 characters) summarizing or reporting this headline to your followers.
+Write a short post (under 280 characters) for your followers.
 Rules:
-1. Speak strictly in the tone designated by your Personality Guide and your niche focus.
-2. Make it sound like a fresh update ("JUST IN:", "Breaking:", etc.).
-3. DO NOT use hashtags.
-4. DO NOT include any links or URLs. Just post the summary text.
+1. First, check if the headline matches your niche focus. For example, if you are @scholarship_shop, the headline MUST be about education, careers, or scholarships. If it is about oil refineries, football matches, Nollywood gossip, or political elections, IT DOES NOT MATCH.
+2. If the headline matches your niche, write an engaging post summarizing or reporting it. Use a fresh update format ("Breaking:", "JUST IN:", etc.).
+3. If the headline is completely unrelated to your niche focus, DISCARD it! Instead, write an original, high-quality, practical advice post, tip, resource, or discussion question directly matching your niche focus.
+4. Speak strictly in the tone designated by your Personality Guide and your niche focus.
+5. DO NOT use hashtags.
+6. DO NOT include any links or URLs. Just post the text.
 `;
           }
         }
