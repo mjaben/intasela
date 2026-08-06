@@ -37,7 +37,18 @@ const SIMULATED_PROFILES = [
   { firstName: "Uche", lastName: "Obi", username: "uche_technews", bio: "Tech journalist and consumer gadgets reviewer. Breaking news, product launches, and reviews. 📱📰", gender: "MALE", occupation: "Tech Journalist", country: "Nigeria", state: "Lagos", nicheInterests: ["Technology News", "Gadgets & Consumer Tech", "Artificial Intelligence", "Science News"] },
   { firstName: "Halima", lastName: "Danjuma", username: "halima_beauty", bio: "Beauty influencer & makeup artist. Sharing tutorials, reviews, and skincare routines. 💄✨", gender: "FEMALE", occupation: "Makeup Artist", country: "Nigeria", state: "FCT", nicheInterests: ["Beauty & Makeup", "Women's Fashion", "Visual Arts & Design", "Marketing & Advertising"] },
   { firstName: "Victor", lastName: "Johnson", username: "victor_photo", bio: "Street photographer, videographer, and visual storyteller. Capturing Nigerian city life. 📸🏙️", gender: "MALE", occupation: "Photographer", country: "Nigeria", state: "Lagos", nicheInterests: ["Photography", "Visual Arts & Design", "Travel", "Destinations"] },
-  { firstName: "Grace", lastName: "Adeyemi", username: "grace_edu", bio: "Online learning enthusiast and professional development trainer. Helping you build career skills. 🎓✨", gender: "FEMALE", occupation: "Trainer", country: "Nigeria", state: "Oyo", nicheInterests: ["Online Learning", "Professional Development", "Job Searching & Careers", "Higher Education"] }
+  { firstName: "Grace", lastName: "Adeyemi", username: "grace_edu", bio: "Online learning enthusiast and professional development trainer. Helping you build career skills. 🎓✨", gender: "FEMALE", occupation: "Trainer", country: "Nigeria", state: "Oyo", nicheInterests: ["Online Learning", "Professional Development", "Job Searching & Careers", "Higher Education"] },
+  // 10 News Users
+  { firstName: "Naija", lastName: "News 360", username: "naijanews360", bio: "24/7 breaking news, politics, and top stories across Nigeria. 🇳🇬📰", gender: "OTHER", occupation: "News Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["News", "World News", "Politics News"] },
+  { firstName: "Goal", lastName: "Nigeria", username: "goal_nigeria", bio: "Your home for football news, Super Eagles updates, and sports analysis. ⚽🇳🇬", gender: "OTHER", occupation: "Sports Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Sports News", "Football (Soccer)", "News"] },
+  { firstName: "Celeb", lastName: "Gossip", username: "celeb_gossip", bio: "Hot gist, celebrity updates, and the latest entertainment news in Nigeria. 🎬🔥", gender: "OTHER", occupation: "Entertainment Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Entertainment", "Music", "Movies & TV", "News"] },
+  { firstName: "Politics", lastName: "Nigeria", username: "politics_nigeria", bio: "Unbiased political news, analysis, and election updates in Nigeria. 🗳️📰", gender: "OTHER", occupation: "Politics Publisher", country: "Nigeria", state: "FCT", nicheInterests: ["Politics News", "World News", "News"] },
+  { firstName: "Cruise", lastName: "Nation", username: "cruise_nation", bio: "Trending topics, memes, comedy, and pure cruise. 🤣🔥", gender: "OTHER", occupation: "Trending Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Entertainment", "Comedy", "Trending"] },
+  { firstName: "Afrobeat", lastName: "News", username: "afrobeat_news", bio: "The number 1 source for Afrobeats music, artists, and culture. 🎶🌍", gender: "OTHER", occupation: "Music Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Music", "Entertainment", "News"] },
+  { firstName: "Food", lastName: "Daily", username: "food_daily", bio: "Daily food inspiration, restaurant reviews, and Nigerian recipes. 🥘🍗", gender: "OTHER", occupation: "Food Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Cooking & Recipes", "Restaurants", "Healthy Eating & Nutrition"] },
+  { firstName: "Business", lastName: "News", username: "business_news", bio: "Economy, finance, startups, and business updates in Nigeria. 📈💼", gender: "OTHER", occupation: "Business Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Economics", "Investing & Stocks", "Entrepreneurship", "News"] },
+  { firstName: "Trending", lastName: "Daily", username: "trending_daily", bio: "What's happening right now? Trending stories and viral news. 🚀📲", gender: "OTHER", occupation: "Trending Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["News", "Trending", "World News"] },
+  { firstName: "Scholarship", lastName: "Shop", username: "scholarship_shop", bio: "Your plug for scholarships, study abroad opportunities, and grants. 🎓✈️", gender: "OTHER", occupation: "Education Publisher", country: "Nigeria", state: "Lagos", nicheInterests: ["Higher Education", "Professional Development", "Online Learning"] }
 ];
 
 export async function autoSeedSimulatorProfiles(prisma: any, logger: Logger) {
@@ -46,12 +57,12 @@ export async function autoSeedSimulatorProfiles(prisma: any, logger: Logger) {
       where: { email: { endsWith: '@intasela.internal' } }
     });
 
-    if (existingCount >= 20) {
+    if (existingCount >= 30) {
       logger.log('Simulated profiles already exist. Skipping auto-seed.');
       return;
     }
 
-    logger.log(`Found ${existingCount} simulated profiles. Auto-seeding up to 20 profiles...`);
+    logger.log(`Found ${existingCount} simulated profiles. Auto-seeding up to 30 profiles...`);
     const defaultPassword = "Password123!";
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 

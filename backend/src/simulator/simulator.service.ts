@@ -109,18 +109,20 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     const user = simulatedUsers[userIndex];
 
     // Roll random action
-    // 35% Post, 20% Reply, 20% Like, 10% Re-Sela, 10% Quote, 5% Join Space
+    // 20% Post, 20% Reply, 20% Like, 15% Quote, 10% Re-Sela, 10% Bookmark, 5% Join Space
     const rand = Math.random();
-    if (rand < 0.35) {
+    if (rand < 0.20) {
       return await this.executePostAction(user);
-    } else if (rand < 0.55) {
+    } else if (rand < 0.40) {
       return await this.executeReplyAction(user);
-    } else if (rand < 0.75) {
+    } else if (rand < 0.60) {
       return await this.executeLikeAction(user);
+    } else if (rand < 0.75) {
+      return await this.executeQuoteAction(user);
     } else if (rand < 0.85) {
       return await this.executeReSelaAction(user);
     } else if (rand < 0.95) {
-      return await this.executeQuoteAction(user);
+      return await this.executeBookmarkAction(user);
     } else {
       return await this.executeJoinSpaceAction(user);
     }
@@ -205,15 +207,17 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async executeReplyAction(user: any): Promise<string> {
-    // Find a recent post by someone else that isn't a reply
-    const targetPost = await this.prisma.post.findFirst({
+    // Find a random recent post by someone else that isn't a reply
+    const recentPosts = await this.prisma.post.findMany({
       where: {
         authorId: { not: user.id },
         parentId: null
       },
       orderBy: { createdAt: 'desc' },
-      include: { author: true }
+      include: { author: true },
+      take: 20
     });
+    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
 
     if (!targetPost) {
       this.logger.log('No eligible posts found to reply to. Falling back to writing a new post.');
@@ -284,10 +288,12 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async executeLikeAction(user: any): Promise<string> {
-    const targetPost = await this.prisma.post.findFirst({
+    const recentPosts = await this.prisma.post.findMany({
       where: { authorId: { not: user.id } },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      take: 20
     });
+    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
 
     if (!targetPost) {
       return 'No target post to like.';
@@ -332,10 +338,12 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async executeReSelaAction(user: any): Promise<string> {
-    const targetPost = await this.prisma.post.findFirst({
+    const recentPosts = await this.prisma.post.findMany({
       where: { authorId: { not: user.id } },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      take: 20
     });
+    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
 
     if (!targetPost) {
       return 'No target post to re-sela.';
@@ -379,11 +387,13 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async executeQuoteAction(user: any): Promise<string> {
-    const targetPost = await this.prisma.post.findFirst({
+    const recentPosts = await this.prisma.post.findMany({
       where: { authorId: { not: user.id } },
       orderBy: { createdAt: 'desc' },
-      include: { author: true }
+      include: { author: true },
+      take: 20
     });
+    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
 
     if (!targetPost) {
       return 'No target post to quote.';
@@ -435,6 +445,45 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     }).catch(err => this.logger.error('Failed to create quote notification:', err));
 
     return `Simulated User @${user.username} quoted post ${targetPost.id}`;
+  }
+
+  private async executeBookmarkAction(user: any): Promise<string> {
+    const recentPosts = await this.prisma.post.findMany({
+      where: { authorId: { not: user.id } },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
+
+    if (!targetPost) {
+      return 'No target post to bookmark.';
+    }
+
+    this.logger.log(`Simulated user ${user.username} is bookmarking post ${targetPost.id}`);
+
+    const existing = await this.prisma.engagement.findUnique({
+      where: {
+        userId_postId_type: {
+          userId: user.id,
+          postId: targetPost.id,
+          type: 'BOOKMARK'
+        }
+      }
+    });
+
+    if (existing) {
+      return `Simulated User @${user.username} already bookmarked post ${targetPost.id}`;
+    }
+
+    await this.prisma.engagement.create({
+      data: {
+        type: 'BOOKMARK',
+        userId: user.id,
+        postId: targetPost.id
+      }
+    });
+
+    return `Simulated User @${user.username} bookmarked post ${targetPost.id}`;
   }
 
   private async executeJoinSpaceAction(user: any): Promise<string> {
@@ -489,7 +538,8 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async generatePostWithOpenAI(user: any, niche: string): Promise<string> {
-    const systemPrompt = `You are a real, highly active user on the Intasela social media platform (which is similar to X/Twitter).
+    const newsUsers = ['naijanews360', 'goal_nigeria', 'celeb_gossip', 'politics_nigeria', 'cruise_nation', 'afrobeat_news', 'food_daily', 'business_news', 'trending_daily', 'scholarship_shop'];
+    let systemPrompt = `You are a real, highly active user on the Intasela social media platform (which is similar to X/Twitter).
 Your profile details:
 - Name: ${user.firstName} ${user.lastName}
 - Username: @${user.username}
@@ -505,6 +555,48 @@ Rules:
 4. DO NOT quote your own username or introduce yourself. Just write the post.
 5. Keep it conversational.
 `;
+
+    if (newsUsers.includes(user.username)) {
+      try {
+        const queryMap: Record<string, string> = {
+          'naijanews360': 'Nigeria Breaking News',
+          'goal_nigeria': 'Nigeria Super Eagles Football',
+          'celeb_gossip': 'Nigeria Entertainment Nollywood Gossip',
+          'politics_nigeria': 'Nigeria Politics',
+          'cruise_nation': 'Nigeria Trending',
+          'afrobeat_news': 'Afrobeats Music Nigeria',
+          'food_daily': 'Nigeria Food Recipes',
+          'business_news': 'Nigeria Business Economy',
+          'trending_daily': 'Nigeria News',
+          'scholarship_shop': 'Scholarships Study Abroad Nigeria'
+        };
+        const query = queryMap[user.username] || 'Nigeria News';
+        const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-NG&gl=NG&ceid=NG:en`;
+        const rssRes = await fetch(url);
+        if (rssRes.ok) {
+          const xml = await rssRes.text();
+          const titles = [...xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>/g)].map(m => m[1]);
+          if (titles.length > 0) {
+            const headline = titles[Math.floor(Math.random() * Math.min(10, titles.length))];
+            systemPrompt = `You are a news reporter on the Intasela social media platform.
+Your profile details:
+- Name: ${user.firstName} ${user.lastName}
+- Username: @${user.username}
+
+You just found this breaking headline: "${headline.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}"
+
+Write a short, engaging news post (under 280 characters) summarizing or reporting this headline to your followers.
+Rules:
+1. Speak like a modern news blog (e.g. "JUST IN:", "Breaking:", or just an engaging statement).
+2. DO NOT use hashtags.
+3. DO NOT include any links or URLs. Just post the summary text.
+`;
+          }
+        }
+      } catch (e) {
+        this.logger.error('Failed to scrape RSS news:', e);
+      }
+    }
 
     const body = {
       model: 'gpt-4o-mini',
