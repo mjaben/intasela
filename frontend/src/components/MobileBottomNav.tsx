@@ -38,25 +38,27 @@ export default function MobileBottomNav() {
       href: "/activity",
       icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAE9klEQVR4nO2Ze2xTVRzHv71b23PPfbWbyhgwCBB1bmG6THkNxkSMixlPgSBIoqIEDBMHTh6JEaeGgJIYgQTBEWVkEIToGAxBHgqMp9s6dby6a9DEIBqLgw3Wdj3m6NXMBda1a3cr4Zt8k/5xcnI/t/f3O7/f7wDR10oAGm4D/XE7gFgAeAHE4zbQTwD64X+mRACTJImuczjUGkWRL4oi8RJCmmRZ/lnT1LMOh7oDwHwADyMGlSHL8ha73XYjK+uhKwsXFLSWfvIhq9z1KTtW9SU7efwA27+vnO3YXspWLF/Gnp42uTk5uWcjpeIlq9X6JgCH2QBUkqQ1kkSbC+bN9p06cZDpblenvbtiG5syeXyzKJLG+Pj4BQAEMyB6USq6c3Kym08c2x8SQHsfOlDBMjMzrsqyfBTA3d0JMUAUyeWXC+b4uwLQ1u7zNeyluS/ckCTpIoCk7oDQJEn6cfGiwohBtPXSJQt9lNIfAChRpZBlunfihPyWaEDohp97dvp1TVMqjXMo8hIEYVqv5J7NZ+tPRQ1Cd7vYhXPV7IHUexsFQZgRDQ5KCPFsKSuJKoRu+IvKHYxS6ol4eUMIKcoZOby5OyB0w1OnTGwSRfsbkeSwiiLxlH9W1m0QutvFjny9h1FR5EWnGCmQSelp91/tTgjdcO6oETxWnokIhaaph1euKO52CN3tYiUfrWEOh+NURDhsNltLXW2VKSDnzpxmhJDrkQj6yYMfyWo0A0I3nJ099BqACV2iUBRl/eJFhQEzQYqXLWWKIpd2CcTpdDRs2/qxaRC628UO7t/JRFG81BUOyWq1es98f9JUkIYLtf/EiTNckJEDB/T3mAmhG05PS+XnyahwQV4cP+5JU84PvZ1nTJ96A8ArYVFQSt9/dWGBqYGuG37n7dcZpWJ4Ae90Og6sXf2e6RC628U2l25gqqpWhwWiKHJD+edbTIfQ3S5WdWQvD3heDYcuQsiV41Vd68cjmbmsVisf9kmhcsQJguDnTY7ZELrh5OQknrkGhQrSg495zHjgb11V7PBXe9jO8q1sY8navwJ91vMzWzVN9QMoDBXkMUEQWFJSj9aUPr39Awf296enpXozMzN8I0YM845+dKRvbH5ey03sHZuf58vLG+PLzc3+j7OHD2nJGJTuS0tL9fbrm+Ln+yYmJrQmJDgDhJAAIXYWFxfHREICsiz5FUW5rqqKR5alcxaLpQLAIQCrQwXhOXsbgMcB8N55DoClAIoBrDJcAmBTO68HsM7wB23Wci8HUGSMTGfyghTAGABDAdwHICHIM/HPqj5UkD0AnkDsqQFA384uvgvArwBsiD2tCiVOZgHYjNhUDgA+Wu2U9vE+HbGpOACXAfQOtvAeAJ5ITi6ioI0A5gVbxLNTGWJb44xU3KF4vn4KsS3RuGTtcasFVuOzMv0GqRPabiSlmyrFyNPOMJ0MoI/xO1jqVoPslQigfwcu6iiz8n/CDeD3MB0AwML0lSB7/2K8ZO46AKcBrEE05HRqLj4ZvFkhWP/dSVbzzeF//VrR/ICmqbsQi4qPF2ZnZT3YFKy6ra0+whITE/jQbQhiVDZJks4vWbzgltdyfLQ0bNjga4qibECMK0WSaENubvZV3me7ao7+3aoe3cfeXflWgN+vy7K8yTihY16iIAhzNU2ts9ttTRaLpZVS+puqyrsBjDb74e7ojtB5/QkvNRsGwWTkOwAAAABJRU5ErkJggg==",
     }
-  ];
+  if (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password') {
+    return null;
+  }
 
   return (
-    <nav className="sm:hidden fixed z-[100] w-full flex justify-center px-4 pointer-events-none" style={{ position: 'fixed', bottom: '24px', left: 0, right: 0 }}>
-      <div className="flex items-center gap-3 w-full max-w-[400px] pointer-events-auto">
+    <nav className="sm:hidden fixed z-[100] w-full flex justify-center px-4 pointer-events-none" style={{ position: 'fixed', bottom: 'calc(16px + env(safe-area-inset-bottom))', left: 0, right: 0 }}>
+      <div className="flex items-center gap-2.5 w-full max-w-[340px] pointer-events-auto">
         
         {/* Main Pill */}
-        <div className="flex-1 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center justify-around h-[65px] rounded-full px-2">
+        <div className="flex-1 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] flex items-center justify-around h-[54px] rounded-full px-2">
           {navItems.filter(item => item.name !== "Activity").map((item) => {
             const isActive = pathname === item.href || (item.name === "Profile" && pathname.startsWith("/@"));
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center justify-center relative transition-all duration-300 ease-out h-[48px] ${
-                  isActive ? "bg-black dark:bg-[#ACC8A2] rounded-full px-5 gap-2.5 shadow-md" : "w-[48px] rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+                className={`flex items-center justify-center relative transition-all duration-300 ease-out h-[40px] ${
+                  isActive ? "bg-black dark:bg-[#ACC8A2] rounded-full px-4 gap-2 shadow-md" : "w-[40px] rounded-full hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
-                <div className={`w-[22px] h-[22px] flex items-center justify-center relative transition-all duration-300 ${isActive ? "scale-100" : "scale-[0.85] opacity-60"}`}>
+                <div className={`w-[18px] h-[18px] flex items-center justify-center relative transition-all duration-300 ${isActive ? "scale-100" : "scale-90 opacity-60"}`}>
                   {item.icon ? (
                     <img 
                       src={item.icon} 
@@ -69,7 +71,7 @@ export default function MobileBottomNav() {
                 </div>
                 
                 {isActive && (
-                  <span className="text-[13px] font-bold text-white dark:text-[#1A2517] tracking-wide whitespace-nowrap">
+                  <span className="text-[12px] font-bold text-white dark:text-[#1A2517] tracking-wide whitespace-nowrap">
                     {item.name}
                   </span>
                 )}
@@ -82,9 +84,9 @@ export default function MobileBottomNav() {
         {isAuthenticated && (
           <Link
             href="/activity"
-            className="w-[65px] h-[65px] shrink-0 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] rounded-full flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95"
+            className="w-[54px] h-[54px] shrink-0 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] rounded-full flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95"
           >
-            <div className="w-[26px] h-[26px] relative flex items-center justify-center">
+            <div className="w-[20px] h-[20px] relative flex items-center justify-center">
               {navItems.find(i => i.name === 'Activity')?.icon ? (
                 <img src={navItems.find(i => i.name === 'Activity')?.icon} className="w-full h-full object-contain opacity-60 dark:invert" />
               ) : (
@@ -92,7 +94,7 @@ export default function MobileBottomNav() {
               )}
             </div>
             {unreadCount > 0 && (
-              <div className="absolute top-2 right-2 translate-x-1/2 -translate-y-1/3 bg-red-500 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full z-10 border-[2.5px] border-white dark:border-[#1A2517] min-w-[22px] flex justify-center shadow-lg animate-pulse">
+              <div className="absolute top-1 right-1 translate-x-1/2 -translate-y-1/4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 border-[2px] border-white dark:border-[#1A2517] min-w-[18px] flex justify-center shadow-lg animate-pulse">
                 {unreadCount > 20 ? "20+" : unreadCount}
               </div>
             )}

@@ -216,52 +216,70 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-w-lg bg-[#18181b] p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
-      <div className="text-center mb-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Create Account</h1>
-        <p className="text-gray-400">Step {step} of 5</p>
-        
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-800 h-2 rounded-full mt-4">
+    <div className="w-full max-w-lg bg-black/40 backdrop-blur-3xl p-6 sm:p-10 rounded-[2rem] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-y-auto max-h-[90vh] custom-scrollbar">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-extrabold text-white mb-2 tracking-tight">Create Account</h1>
+        <p className="text-white/70">Join Intasela and start connecting</p>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mb-8">
+        <div className="flex justify-between mb-2">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <div 
+              key={s} 
+              className={`text-xs font-bold ${s === step ? 'text-[#ACC8A2]' : s < step ? 'text-white/70' : 'text-white/30'}`}
+            >
+              Step {s}
+            </div>
+          ))}
+        </div>
+        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
           <div 
-            className="bg-[#ACC8A2] h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(step / 5) * 100}%` }}
+            className="h-full bg-[#ACC8A2] transition-all duration-500 ease-out rounded-full"
+            style={{ width: `${((step) / 5) * 100}%` }}
           />
         </div>
       </div>
 
       <div className="min-h-[44px] mb-2">
         {error && (
-          <div className="p-2.5 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center">
+          <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-100 text-sm text-center font-medium">
             {error}
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {step === 1 && (
-          <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">First Name <span className="text-red-500">*</span></label>
-                <Input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required />
+                <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">First Name <span className="text-red-500">*</span></label>
+                <Input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Last Name <span className="text-red-500">*</span></label>
-                <Input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required />
+                <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Last Name <span className="text-red-500">*</span></label>
+                <Input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
               </div>
             </div>
+            
             <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Username <span className="text-red-500">*</span></label>
-                <Input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe123" required />
+              <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Username <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 font-medium">@</span>
+                <Input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe" className="pl-8 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" required />
+              </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Email <span className="text-red-500">*</span></label>
-              <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required />
+              <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Email <span className="text-red-500">*</span></label>
+              <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1.5 ml-1">Phone Number</label>
-              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+234 800 000 0000" />
+              <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Phone Number (Optional)</label>
+              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+1234567890" className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
             </div>
           </div>
         )}
@@ -458,13 +476,13 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <div className="flex gap-4 mt-6">
+        <div className="flex gap-4 mt-8">
           {step > 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
-              className="flex-1"
+              className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/5 hover:text-white rounded-full h-12 font-bold"
             >
               Back
             </Button>
@@ -472,17 +490,17 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="flex-1"
+            className="flex-1 bg-[#ACC8A2] text-[#1A2517] hover:bg-white transition-colors rounded-full h-12 font-bold text-[15px] shadow-[0_4px_14px_rgba(172,200,162,0.4)]"
           >
             {loading ? "Loading..." : step < 4 ? "Continue" : step === 4 ? "Send Code" : "Create Account"}
           </Button>
         </div>
       </form>
 
-      <div className="mt-6 text-center">
-        <p className="text-gray-400 text-sm">
+      <div className="mt-8 text-center">
+        <p className="text-white/60 text-sm">
           Already have an account?{" "}
-          <Link href="/login" className="text-[#ACC8A2] hover:underline font-medium">
+          <Link href="/login" className="text-[#ACC8A2] hover:text-white transition-colors font-bold ml-1">
             Log in
           </Link>
         </p>
