@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MonetizationService } from '../monetization/monetization.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import OpenAI from 'openai';
 
 @Injectable()
 export class PostsService {
@@ -107,7 +108,7 @@ export class PostsService {
       };
     }
 
-    const posts = await this.prisma.post.findMany({
+    const candidates = await this.prisma.post.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -133,10 +134,101 @@ export class PostsService {
           }
         }
       },
-      take: 20,
+      take: 300,
     });
 
-    return posts.map(post => this.formatPost(post, currentUserId));
+    if (type === 'following') {
+      // Standard chronological feed for 'Following' tab
+      return candidates.slice(0, 20).map(post => this.formatPost(post, currentUserId));
+    }
+
+    // --- ALGORITHMIC RANKING ---
+    // If Python ML Microservice is enabled, call it for the ranked IDs
+    if (process.env.USE_PYTHON_RECOMMENDER === 'true') {
+      try {
+        const user = await this.prisma.user.findUnique({ where: { id: currentUserId } });
+        const userInterests = user?.interests && Array.isArray(user.interests) ? user.interests : [];
+
+        const pythonUrl = process.env.PYTHON_RECOMMENDER_URL || 'http://localhost:8000';
+        const reqBody = {
+          user_id: currentUserId,
+          type: type || 'for-you',
+          limit: 20,
+          interests: userInterests
+        };
+        
+        const response = await fetch(`${pythonUrl}/recommend`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'success' && Array.isArray(data.post_ids)) {
+            // Sort the original candidates to match the ranked IDs from Python
+            const rankedIds = data.post_ids as number[];
+            
+            // Map the IDs back to the actual post objects
+            // Note: Since this is Phase 1 and Python is returning dummy IDs [1,2,3], 
+            // some posts might not exist in `candidates`. We filter out undefined.
+            const rankedPosts = rankedIds.map(id => candidates.find(p => p.id === id)).filter(p => p !== undefined);
+            
+            // If python didn't return enough valid posts, we can pad with our local ranking
+            if (rankedPosts.length > 0) {
+                return rankedPosts.map(post => this.formatPost(post, currentUserId));
+            }
+          }
+        } else {
+          this.logger.error(`Python ML Service returned error: ${response.statusText}`);
+        }
+      } catch (error) {
+        this.logger.error(`Failed to connect to Python ML Service: ${error.message}`);
+      }
+      this.logger.warn('Falling back to local heuristic ranking engine.');
+    }
+
+    const now = Date.now();
+    
+    const scoredPosts = candidates.map(post => {
+      let score = 1.0;
+      
+      // 1. Engagement Boosts
+      const likesCount = post.engagements.filter(e => e.type === 'LIKE').length;
+      const reselaCount = post.engagements.filter(e => e.type === 'RESELA').length;
+      const replyCount = post._count.replies;
+      
+      score += (reselaCount * 1.0);
+      score += (likesCount * 0.5);
+      score += (replyCount * 0.2);
+
+      // 2. Media Multiplier
+      if ((post.mediaUrls && post.mediaUrls.length > 0) || post.mediaUrl || post.mediaType) {
+        score *= 1.2;
+      }
+
+      // 3. Network Multiplier
+      const isFollowedByCurrentUser = currentUserId && (post.author as any).followers?.length > 0;
+      if (isFollowedByCurrentUser) {
+        score *= 2.0;
+      }
+
+      // 4. Time Decay Penalty (Halves every 12 hours)
+      const ageInHours = (now - post.createdAt.getTime()) / (1000 * 60 * 60);
+      const timeDecay = Math.pow(0.5, ageInHours / 12);
+      
+      score *= timeDecay;
+
+      return { post, score };
+    });
+
+    // Sort by score descending
+    scoredPosts.sort((a, b) => b.score - a.score);
+
+    // Take top 20
+    const topPosts = scoredPosts.slice(0, 20).map(item => item.post);
+
+    return topPosts.map(post => this.formatPost(post, currentUserId));
   }
 
   async getOrbitFeed(currentUserId?: string, type?: string, videoId?: string) {
@@ -172,8 +264,7 @@ export class PostsService {
         });
       }
     }
-
-    const posts = await this.prisma.post.findMany({
+    const candidates = await this.prisma.post.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -185,10 +276,81 @@ export class PostsService {
         },
         engagements: true,
       },
-      take: 20,
+      take: 300,
     });
 
-    const finalPosts = initialPost && initialPost.mediaType === 'VIDEO' ? [initialPost, ...posts] : posts;
+    if (type === 'following') {
+      const topPosts = candidates.slice(0, 20);
+      const finalPosts = initialPost && initialPost.mediaType === 'VIDEO' ? [initialPost, ...topPosts] : topPosts;
+      return finalPosts.map(post => this.formatPost(post, currentUserId));
+    }
+
+    // --- ALGORITHMIC RANKING (ORBIT) ---
+    if (process.env.USE_PYTHON_RECOMMENDER === 'true') {
+      try {
+        const user = await this.prisma.user.findUnique({ where: { id: currentUserId } });
+        const userInterests = user?.interests && Array.isArray(user.interests) ? user.interests : [];
+
+        const pythonUrl = process.env.PYTHON_RECOMMENDER_URL || 'http://localhost:8000';
+        const reqBody = {
+          user_id: currentUserId,
+          type: 'orbit',
+          limit: 20,
+          interests: userInterests
+        };
+        
+        const response = await fetch(`${pythonUrl}/recommend`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reqBody)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'success' && Array.isArray(data.post_ids)) {
+            const rankedIds = data.post_ids as number[];
+            const rankedPosts = rankedIds.map(id => candidates.find(p => p.id === id)).filter(p => p !== undefined);
+            
+            if (rankedPosts.length > 0) {
+              const formattedPosts = rankedPosts.map(post => this.formatPost(post, currentUserId));
+              if (initialPost) {
+                return [this.formatPost(initialPost, currentUserId), ...formattedPosts.filter(p => p.id !== initialPost.id)];
+              }
+              return formattedPosts;
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Failed to connect to Python ML Service for Orbit: ${error.message}`);
+      }
+    }
+
+    const now = Date.now();
+    const scoredPosts = candidates.map(post => {
+      let score = 1.0;
+      
+      const likesCount = post.engagements.filter(e => e.type === 'LIKE').length;
+      const reselaCount = post.engagements.filter(e => e.type === 'RESELA').length;
+      const replyCount = post._count.replies;
+      
+      score += (reselaCount * 1.0) + (likesCount * 0.5) + (replyCount * 0.2);
+
+      const isFollowedByCurrentUser = currentUserId && (post.author as any).followers?.length > 0;
+      if (isFollowedByCurrentUser) {
+        score *= 2.0;
+      }
+
+      const ageInHours = (now - post.createdAt.getTime()) / (1000 * 60 * 60);
+      const timeDecay = Math.pow(0.5, ageInHours / 12);
+      
+      score *= timeDecay;
+      return { post, score };
+    });
+
+    scoredPosts.sort((a, b) => b.score - a.score);
+    const topPosts = scoredPosts.slice(0, 20).map(item => item.post);
+
+    const finalPosts = initialPost && initialPost.mediaType === 'VIDEO' ? [initialPost, ...topPosts] : topPosts;
     return finalPosts.map(post => this.formatPost(post, currentUserId));
   }
 
@@ -633,6 +795,11 @@ export class PostsService {
       }
     }
 
+    // Fire and forget auto-tagger
+    if (finalStatus === 'PUBLISHED' && initialApprovalStatus === 'APPROVED') {
+      this.generateTagsForPost(post.id, content).catch(err => this.logger.error(err));
+    }
+
     return post;
   }
 
@@ -895,6 +1062,38 @@ export class PostsService {
     return { success: true };
   }
 
+  async generateTagsForPost(postId: number, content: string) {
+    try {
+      if (!process.env.OPENAI_API_KEY) return;
+      
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a content categorizer. Extract 3 to 5 highly relevant, single-word or short-phrase semantic tags for the following post. Return ONLY a valid JSON array of strings (e.g. [\"#Tech\", \"#Startup\", \"#AI\"]). Do not include markdown formatting or other text." },
+          { role: "user", content }
+        ],
+        temperature: 0.3,
+      });
+
+      const result = response.choices[0]?.message?.content;
+      if (result) {
+        const cleanResult = result.replace(/```json/g, '').replace(/```/g, '').trim();
+        const tags = JSON.parse(cleanResult);
+        if (Array.isArray(tags)) {
+          await this.prisma.post.update({
+            where: { id: postId },
+            data: { tags }
+          });
+          this.logger.log(`Generated tags for post ${postId}: ${tags.join(', ')}`);
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Failed to generate tags for post ${postId}: ${error.message}`);
+    }
+  }
+
+  // Helper method to resolve post format
   async getDrafts(currentUserId: string) {
     const posts = await this.prisma.post.findMany({
       where: {

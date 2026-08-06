@@ -119,6 +119,8 @@ model Post {
   quotedPost     Post?        @relation("PostQuotes", fields: [quotedPostId], references: [id], onDelete: Cascade)
   quotes         Post[]       @relation("PostQuotes")
   
+  tags           String[]     @default([])
+  
   engagements    Engagement[]
   notifications  Notification[]
   transactions   Transaction[]
