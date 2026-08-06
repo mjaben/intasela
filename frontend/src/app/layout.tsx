@@ -38,7 +38,7 @@ export default function RootLayout({
       <head>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1173851541726956" crossOrigin="anonymous"></script>
       </head>
-      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-screen bg-background text-foreground flex flex-col items-center`} suppressHydrationWarning>
+      <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-[100dvh] overscroll-none bg-background text-foreground flex flex-col items-center`} suppressHydrationWarning>
         <MobileHeader />
         <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0">
           <SidebarNav />
