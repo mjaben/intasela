@@ -73,10 +73,30 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       clearTimeout(this.timeoutRef);
     }
 
-    // User explicitly requested 1 post cycle every 4 minutes to lower volume and avoid spam.
-    const delayMs = 4 * 60 * 1000;
+    // Determine current hour in West Africa Time (GMT+1) / server time
+    const lagosTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
+    const hour = lagosTime.getHours();
 
-    this.logger.log(`Scheduling next simulator action in 4 minutes.`);
+    let delayMs = 4 * 60 * 1000; // default 4 mins (Normal)
+    let modeName = 'Normal';
+
+    // Circadian Rhythm Pacing
+    if ((hour >= 7 && hour <= 9) || (hour >= 18 && hour <= 22)) {
+      // Peak Hours (7AM-9AM, 6PM-10PM): 2 minutes
+      delayMs = 2 * 60 * 1000;
+      modeName = 'Peak';
+    } else if (hour >= 0 && hour <= 6) {
+      // Night Hours (12AM-6AM): 20 minutes (slower pacing to mimic sleep)
+      delayMs = 20 * 60 * 1000;
+      modeName = 'Night';
+    } else {
+      // Off-Peak/Day Hours: 5 minutes
+      delayMs = 5 * 60 * 1000;
+      modeName = 'Day';
+    }
+
+    this.logger.log(`[Circadian Rhythm] Current time: ${lagosTime.toLocaleTimeString()} (${modeName} Mode). Next tick in ${delayMs / 60000} minutes.`);
+    
     this.timeoutRef = setTimeout(() => {
       this.runSimulationTick()
         .catch(err => this.logger.error('Error during scheduled simulation tick:', err))
@@ -143,8 +163,23 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
         const actionsToProcess = deficits.sort(() => 0.5 - Math.random()).slice(0, 3);
 
         for (const actionToTake of actionsToProcess) {
-          // Shuffle potential users
-          const shuffledUsers = [...simulatedUsers.filter(u => u.id !== post.authorId)].sort(() => 0.5 - Math.random());
+          // Retrieve candidates who are not the post author
+          const potentialActors = simulatedUsers.filter(u => u.id !== post.authorId);
+          
+          // Query Follows table to see which candidates follow the post author
+          const followersOfAuthor = await this.prisma.follows.findMany({
+            where: {
+              followingId: post.authorId,
+              followerId: { in: potentialActors.map(u => u.id) }
+            }
+          });
+          const followerIds = followersOfAuthor.map(f => f.followerId);
+
+          // Partition candidates: followers first, then others (both shuffled)
+          const followers = potentialActors.filter(u => followerIds.includes(u.id)).sort(() => 0.5 - Math.random());
+          const nonFollowers = potentialActors.filter(u => !followerIds.includes(u.id)).sort(() => 0.5 - Math.random());
+          
+          const shuffledUsers = [...followers, ...nonFollowers];
           let validUser = null;
 
           // Find a user who hasn't done this specific action yet
@@ -208,9 +243,29 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // Guarantee EXACTLY 1 post on main feed per tick
-    const mainUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
-    actionsLog.push(await this.executePostAction(mainUser, false));
+    // Guarantee EXACTLY 1 post on main feed per tick, biased by Weekend vs Weekday
+    const lagosTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
+    const dayOfWeek = lagosTime.getDay(); // 0 = Sunday, 6 = Saturday
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6 || dayOfWeek === 5; // Friday, Saturday, Sunday
+
+    let selectedMainUser = null;
+    const weekendUsers = ['goal_nigeria', 'celeb_gossip', 'cruise_nation', 'afrobeat_news'];
+    const weekdayUsers = ['politics_nigeria', 'business_news', 'naijanews360', 'trending_daily', 'scholarship_shop', 'food_daily'];
+
+    // 80% chance to follow weekend/weekday bias
+    if (Math.random() < 0.8) {
+      const targetList = isWeekend ? weekendUsers : weekdayUsers;
+      const candidates = simulatedUsers.filter(u => targetList.includes(u.username));
+      if (candidates.length > 0) {
+        selectedMainUser = candidates[Math.floor(Math.random() * candidates.length)];
+      }
+    }
+
+    if (!selectedMainUser) {
+      selectedMainUser = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
+    }
+
+    actionsLog.push(await this.executePostAction(selectedMainUser, false));
     actionsTaken++;
 
     // Guarantee EXACTLY 1 post in a space per tick
@@ -583,8 +638,26 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return "Hobbies";
   }
 
+  private getPersonalityPrompt(username: string): string {
+    const personalityMap: Record<string, string> = {
+      'naijanews360': 'You are a professional, objective, and authoritative Nigerian news reporter. Keep it informative, clear, and formal.',
+      'goal_nigeria': 'You are an absolute sports fanatic and die-hard Super Eagles / Football follower. Talk with high energy, extreme passion, and use sports slang (e.g. "We move!", "Chale!", "Goal!").',
+      'celeb_gossip': 'You are a sassy, gossip-loving Nollywood and entertainment enthusiast. Use wordplay, gossipy phrases like "spilling the tea", "hot gist", "our fave", and speak with a highly casual, animated, and friendly vibe.',
+      'politics_nigeria': 'You are an analytical, serious, and policy-minded political observer. Speak logically, focus on governance, stats, and ask critical questions.',
+      'cruise_nation': 'You are a funny, highly sarcastic, and savage member of the "Cruise Nation". Use popular Nigerian internet slangs, memes, pidgin English naturally (e.g., "no cap", "cruise", "abeg"), and keep it lighthearted but witty.',
+      'afrobeat_news': 'You are a music industry pundit and massive Afrobeats fanboy/fangirl. Talk about charts, streams, fire emojis, new releases, and defend your favorite artists passionately.',
+      'food_daily': 'You are a warm, descriptive, and inviting chef/foodie. Use rich descriptions of flavor, recipes, and home-cooking warmth (e.g. "deliciousness", "mouthwatering").',
+      'business_news': 'You are a corporate business analyst. Focus on market numbers, inflation, startup funding, and exchange rates with professional clarity.',
+      'trending_daily': 'You write direct, breaking hot-topic news. Short, snappy sentences that get right to the point.',
+      'scholarship_shop': 'You are a highly encouraging, helpful study-abroad advisor. Share educational opportunities, scholarships, tips, and maintain an inspiring, supportive, and resource-heavy tone.'
+    };
+    return personalityMap[username] || 'You are a friendly, casual social media user. Keep it natural, conversational, and direct.';
+  }
+
   private async generatePostWithOpenAI(user: any, niche: string): Promise<string> {
     const newsUsers = ['naijanews360', 'goal_nigeria', 'celeb_gossip', 'politics_nigeria', 'cruise_nation', 'afrobeat_news', 'food_daily', 'business_news', 'trending_daily', 'scholarship_shop'];
+    const personalityPrompt = this.getPersonalityPrompt(user.username);
+    
     let systemPrompt = `You are a real, highly active user on the Intasela social media platform (which is similar to X/Twitter).
 Your profile details:
 - Name: ${user.firstName} ${user.lastName}
@@ -593,13 +666,16 @@ Your profile details:
 - Occupation: ${user.occupation || 'N/A'}
 - State/Country: ${user.state ? `${user.state}, ` : ''}${user.country || 'Nigeria'}
 
+Personality Guide: ${personalityPrompt}
+
 Write a short, engaging, natural post (under 280 characters) about the topic "${niche}" that matches your bio and interest.
 Rules:
-1. Speak in a natural, casual social-media tone.
-2. Feel free to use appropriate emojis and Nigerian slangs/pidgin (like 'o', 'na', 'chale', 'abeg', 'jare') where contextually fitting, but keep it readable and highly authentic.
-3. DO NOT use hashtags.
-4. DO NOT quote your own username or introduce yourself. Just write the post.
-5. Keep it conversational.
+1. Speak strictly in the tone designated by your Personality Guide.
+2. Speak in a natural, casual social-media tone.
+3. Feel free to use appropriate emojis and Nigerian slangs/pidgin (like 'o', 'na', 'chale', 'abeg', 'jare') where contextually fitting, but keep it readable and highly authentic.
+4. DO NOT use hashtags.
+5. DO NOT quote your own username or introduce yourself. Just write the post.
+6. Keep it conversational.
 `;
 
     if (newsUsers.includes(user.username)) {
@@ -618,11 +694,24 @@ Rules:
         };
         const nicheData = queryMap[user.username] || { query: 'Nigeria News', nicheDef: 'General News' };
         
-        // Append when:6h to strictly scrape news from the last 6 hours to avoid stale content
-        const url = `https://news.google.com/rss/search?q=${encodeURIComponent(nicheData.query + ' when:6h')}&hl=en-NG&gl=NG&ceid=NG:en`;
-        const rssRes = await fetch(url);
+        // Try scraping news from last 6 hours
+        let url = `https://news.google.com/rss/search?q=${encodeURIComponent(nicheData.query + ' when:6h')}&hl=en-NG&gl=NG&ceid=NG:en`;
+        let rssRes = await fetch(url);
+        let xml = '';
         if (rssRes.ok) {
-          const xml = await rssRes.text();
+          xml = await rssRes.text();
+        }
+        
+        // Fallback to last 24 hours if 6 hours is too narrow/empty
+        if (!xml || !xml.includes('<item>')) {
+          url = `https://news.google.com/rss/search?q=${encodeURIComponent(nicheData.query + ' when:24h')}&hl=en-NG&gl=NG&ceid=NG:en`;
+          rssRes = await fetch(url);
+          if (rssRes.ok) {
+            xml = await rssRes.text();
+          }
+        }
+
+        if (xml) {
           const titles = [...xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>/g)].map(m => m[1]);
           if (titles.length > 0) {
             const headline = titles[Math.floor(Math.random() * Math.min(10, titles.length))];
@@ -632,11 +721,13 @@ Your profile details:
 - Username: @${user.username}
 - Your Strict Niche Focus: ${nicheData.nicheDef}
 
-You just found this recent breaking headline from the last 6 hours: "${headline.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}"
+Personality Guide: ${personalityPrompt}
+
+You just found this recent breaking headline: "${headline.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}"
 
 Write a short, engaging news post (under 280 characters) summarizing or reporting this headline to your followers.
 Rules:
-1. Speak in a tone appropriate for your specific niche (e.g., professional for business/politics, hype for afrobeats, gossipy for celeb, funny/savage for cruise nation).
+1. Speak strictly in the tone designated by your Personality Guide and your niche focus.
 2. Make it sound like a fresh update ("JUST IN:", "Breaking:", etc.).
 3. DO NOT use hashtags.
 4. DO NOT include any links or URLs. Just post the summary text.
@@ -676,11 +767,14 @@ Rules:
   }
 
   private async generateReplyWithOpenAI(user: any, targetPost: any): Promise<string> {
-    const systemPrompt = `You are a real user on the Intasela social media platform.
+    const personalityPrompt = this.getPersonalityPrompt(user.username);
+    const systemPrompt = `You are a user on the Intasela social media platform.
 Your profile details:
 - Name: ${user.firstName} ${user.lastName}
 - Username: @${user.username}
 - Bio: ${user.bio}
+
+Personality Guide: ${personalityPrompt}
 
 You are replying to a post by ${targetPost.author.firstName} (@${targetPost.author.username}).
 Their post content:
@@ -688,10 +782,11 @@ Their post content:
 
 Write a natural, conversational, and short reply (under 150 characters) to their post.
 Rules:
-1. Address the post's content directly (agreeing, adding a friendly point, or asking a quick question).
-2. Keep it casual and conversational.
-3. DO NOT use hashtags.
-4. You can tag them using @${targetPost.author.username} naturally in the text if fitting, but don't force it.
+1. Speak strictly in the tone designated by your Personality Guide.
+2. Address the post's content directly (agreeing, adding a friendly point, or asking a quick question).
+3. Keep it casual and conversational.
+4. DO NOT use hashtags.
+5. You can tag them using @${targetPost.author.username} naturally in the text if fitting, but don't force it.
 `;
 
     const body = {
@@ -722,11 +817,14 @@ Rules:
   }
 
   private async generateQuoteWithOpenAI(user: any, targetPost: any): Promise<string> {
-    const systemPrompt = `You are a real user on the Intasela social media platform.
+    const personalityPrompt = this.getPersonalityPrompt(user.username);
+    const systemPrompt = `You are a user on the Intasela social media platform.
 Your profile details:
 - Name: ${user.firstName} ${user.lastName}
 - Username: @${user.username}
 - Bio: ${user.bio}
+
+Personality Guide: ${personalityPrompt}
 
 You are quoting (retweeting with a note) a post by ${targetPost.author.firstName} (@${targetPost.author.username}).
 Their post content:
@@ -734,10 +832,11 @@ Their post content:
 
 Write a natural, conversational, and short note (under 100 characters) to accompany the quoted post.
 Rules:
-1. Add your own brief thought, opinion, or endorsement of their post.
-2. Keep it casual and conversational.
-3. DO NOT use hashtags.
-4. DO NOT quote their username unless necessary.
+1. Speak strictly in the tone designated by your Personality Guide.
+2. Add your own brief thought, opinion, or endorsement of their post.
+3. Keep it casual and conversational.
+4. DO NOT use hashtags.
+5. DO NOT quote their username unless necessary.
 `;
 
     const body = {
