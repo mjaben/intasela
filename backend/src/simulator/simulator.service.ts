@@ -99,33 +99,102 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     });
 
     if (simulatedUsers.length === 0) {
-      const msg = 'No simulated user profiles found in the database. Run the seeding script first.';
-      this.logger.warn(msg);
-      return msg;
+      return 'No simulated user profiles found in the database. Run the seeding script first.';
     }
 
-    // Select a random simulated user
-    const userIndex = Math.floor(Math.random() * simulatedUsers.length);
-    const user = simulatedUsers[userIndex];
+    let actionsTaken = 0;
+    const actionsLog: string[] = [];
 
-    // Roll random action
-    // 20% Post, 20% Reply, 20% Like, 15% Quote, 10% Re-Sela, 10% Bookmark, 5% Join Space
-    const rand = Math.random();
-    if (rand < 0.20) {
-      return await this.executePostAction(user);
-    } else if (rand < 0.40) {
-      return await this.executeReplyAction(user);
-    } else if (rand < 0.60) {
-      return await this.executeLikeAction(user);
-    } else if (rand < 0.75) {
-      return await this.executeQuoteAction(user);
-    } else if (rand < 0.85) {
-      return await this.executeReSelaAction(user);
-    } else if (rand < 0.95) {
-      return await this.executeBookmarkAction(user);
-    } else {
-      return await this.executeJoinSpaceAction(user);
+    // Engagement Cascade Logic: Find all posts created in the last 60 minutes
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const recentPosts = await this.prisma.post.findMany({
+      where: { 
+        createdAt: { gte: oneHourAgo },
+        parentId: null 
+      },
+      include: { author: true }
+    });
+
+    for (const post of recentPosts) {
+      // Determine deterministic targets based on post ID
+      const targetLikes = 15 + (post.id % 15); // 15 to 29
+      const targetReplies = 5 + (post.id % 10); // 5 to 14
+      const targetQuotes = 5 + (post.id % 6); // 5 to 10
+      const targetReSelas = 5 + (post.id % 6); // 5 to 10
+      const targetBookmarks = 5 + (post.id % 10); // 5 to 14
+
+      // Current counts
+      const likeCount = await this.prisma.engagement.count({ where: { postId: post.id, type: 'LIKE' } });
+      const replyCount = await this.prisma.post.count({ where: { parentId: post.id, quotedPostId: null } });
+      const quoteCount = await this.prisma.post.count({ where: { quotedPostId: post.id } });
+      const reselaCount = await this.prisma.engagement.count({ where: { postId: post.id, type: 'RESELA' } });
+      const bookmarkCount = await this.prisma.engagement.count({ where: { postId: post.id, type: 'BOOKMARK' } });
+
+      // Determine deficit
+      const deficits = [];
+      if (likeCount < targetLikes) deficits.push('LIKE');
+      if (replyCount < targetReplies) deficits.push('REPLY');
+      if (quoteCount < targetQuotes) deficits.push('QUOTE');
+      if (reselaCount < targetReSelas) deficits.push('RESELA');
+      if (bookmarkCount < targetBookmarks) deficits.push('BOOKMARK');
+
+      // Randomly decide to act on this post (25% chance per tick to ensure spreading out)
+      if (deficits.length > 0 && Math.random() < 0.25) {
+        // Pick a random deficit
+        const actionToTake = deficits[Math.floor(Math.random() * deficits.length)];
+        
+        // Pick a random user who isn't the author
+        const potentialUsers = simulatedUsers.filter(u => u.id !== post.authorId);
+        if (potentialUsers.length > 0) {
+          const user = potentialUsers[Math.floor(Math.random() * potentialUsers.length)];
+          try {
+            if (actionToTake === 'LIKE') actionsLog.push(await this.executeLikeAction(user, post));
+            else if (actionToTake === 'REPLY') actionsLog.push(await this.executeReplyAction(user, post));
+            else if (actionToTake === 'QUOTE') actionsLog.push(await this.executeQuoteAction(user, post));
+            else if (actionToTake === 'RESELA') actionsLog.push(await this.executeReSelaAction(user, post));
+            else if (actionToTake === 'BOOKMARK') actionsLog.push(await this.executeBookmarkAction(user, post));
+            actionsTaken++;
+          } catch(e) { this.logger.error(e); }
+        }
+      }
+
+      // Author Reply Logic
+      if (post.author.email.endsWith('@intasela.internal')) {
+        // If the author is a simulated user, they should reply to max 5 comments
+        const comments = await this.prisma.post.findMany({ 
+          where: { parentId: post.id, authorId: { not: post.authorId } },
+          include: { author: true }
+        });
+        if (comments.length > 0) {
+          const authorReplies = await this.prisma.post.count({ where: { parentId: post.id, authorId: post.authorId } });
+          if (authorReplies < 5 && Math.random() < 0.20) {
+            // Reply to a random comment
+            const commentToReply = comments[Math.floor(Math.random() * comments.length)];
+            try {
+              actionsLog.push(await this.executeReplyAction(post.author, commentToReply));
+              actionsTaken++;
+            } catch(e) { this.logger.error(e); }
+          }
+        }
+      }
     }
+
+    // Still roll a chance for global random actions (like creating new posts)
+    if (Math.random() < 0.3) {
+      const user = simulatedUsers[Math.floor(Math.random() * simulatedUsers.length)];
+      if (Math.random() < 0.8) {
+        actionsLog.push(await this.executePostAction(user));
+      } else {
+        actionsLog.push(await this.executeJoinSpaceAction(user));
+      }
+      actionsTaken++;
+    }
+
+    if (actionsTaken === 0) {
+      return 'Tick processed, no actions were taken this round to maintain gradual pacing.';
+    }
+
+    return `Tick processed. Took ${actionsTaken} actions:\n` + actionsLog.join('\n');
   }
 
   private async executePostAction(user: any): Promise<string> {
@@ -206,24 +275,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return `Simulated User @${user.username} created post ${post.id} in niche ${niche}`;
   }
 
-  private async executeReplyAction(user: any): Promise<string> {
-    // Find a random recent post by someone else that isn't a reply
-    const recentPosts = await this.prisma.post.findMany({
-      where: {
-        authorId: { not: user.id },
-        parentId: null
-      },
-      orderBy: { createdAt: 'desc' },
-      include: { author: true },
-      take: 20
-    });
-    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
-
-    if (!targetPost) {
-      this.logger.log('No eligible posts found to reply to. Falling back to writing a new post.');
-      return await this.executePostAction(user);
-    }
-
+  private async executeReplyAction(user: any, targetPost: any): Promise<string> {
     this.logger.log(`Simulated user ${user.username} is replying to post ${targetPost.id} by @${targetPost.author.username}`);
 
     let replyContent = '';
@@ -287,18 +339,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return `Simulated User @${user.username} replied to post ${targetPost.id} (reply ${reply.id})`;
   }
 
-  private async executeLikeAction(user: any): Promise<string> {
-    const recentPosts = await this.prisma.post.findMany({
-      where: { authorId: { not: user.id } },
-      orderBy: { createdAt: 'desc' },
-      take: 20
-    });
-    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
-
-    if (!targetPost) {
-      return 'No target post to like.';
-    }
-
+  private async executeLikeAction(user: any, targetPost: any): Promise<string> {
     this.logger.log(`Simulated user ${user.username} is liking post ${targetPost.id}`);
 
     // Check if already liked
@@ -337,18 +378,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return `Simulated User @${user.username} liked post ${targetPost.id}`;
   }
 
-  private async executeReSelaAction(user: any): Promise<string> {
-    const recentPosts = await this.prisma.post.findMany({
-      where: { authorId: { not: user.id } },
-      orderBy: { createdAt: 'desc' },
-      take: 20
-    });
-    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
-
-    if (!targetPost) {
-      return 'No target post to re-sela.';
-    }
-
+  private async executeReSelaAction(user: any, targetPost: any): Promise<string> {
     this.logger.log(`Simulated user ${user.username} is re-posting (Re-Sela) post ${targetPost.id}`);
 
     const existing = await this.prisma.engagement.findUnique({
@@ -386,19 +416,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return `Simulated User @${user.username} re-sela'd post ${targetPost.id}`;
   }
 
-  private async executeQuoteAction(user: any): Promise<string> {
-    const recentPosts = await this.prisma.post.findMany({
-      where: { authorId: { not: user.id } },
-      orderBy: { createdAt: 'desc' },
-      include: { author: true },
-      take: 20
-    });
-    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
-
-    if (!targetPost) {
-      return 'No target post to quote.';
-    }
-
+  private async executeQuoteAction(user: any, targetPost: any): Promise<string> {
     this.logger.log(`Simulated user ${user.username} is quoting (Re-Sela with note) post ${targetPost.id}`);
 
     let quoteContent = '';
@@ -447,18 +465,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     return `Simulated User @${user.username} quoted post ${targetPost.id}`;
   }
 
-  private async executeBookmarkAction(user: any): Promise<string> {
-    const recentPosts = await this.prisma.post.findMany({
-      where: { authorId: { not: user.id } },
-      orderBy: { createdAt: 'desc' },
-      take: 20
-    });
-    const targetPost = recentPosts.length > 0 ? recentPosts[Math.floor(Math.random() * recentPosts.length)] : null;
-
-    if (!targetPost) {
-      return 'No target post to bookmark.';
-    }
-
+  private async executeBookmarkAction(user: any, targetPost: any): Promise<string> {
     this.logger.log(`Simulated user ${user.username} is bookmarking post ${targetPost.id}`);
 
     const existing = await this.prisma.engagement.findUnique({
