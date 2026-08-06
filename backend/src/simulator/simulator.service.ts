@@ -42,6 +42,15 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    // TEMPORARY PROD DB CLEANUP
+    try {
+      this.logger.log('PROD CLEANUP: Purging all posts and related engagements...');
+      const result = await this.prisma.post.deleteMany({});
+      this.logger.log(`PROD CLEANUP: Deleted ${result.count} posts from production.`);
+    } catch (e) {
+      this.logger.error('PROD CLEANUP FAILED:', e);
+    }
+
     const isEnabled = process.env.SIMULATOR_ENABLED === 'true';
     this.logger.log(`Simulator initialization: enabled = ${isEnabled}`);
     
