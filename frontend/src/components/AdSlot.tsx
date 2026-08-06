@@ -205,24 +205,68 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
   );
 }
 
-// Native AdSense component to replace next-google-adsense
+// Native AdSense component with layout & visibility inspection
 function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const insRef = useRef<HTMLModElement>(null);
+  const pushedRef = useRef<boolean>(false);
+
   useEffect(() => {
-    try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-      console.error("AdSense error:", e);
+    const el = insRef.current;
+    const container = containerRef.current;
+    if (!el || !container) return;
+
+    const tryPushAd = () => {
+      if (pushedRef.current) return;
+      
+      // Check if already filled by AdSense script
+      if (el.getAttribute("data-adsbygoogle-status")) {
+        pushedRef.current = true;
+        return;
+      }
+
+      // Check if element has actual visible width in DOM
+      if (el.offsetWidth > 0 && container.offsetWidth > 0) {
+        pushedRef.current = true;
+        try {
+          // @ts-ignore
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {
+          console.error("AdSense error:", e);
+        }
+      }
+    };
+
+    // Immediate attempt if visible on mount
+    tryPushAd();
+
+    if (pushedRef.current) return;
+
+    // Use ResizeObserver to detect when hidden element becomes visible (e.g. window resize / viewport change)
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => {
+        tryPushAd();
+        if (pushedRef.current && observer) {
+          observer.disconnect();
+        }
+      });
+      observer.observe(container);
     }
-  }, []);
+
+    return () => {
+      if (observer) observer.disconnect();
+    };
+  }, [slotId]);
 
   const adSlotId = slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '5819377787';
 
   return (
     <div className={`w-full my-4 flex flex-col items-center justify-center overflow-hidden min-h-[50px]`}>
       <span className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center">Advertisement</span>
-      <div className="w-full min-w-[250px] max-w-full overflow-hidden block">
-        <ins className="adsbygoogle"
+      <div ref={containerRef} className="w-full min-w-[250px] max-w-full overflow-hidden block">
+        <ins ref={insRef}
+             className="adsbygoogle"
              style={{ display: "block", minWidth: "250px", width: "100%" }}
              data-ad-client="ca-pub-1173851541726956"
              data-ad-slot={adSlotId}
