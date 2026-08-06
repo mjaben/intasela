@@ -205,27 +205,50 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
   );
 }
 
-// Native AdSense component with layout & visibility inspection
+// Native AdSense component with layout, visibility, and fill status inspection
 function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const insRef = useRef<HTMLModElement>(null);
   const pushedRef = useRef<boolean>(false);
+  const [isFilled, setIsFilled] = useState<boolean>(false);
 
   useEffect(() => {
     const el = insRef.current;
     const container = containerRef.current;
     if (!el || !container) return;
 
+    // Helper to check if AdSense loaded content into <ins>
+    const checkFillStatus = () => {
+      const status = el.getAttribute("data-ad-status");
+      const hasIframe = el.querySelector("iframe") !== null;
+      if (status === "filled" || hasIframe) {
+        setIsFilled(true);
+      } else if (status === "unfilled") {
+        setIsFilled(false);
+      }
+    };
+
+    // Watch for AdSense DOM changes (iframe injection or attribute updates)
+    const mutationObserver = new MutationObserver(() => {
+      checkFillStatus();
+    });
+
+    mutationObserver.observe(el, {
+      attributes: true,
+      attributeFilter: ["data-ad-status", "data-adsbygoogle-status"],
+      childList: true,
+      subtree: true,
+    });
+
     const tryPushAd = () => {
       if (pushedRef.current) return;
-      
-      // Check if already filled by AdSense script
+
       if (el.getAttribute("data-adsbygoogle-status")) {
         pushedRef.current = true;
+        checkFillStatus();
         return;
       }
 
-      // Check if element has actual visible width in DOM
       if (el.offsetWidth > 0 && container.offsetWidth > 0) {
         pushedRef.current = true;
         try {
@@ -237,32 +260,29 @@ function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
       }
     };
 
-    // Immediate attempt if visible on mount
     tryPushAd();
 
-    if (pushedRef.current) return;
-
-    // Use ResizeObserver to detect when hidden element becomes visible (e.g. window resize / viewport change)
-    let observer: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(() => {
+    let resizeObserver: ResizeObserver | null = null;
+    if (!pushedRef.current && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
         tryPushAd();
-        if (pushedRef.current && observer) {
-          observer.disconnect();
+        if (pushedRef.current && resizeObserver) {
+          resizeObserver.disconnect();
         }
       });
-      observer.observe(container);
+      resizeObserver.observe(container);
     }
 
     return () => {
-      if (observer) observer.disconnect();
+      mutationObserver.disconnect();
+      if (resizeObserver) resizeObserver.disconnect();
     };
   }, [slotId]);
 
   const adSlotId = slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '5819377787';
 
   return (
-    <div className={`w-full my-4 flex flex-col items-center justify-center overflow-hidden min-h-[50px]`}>
+    <div className={`w-full ${isFilled ? 'my-4 flex flex-col items-center justify-center overflow-hidden' : 'hidden'}`}>
       <span className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center">Advertisement</span>
       <div ref={containerRef} className="w-full min-w-[250px] max-w-full overflow-hidden block">
         <ins ref={insRef}
