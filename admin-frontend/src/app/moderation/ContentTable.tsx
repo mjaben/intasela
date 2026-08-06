@@ -5,6 +5,7 @@ import ContentFilters from "./ContentFilters";
 import Pagination from "../users/Pagination";
 import { togglePostFlag, togglePostEligibility, deletePost } from "./actions";
 import ReasonModal from "@/components/ReasonModal";
+import { useToastStore } from "@/store/useToastStore";
 
 type Post = {
   id: number;
@@ -39,6 +40,8 @@ export default function ContentTable({
 }) {
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [actingId, setActingId] = useState<{ id: number; action: string } | null>(null);
+  const addToast = useToastStore(state => state.addToast);
 
   const [modalState, setModalState] = useState<{ 
     isOpen: boolean; 
@@ -75,13 +78,27 @@ export default function ContentTable({
     setModalState(prev => ({ ...prev, isOpen: false }));
     
     startTransition(async () => {
-      if (actionType === "FLAG") {
-        await togglePostFlag(id, !currentStatus, reason);
-      } else if (actionType === "ELIGIBILITY") {
-        await togglePostEligibility(id, !currentStatus, reason);
-      } else if (actionType === "DELETE") {
-        setDeletingId(id);
-        await deletePost(id, reason);
+      try {
+        if (actionType === "FLAG") {
+          setActingId({ id, action: "FLAG" });
+          const res = await togglePostFlag(id, !currentStatus, reason);
+          if (res.success) addToast(`Post successfully ${currentStatus ? 'unflagged' : 'flagged'}`, "success");
+          else addToast(res.error || "Failed to flag post", "error");
+        } else if (actionType === "ELIGIBILITY") {
+          setActingId({ id, action: "ELIGIBILITY" });
+          const res = await togglePostEligibility(id, !currentStatus, reason);
+          if (res.success) addToast(`Post eligibility updated successfully`, "success");
+          else addToast(res.error || "Failed to update eligibility", "error");
+        } else if (actionType === "DELETE") {
+          setDeletingId(id);
+          const res = await deletePost(id, reason);
+          if (res.success) addToast("Post deleted successfully", "success");
+          else addToast(res.error || "Failed to delete post", "error");
+        }
+      } catch (err: any) {
+        addToast(err.message || "An unexpected error occurred", "error");
+      } finally {
+        setActingId(null);
         setDeletingId(null);
       }
     });
@@ -175,21 +192,21 @@ export default function ContentTable({
                             disabled={isPending}
                             className={`text-xs font-semibold transition-colors disabled:opacity-50 ${post.isFlagged ? 'text-gray-400 hover:text-white' : 'text-orange-400 hover:text-orange-300'}`}
                           >
-                            {post.isFlagged ? 'Unflag' : 'Flag'}
+                            {actingId?.id === post.id && actingId?.action === "FLAG" ? "Processing..." : (post.isFlagged ? 'Unflag' : 'Flag')}
                          </button>
                          <button 
                             onClick={() => requestAction(post.id, "ELIGIBILITY", post.isEligible)}
                             disabled={isPending}
                             className="text-xs font-semibold text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                           >
-                            {post.isEligible ? 'Restrict' : 'Allow Earnings'}
+                            {actingId?.id === post.id && actingId?.action === "ELIGIBILITY" ? "Processing..." : (post.isEligible ? 'Restrict' : 'Allow Earnings')}
                          </button>
                          <button 
                             onClick={() => requestAction(post.id, "DELETE")}
                             disabled={deletingId === post.id || isPending}
                             className="text-xs font-semibold text-red-500 hover:text-red-400 transition-colors disabled:opacity-50"
                           >
-                            Delete
+                            {deletingId === post.id ? "Deleting..." : "Delete"}
                          </button>
                        </div>
                     </td>

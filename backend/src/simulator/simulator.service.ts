@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MonetizationService } from '../monetization/monetization.service';
+import { autoSeedSimulatorProfiles } from './simulator.seeder';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -17,11 +18,14 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     this.loadMockPosts();
   }
 
-  onModuleInit() {
+  async onModuleInit() {
     const isEnabled = process.env.SIMULATOR_ENABLED === 'true';
     this.logger.log(`Simulator initialization: enabled = ${isEnabled}`);
     
     if (isEnabled) {
+      // Auto-seed profiles if they don't exist
+      await autoSeedSimulatorProfiles(this.prisma, this.logger);
+
       // Schedule the first randomized tick
       this.scheduleNextRun();
 

@@ -66,6 +66,6 @@ export async function bulkDeleteUsers(userIds: string[], reason: string) {
     return { success: true };
   } catch (error) {
     console.error("Failed to delete users:", error);
-    return { success: false, error: "Failed to delete users" };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }

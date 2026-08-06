@@ -69,7 +69,13 @@ export default function ReasonModal({
           <AlertDialogFooter>
             <AlertDialogCancel type="button" onClick={handleCancel}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              type="submit"
+              onClick={(e) => {
+                // If the user clicks the button, call our submit logic
+                if (reason.trim()) {
+                  onConfirm(reason);
+                  setReason("");
+                }
+              }}
               disabled={!reason.trim()}
             >
               Confirm Action

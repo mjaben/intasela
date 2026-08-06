@@ -99,7 +99,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: Rec
           onClick={() => requestUpdate(key, settings[key])}
           className="px-4 py-2 bg-brand/10 text-brand font-semibold text-sm rounded-lg hover:bg-brand/20 transition-colors disabled:opacity-50"
         >
-          Save
+          {isPending ? "Saving..." : "Save"}
         </button>
       </div>
     </div>
@@ -124,7 +124,7 @@ export default function SettingsForm({ initialSettings }: { initialSettings: Rec
           onClick={() => requestUpdate(key, settings[key])}
           className="px-4 py-2 bg-brand/10 text-brand font-semibold text-sm rounded-lg hover:bg-brand/20 transition-colors disabled:opacity-50 flex-shrink-0"
         >
-          Save
+          {isPending ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

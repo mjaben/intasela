@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { assignUserRole, bulkDeleteUsers } from "./actions";
 import ReasonModal from "@/components/ReasonModal";
+import { useToastStore } from "@/store/useToastStore";
 
 type User = {
   id: string;
@@ -29,6 +30,7 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const addToast = useToastStore(state => state.addToast);
   
   const [modalState, setModalState] = useState<{ 
     isOpen: boolean; 
@@ -71,11 +73,19 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
     
     startTransition(async () => {
       if (actionType === "TOGGLE_MOD") {
-        await assignUserRole(userId, !currentStatus, reason);
+        const res = await assignUserRole(userId, !currentStatus, reason);
+        if (!res.success) {
+          addToast(res.error || "Failed to update role", "error");
+        } else {
+          addToast("Space Mod status updated successfully", "success");
+        }
       } else if (actionType === "BULK_DELETE") {
         const res = await bulkDeleteUsers(selectedUserIds, reason);
         if (res.success) {
           setSelectedUserIds([]);
+          addToast("Users deleted successfully", "success");
+        } else {
+          addToast(res.error || "Failed to delete users", "error");
         }
       }
     });
@@ -109,7 +119,7 @@ export default function UserTable({ initialUsers, totalUsers, totalSystemUsers, 
             disabled={isPending}
             className="bg-red-600 hover:bg-red-500 text-white px-4 py-1.5 rounded text-sm font-semibold transition-colors disabled:opacity-50"
           >
-            Delete Selected
+            {isPending ? "Deleting..." : "Delete Selected"}
           </button>
         </div>
       )}
