@@ -221,9 +221,9 @@ function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
   return (
     <div className={`w-full my-4 flex flex-col items-center justify-center overflow-hidden min-h-[50px]`}>
       <span className="text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center">Advertisement</span>
-      <div className="w-full max-w-full overflow-x-auto no-scrollbar flex justify-center">
+      <div className="w-full min-w-[250px] max-w-full overflow-hidden block">
         <ins className="adsbygoogle"
-             style={{ display: "block" }}
+             style={{ display: "block", minWidth: "250px", width: "100%" }}
              data-ad-client="ca-pub-1173851541726956"
              data-ad-slot={adSlotId}
              data-ad-format="auto"
