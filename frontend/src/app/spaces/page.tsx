@@ -41,11 +41,11 @@ export default function SpacesPage() {
     : spaces.filter(s => s.members?.some((m: any) => m.userId === user?.id && m.status === 'ACTIVE'));
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen bg-[#09090b]">
-      <header className="sticky top-0 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/10 z-10 flex">
+    <div className="w-full max-w-[650px] mx-auto min-h-screen">
+      <header className="sticky top-0 bg-background/80 backdrop-blur-xl border-b border-border z-10 flex">
         <button 
           onClick={() => setActiveTab("Explore")}
-          className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-white/5 relative ${activeTab === "Explore" ? "text-white" : "text-gray-400"}`}
+          className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-accent/50 relative ${activeTab === "Explore" ? "text-foreground" : "text-muted-foreground"}`}
         >
           Explore
           {activeTab === "Explore" && (
@@ -58,7 +58,7 @@ export default function SpacesPage() {
         {isAuthenticated && (
           <button 
             onClick={() => setActiveTab("My Spaces")}
-            className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-white/5 relative ${activeTab === "My Spaces" ? "text-white" : "text-gray-400"}`}
+            className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-accent/50 relative ${activeTab === "My Spaces" ? "text-foreground" : "text-muted-foreground"}`}
           >
             My Spaces
             {activeTab === "My Spaces" && (
@@ -73,18 +73,18 @@ export default function SpacesPage() {
 
       <div className="p-4">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Spaces</h1>
-          <p className="text-gray-400">Discover niche mini-communities.</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Spaces</h1>
+          <p className="text-muted-foreground">Discover niche mini-communities.</p>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-48 rounded-xl bg-white/5 border border-white/10 animate-pulse"></div>
+              <div key={i} className="h-48 rounded-xl bg-accent border border-border animate-pulse"></div>
             ))}
           </div>
         ) : displaySpaces.length === 0 ? (
-          <div className="p-8 text-center text-gray-400 bg-white/5 rounded-xl border border-white/10 border-dashed">
+          <div className="p-8 text-center text-muted-foreground bg-accent/30 rounded-xl border border-border border-dashed">
             No spaces found.
           </div>
         ) : (
