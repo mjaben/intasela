@@ -275,7 +275,7 @@ export default function RegisterPage() {
               <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email address" required className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
             </div>
             <div>
-              <Input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="Phone Number" className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
+              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
             </div>
             <div className="relative">
               <Input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Password" required className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 pr-12 text-[15px]" />
