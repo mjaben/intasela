@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
-// We require it because next-pwa doesn't export typings cleanly in some versions
-const withPWA = require("next-pwa")({
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
   dest: "public",
   register: true,
   skipWaiting: true,

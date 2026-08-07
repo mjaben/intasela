@@ -1,12 +1,14 @@
 @import "tailwindcss";
 
 html, body {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
   height: 100dvh;
   overflow-y: auto;
   background-color: var(--background);
 }
 :root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --background: #0f150e;
   --foreground: #f3f4f6;
   --card: #1A2517;
@@ -46,6 +48,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   overflow-x: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.selectable-text {
+  user-select: text;
 }
 
 html {

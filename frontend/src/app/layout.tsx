@@ -19,7 +19,14 @@ export const metadata: Metadata = {
   title: "Intasela",
   description: "Premium Social Network and Creator Economy Platform",
   manifest: "/manifest.json",
-  themeColor: "#ACC8A2",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Intasela",
+  },
+  icons: {
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {
@@ -28,6 +35,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "#ACC8A2",
 };
 
 export default function RootLayout({
