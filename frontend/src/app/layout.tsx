@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     default: "Intasela | Premium Social Network",
     template: "%s | Intasela"
   },
-  description: "Premium Social Network and Creator Economy Platform",
+  description: "Intasela (formerly Naijanews360) Africa's social network & creator economy platform. Share content, engage with followers, and monetize your passion.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     url: "https://naijanews360.com.ng",
     siteName: "Intasela",
     title: "Intasela | Premium Social Network",
-    description: "Premium Social Network and Creator Economy Platform where creators earn.",
+    description: "Intasela (formerly Naijanews360) Africa's social network & creator economy platform. Share content, engage with followers, and monetize your passion.",
     images: [
       {
         url: "/icon-512x512.png",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Intasela | Premium Social Network",
-    description: "Premium Social Network and Creator Economy Platform",
+    description: "Intasela (formerly Naijanews360) Africa's social network & creator economy platform. Share content, engage with followers, and monetize your passion.",
     images: ["/icon-512x512.png"],
     creator: "@intasela",
   }
