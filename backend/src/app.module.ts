@@ -36,7 +36,12 @@ import { SimulatorModule } from './simulator/simulator.module';
     BullModule.forRootAsync({
       useFactory: () => {
         if (process.env.REDIS_URL) {
-          const url = new URL(process.env.REDIS_URL);
+          let rawUrl = process.env.REDIS_URL;
+          const match = rawUrl.match(/(redis|rediss):\/\/[^\s]+/);
+          if (match) {
+            rawUrl = match[0];
+          }
+          const url = new URL(rawUrl);
           return {
             connection: {
               host: url.hostname,

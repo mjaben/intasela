@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
 import ReactMarkdown from 'react-markdown';
@@ -380,8 +381,8 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
       )}
 
       {/* Expanded Modal State */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-[#10170E] animate-in slide-in-from-bottom duration-300">
+      {isOpen && typeof document !== 'undefined' ? createPortal(
+        <div className="fixed inset-0 z-[9999] flex flex-col bg-[#10170E] animate-in slide-in-from-bottom duration-300">
           {/* Subtle gradient background inspired by the mesh */}
           <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-[#ACC8A2]/5 to-transparent pointer-events-none opacity-50" />
           
@@ -688,9 +689,8 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
               ) : (mode === 'REPLY' ? 'Reply' : 'Sela')}
             </button>
           </div>
-
         </div>
-      )}
+      , document.body) : null}
     </>
   );
 }

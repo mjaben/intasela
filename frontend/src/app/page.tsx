@@ -174,8 +174,7 @@ export default function Home() {
   return (
     <PullToRefresh onRefresh={async () => { await fetchPosts(true); }}>
       <div className="w-full max-w-[650px] mx-auto min-h-screen relative">
-        {/* Top Header */}
-        <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border z-30 flex">
+        <header className="sticky top-[60px] sm:top-0 bg-[#0f150e]/90 backdrop-blur-md border-b border-border z-30 flex">
         <button 
           onClick={() => setActiveTab("For you")}
           className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-accent/50 relative ${activeTab === "For you" ? "text-white" : "text-gray-400 font-medium"}`}

@@ -13,7 +13,7 @@ export default function MobileHeader() {
 
   return (
     <>
-      <header className="sm:hidden fixed top-0 left-0 right-0 h-[calc(60px+var(--safe-area-inset-top))] pt-[var(--safe-area-inset-top)] bg-background/90 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
+      <header className="sm:hidden fixed top-0 left-0 right-0 h-[calc(60px+var(--safe-area-inset-top))] pt-[var(--safe-area-inset-top)] bg-[#0f150e]/95 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
         {/* Left Side: Hamburger (if logged in) + Brand Logo */}
         <div className="flex items-center gap-3">
           {isAuthenticated && (

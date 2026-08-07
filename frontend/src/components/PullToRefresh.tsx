@@ -99,12 +99,14 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
         className="absolute top-0 left-0 right-0 flex justify-center z-50 pointer-events-none"
         style={{ marginTop: '-40px' }}
       >
-        <div className="bg-background border border-border shadow-md rounded-full p-2 flex items-center justify-center">
+        <div 
+          className="bg-background border border-border shadow-md rounded-full p-2 flex items-center justify-center"
+          style={{ opacity: isRefreshing ? 1 : Math.min(pullDistance / THRESHOLD, 1) }}
+        >
           <Loader2 
             className={`w-5 h-5 text-[#ACC8A2] ${isRefreshing ? 'animate-spin' : ''}`} 
             style={{ 
-              transform: !isRefreshing ? `rotate(${pullDistance * 3}deg)` : 'none',
-              opacity: pullDistance / THRESHOLD
+              transform: !isRefreshing ? `rotate(${pullDistance * 3}deg)` : 'none'
             }} 
           />
         </div>
