@@ -6,12 +6,15 @@ import { useUserStore } from "@/store/useUserStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
 import { useToastStore } from "@/store/useToastStore";
 import { useBlockMuteStore } from "@/store/useBlockMuteStore";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function SettingsPage() {
   const router = useRouter();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const setGlobalSettings = useSettingsStore((state) => state.setSettings);
   const { blockedUsers, mutedUsers, toggleBlockUser, toggleMuteUser } = useBlockMuteStore();
+  const { permission: pushPermission, requestPermission: requestPushPermission } = usePushNotifications();
+  const pushGranted = pushPermission === "granted";
   const [userData, setUserData] = useState<any>(null);
   const [settings, setSettings] = useState<any>({
     filterExplicit: false,
@@ -379,12 +382,14 @@ export default function SettingsPage() {
     </svg>
   );
 
-  const Checkbox = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
+  const Checkbox = ({ checked, onChange, disabled }: { checked: boolean, onChange: (val: boolean) => void, disabled?: boolean }) => (
     <div 
-      onClick={() => onChange(!checked)}
-      className={`w-5 h-5 rounded flex items-center justify-center cursor-pointer transition-colors duration-200 ${checked ? 'bg-[#ACC8A2]' : 'bg-white/20'}`}
+      onClick={() => !disabled && onChange(!checked)}
+      className={`w-5 h-5 rounded flex items-center justify-center transition-colors duration-200 ${
+        disabled ? 'opacity-30 cursor-not-allowed bg-white/10' : 'cursor-pointer ' + (checked ? 'bg-[#ACC8A2]' : 'bg-white/20')
+      }`}
     >
-      {checked && (
+      {checked && !disabled && (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A2517" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
@@ -466,6 +471,23 @@ export default function SettingsPage() {
       </Section>
 
       <Section title="Notifications">
+        {/* Push Permission Status Button */}
+        {!pushGranted && (
+          <div className="mx-5 mt-4 mb-2">
+            <button
+              onClick={requestPushPermission}
+              disabled={pushPermission === "denied"}
+              className={`w-full py-3 rounded-xl text-[14px] font-semibold transition-colors flex items-center justify-center gap-2 ${
+                pushPermission === "denied"
+                  ? "bg-red-500/10 text-red-400 cursor-not-allowed border border-red-500/20"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+              }`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              {pushPermission === "denied" ? "Push Notifications Blocked in Browser" : "Enable Push Notifications"}
+            </button>
+          </div>
+        )}
         {/* Engagement */}
         <div className="border-b border-white/10 transition-colors relative">
           <div className="p-5 flex items-center justify-between cursor-pointer hover:bg-white/10/30" onClick={() => toggleExpand('engagement')}>
@@ -522,7 +544,8 @@ export default function SettingsPage() {
                       {item.hasPush && (
                         <Checkbox 
                           checked={settings.notifications?.engagement?.[item.id]?.push ?? true} 
-                          onChange={(v) => updateNotificationSetting('engagement', item.id, 'push', v)} 
+                          onChange={(v) => updateNotificationSetting('engagement', item.id, 'push', v)}
+                          disabled={!pushGranted}
                         />
                       )}
                     </div>
@@ -602,7 +625,8 @@ export default function SettingsPage() {
                       {item.hasPush && (
                         <Checkbox 
                           checked={settings.notifications?.messaging?.[item.id]?.push ?? true} 
-                          onChange={(v) => updateNotificationSetting('messaging', item.id, 'push', v)} 
+                          onChange={(v) => updateNotificationSetting('messaging', item.id, 'push', v)}
+                          disabled={!pushGranted}
                         />
                       )}
                     </div>
@@ -694,7 +718,8 @@ export default function SettingsPage() {
                       {item.hasPush && (
                         <Checkbox 
                           checked={settings.notifications?.connections?.[item.id]?.push ?? true} 
-                          onChange={(v) => updateNotificationSetting('connections', item.id, 'push', v)} 
+                          onChange={(v) => updateNotificationSetting('connections', item.id, 'push', v)}
+                          disabled={!pushGranted}
                         />
                       )}
                     </div>
@@ -761,7 +786,8 @@ export default function SettingsPage() {
                       {item.hasPush && (
                         <Checkbox 
                           checked={settings.notifications?.marketing?.[item.id]?.push ?? true} 
-                          onChange={(v) => updateNotificationSetting('marketing', item.id, 'push', v)} 
+                          onChange={(v) => updateNotificationSetting('marketing', item.id, 'push', v)}
+                          disabled={!pushGranted}
                         />
                       )}
                     </div>
