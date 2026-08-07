@@ -67,6 +67,7 @@ const navGroups: {
   {
     title: "Business",
     items: [
+      { name: "Broadcast Push", href: "/broadcast", icon: Megaphone, permission: "MANAGE_SYSTEM" },
       { name: "Ad Funding", href: "/business/funding", icon: Wallet, permission: "MANAGE_FINANCE" },
       { name: "Ad Campaigns", href: "/business/campaigns", icon: Megaphone, permission: "MANAGE_SYSTEM" },
       { name: "Ad Manager", href: "/settings/ads", icon: FileText, permission: "MANAGE_SYSTEM" },

@@ -16,6 +16,8 @@ import { useUserStore } from "@/store/useUserStore";
 import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
 
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import PermissionsOnboarding from "@/components/PermissionsOnboarding";
+import SplashScreen from "@/components/SplashScreen";
 
 export const metadata: Metadata = {
   title: "Intasela",
@@ -49,14 +51,28 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1173851541726956" crossOrigin="anonymous"></script>
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-QSYKXCWEME"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-QSYKXCWEME');
+            `,
+          }}
+        />
       </head>
       <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-screen bg-background text-foreground`} suppressHydrationWarning>
         <div className="relative min-h-screen flex flex-col w-full">
+          <SplashScreen />
           <AppShell>
             {children}
           </AppShell>
           <ToastProvider />
           <MediaViewerModal />
+          <PermissionsOnboarding />
           <PWAInstallBanner />
         </div>
       </body>

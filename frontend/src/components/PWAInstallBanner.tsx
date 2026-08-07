@@ -7,18 +7,37 @@ import { X, Download } from "lucide-react";
 export default function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showBanner, setShowBanner] = useState(false);
+  const [isIosSafari, setIsIosSafari] = useState(false);
 
   useEffect(() => {
+    // Check if it's already installed (standalone mode)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    
+    if (isStandalone) {
+      setShowBanner(false);
+      return;
+    }
+
+    // Detect iOS Safari
+    const isIos = /ipad|iphone|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isSafari = /safari/.test(window.navigator.userAgent.toLowerCase()) && !/chrome|crios/.test(window.navigator.userAgent.toLowerCase());
+
+    if (isIos && isSafari) {
+      // iOS doesn't support beforeinstallprompt, so we just show the banner anyway with instructions
+      setTimeout(() => {
+        setIsIosSafari(true);
+        setShowBanner(true);
+      }, 3000);
+      return;
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Wait a few seconds before showing so it's not too aggressive
       setTimeout(() => setShowBanner(true), 3000);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    
-    // If they install it, hide banner
     window.addEventListener("appinstalled", () => {
       setShowBanner(false);
       setDeferredPrompt(null);
@@ -30,6 +49,12 @@ export default function PWAInstallBanner() {
   }, []);
 
   const handleInstallClick = async () => {
+    if (isIosSafari) {
+      // Just visually alert them how to install on iOS
+      alert("To install: tap the Share button at the bottom of Safari and select 'Add to Home Screen'.");
+      return;
+    }
+
     if (!deferredPrompt) return;
     
     deferredPrompt.prompt();
@@ -37,8 +62,6 @@ export default function PWAInstallBanner() {
     
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
     }
     
     setDeferredPrompt(null);
