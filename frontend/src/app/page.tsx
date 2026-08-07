@@ -174,7 +174,7 @@ export default function Home() {
   return (
     <PullToRefresh onRefresh={async () => { await fetchPosts(true); }}>
       <div className="w-full max-w-[650px] mx-auto min-h-screen relative">
-        <header className="sticky top-[60px] sm:top-0 bg-[#0f150e]/90 backdrop-blur-md border-b border-border z-30 flex">
+        <header className="sticky top-[calc(60px+var(--safe-area-inset-top))] sm:top-0 bg-[#0f150e]/90 backdrop-blur-md border-b border-border z-30 flex">
         <button 
           onClick={() => setActiveTab("For you")}
           className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-accent/50 relative ${activeTab === "For you" ? "text-white" : "text-gray-400 font-medium"}`}
@@ -208,7 +208,7 @@ export default function Home() {
             initial={{ opacity: 0, y: -20, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.8 }}
-            className="absolute top-[80px] left-0 right-0 flex justify-center z-50 pointer-events-none"
+            className="absolute top-[calc(80px+var(--safe-area-inset-top))] left-0 right-0 flex justify-center z-50 pointer-events-none"
           >
             <div className="bg-background border border-border shadow-md rounded-full p-2 flex items-center justify-center">
               <Loader2 className="w-5 h-5 text-[#ACC8A2] animate-spin" />
@@ -224,7 +224,7 @@ export default function Home() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="sticky top-[68px] z-40 flex justify-center w-full pt-3 pointer-events-none"
+            className="sticky top-[calc(68px+var(--safe-area-inset-top))] z-40 flex justify-center w-full pt-3 pointer-events-none"
           >
             <button 
               onClick={handleShowNewPosts}

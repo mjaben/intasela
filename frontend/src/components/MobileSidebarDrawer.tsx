@@ -67,7 +67,7 @@ export default function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDr
       
       <div className="fixed top-0 left-0 bottom-0 w-[280px] bg-background z-[70] sm:hidden shadow-xl transform transition-transform flex flex-col">
         {/* Header section */}
-        <div className="p-6 border-b border-border flex items-center justify-between">
+        <div className="px-6 pb-6 pt-[calc(24px+var(--safe-area-inset-top))] border-b border-border flex items-center justify-between">
           <Link href="/" className="flex items-center gap-1.5" onClick={onClose}>
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-bold text-primary-foreground text-sm">
               In
