@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, MaxLength, Matches, IsOptional, IsArray } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, MaxLength, Matches, IsOptional, IsArray, Equals } from 'class-validator';
 
 export class RegisterDto {
   @IsNotEmpty()
@@ -58,4 +58,7 @@ export class RegisterDto {
   @IsArray()
   @IsString({ each: true })
   interests?: string[];
+
+  @Equals(true, { message: 'You must agree to the terms and privacy policy to sign up.' })
+  agreedToTerms: boolean;
 }

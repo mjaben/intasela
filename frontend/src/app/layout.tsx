@@ -10,6 +10,7 @@ import MobileHeader from "@/components/MobileHeader";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileFAB from "@/components/MobileFAB";
 import MediaViewerModal from "@/components/MediaViewerModal";
+import AppShell from "@/components/AppShell";
 import { useEffect } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
@@ -41,19 +42,9 @@ export default function RootLayout({
       </head>
       <body className={`${GeistSans.className} ${GeistSans.variable} ${GeistMono.variable} antialiased min-h-screen bg-background text-foreground`} suppressHydrationWarning>
         <div className="relative min-h-screen flex flex-col w-full">
-          <MobileHeader />
-          <div className="flex flex-1 w-full max-w-[1280px] mx-auto px-0 sm:px-4 pt-[60px] sm:pt-0">
-            <SidebarNav />
-            
-            <main className="flex-1 min-w-0 pb-32 sm:pb-0 flex flex-col overflow-x-hidden">
-              {children}
-            </main>
-
-            <RightSidebar />
-          </div>
-          
-          <MobileFAB />
-          <MobileBottomNav />
+          <AppShell>
+            {children}
+          </AppShell>
           <ToastProvider />
           <MediaViewerModal />
         </div>

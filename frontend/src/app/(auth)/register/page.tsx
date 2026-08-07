@@ -4,12 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import Link from "next/link";
+import AuthBackground from "@/components/AuthBackground";
 import { useStates, useLGAs } from "nigeria-location-kit/react";
 import SearchableOccupationSelect from "@/components/SearchableOccupationSelect";
 import CustomSelect from "@/components/CustomSelect";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, Loader2, X } from "lucide-react";
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
@@ -38,6 +39,7 @@ export default function RegisterPage() {
     creatorType: "",
     interests: [] as string[],
     otp: "",
+    agreedToTerms: false,
   });
 
   const lgas = useLGAs(formData.state);
@@ -216,20 +218,30 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full h-full max-h-full sm:h-auto sm:max-h-[85vh] bg-black/40 backdrop-blur-3xl p-5 sm:p-10 rounded-[2rem] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col min-h-0">
-      <div className="text-center mb-4 shrink-0">
-        <h1 className="text-2xl font-bold text-white mb-3 tracking-tight">Create an account</h1>
-        <p className="text-white/70 text-sm">Join Intasela and start connecting</p>
+    <div className="fixed inset-0 bg-[#0a0a0a] w-full flex flex-col overflow-hidden overscroll-none z-50">
+      <AuthBackground />
+      <div className="w-full h-full max-w-sm mx-auto px-6 pt-[12vh] sm:pt-12 pb-6 flex flex-col relative z-10">
+        <Link href="/" className="absolute top-6 right-6 p-2 text-white/50 hover:text-white transition-colors z-50">
+          <X size={24} />
+        </Link>
+        <div className="text-center mb-8 shrink-0 relative z-10">
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Create an account</h1>
+          <p className="text-white/60 text-[13px] font-medium">
+          Already have an account?{" "}
+          <Link href="/login" className="text-[#ACC8A2] hover:text-white transition-colors">
+            Login
+          </Link>
+        </p>
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-4 shrink-0">
-        <div className="flex justify-between items-end mb-2">
+      <div className="mb-2 shrink-0 relative z-10">
+        <div className="flex justify-between items-end mb-1">
           <div className="text-sm font-bold text-[#ACC8A2]">
             Step {step} of 5
           </div>
         </div>
-        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
           <div 
             className="h-full bg-[#ACC8A2] transition-all duration-500 ease-out rounded-full"
             style={{ width: `${((step) / 5) * 100}%` }}
@@ -238,43 +250,62 @@ export default function RegisterPage() {
       </div>
 
       {error && (
-        <div className="mb-4 flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-medium animate-in slide-in-from-top-2 fade-in duration-300">
+        <div className="mb-2 flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-medium animate-in slide-in-from-top-2 fade-in duration-300 relative z-10">
           <AlertCircle size={16} className="shrink-0" />
           <p>{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-        <div className="flex-1 overflow-y-auto custom-scrollbar overscroll-y-contain pr-1 sm:pr-3 pb-2 space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 sm:flex-none min-h-0 relative z-10 pt-4">
+        <div className="flex-1 sm:flex-none overflow-y-auto custom-scrollbar overscroll-y-contain pb-2 space-y-3">
         {step === 1 && (
           <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">First Name <span className="text-red-500">*</span></label>
-                <Input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="John" required className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
+                <Input type="text" name="firstName" value={formData.firstName} onChange={handleChange} placeholder="First Name" required className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Last Name <span className="text-red-500">*</span></label>
-                <Input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Doe" required className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
+                <Input type="text" name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Last Name" required className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
               </div>
+            </div>
+            <div>
+              <Input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="Username" required className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
+            </div>
+            <div>
+              <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email address" required className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
+            </div>
+            <div>
+              <Input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="Phone Number" className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 text-[15px]" />
+            </div>
+            <div className="relative">
+              <Input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Password" required className="h-[52px] bg-[#161616] border-transparent text-white placeholder:text-white/40 rounded-full px-6 focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20 pr-12 text-[15px]" />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
             
-            <div>
-              <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Username <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 font-medium">@</span>
-                <Input type="text" name="username" value={formData.username} onChange={handleChange} placeholder="johndoe" className="pl-8 h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" required />
+            <div className="flex items-start gap-3 pt-2 px-2">
+              <div className="flex items-center h-5">
+                <input 
+                  id="terms" 
+                  name="agreedToTerms"
+                  type="checkbox" 
+                  checked={formData.agreedToTerms}
+                  onChange={(e) => setFormData({ ...formData, agreedToTerms: e.target.checked })}
+                  required 
+                  className="w-4 h-4 rounded border-white/20 bg-[#161616] text-[#ACC8A2] focus:ring-[#ACC8A2]/50 focus:ring-offset-0 transition-colors cursor-pointer appearance-none checked:bg-[#ACC8A2] checked:border-transparent checked:before:content-['✓'] checked:before:flex checked:before:justify-center checked:before:items-center checked:before:text-[#1A2517] checked:before:text-xs" 
+                />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Email <span className="text-red-500">*</span></label>
-              <Input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-white/80 mb-2 ml-1">Phone Number (Optional)</label>
-              <Input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+1234567890" className="h-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-[#ACC8A2]/50 focus:ring-[#ACC8A2]/20" />
+              <label htmlFor="terms" className="text-white/60 text-[12px] leading-relaxed cursor-pointer select-none">
+                I agree to Intasela's{" "}
+                <Link href="/terms" className="text-[#ACC8A2] hover:text-white transition-colors">Terms of use</Link>
+                {" "}and{" "}
+                <Link href="/privacy" className="text-[#ACC8A2] hover:text-white transition-colors">Privacy policy</Link>
+              </label>
             </div>
           </div>
         )}
@@ -473,13 +504,13 @@ export default function RegisterPage() {
 
         </div>
         
-        <div className="flex gap-4 pt-4 mt-2 shrink-0 border-t border-white/10">
+        <div className="flex gap-4 pt-4 shrink-0">
           {step > 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
-              className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/5 hover:text-white rounded-full h-10 font-bold"
+              className="flex-1 bg-transparent border-white/10 text-white hover:bg-white/5 hover:text-white rounded-full h-[52px] font-bold"
             >
               Back
             </Button>
@@ -487,11 +518,11 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-[#ACC8A2] text-[#1A2517] hover:bg-white transition-all transform hover:scale-[1.02] active:scale-95 rounded-full h-10 font-bold text-[15px] shadow-[0_4px_14px_rgba(172,200,162,0.4)] flex items-center justify-center gap-2"
+            className="flex-1 bg-[#ACC8A2] text-[#1A2517] hover:bg-white transition-all transform hover:scale-[1.02] active:scale-95 rounded-full h-[52px] font-semibold text-[15px] shadow-[0_4px_20px_rgba(172,200,162,0.2)] flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2 size={20} className="animate-spin" />
                 {step === 4 ? "Sending..." : step === 5 ? "Creating Account..." : "Processing..."}
               </>
             ) : step < 4 ? "Continue" : step === 4 ? "Send Code" : "Create Account"}
@@ -499,13 +530,6 @@ export default function RegisterPage() {
         </div>
       </form>
 
-      <div className="mt-4 text-center pb-2 shrink-0">
-        <p className="text-white/60 text-sm">
-          Already have an account?{" "}
-          <Link href="/login" className="text-[#ACC8A2] hover:text-white transition-colors font-bold ml-1">
-            Log in
-          </Link>
-        </p>
       </div>
     </div>
   );

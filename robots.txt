@@ -1,0 +1,10 @@
+User-agent: Googlebot
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+https://naijanews360.com.ng/sitemap_index.xml

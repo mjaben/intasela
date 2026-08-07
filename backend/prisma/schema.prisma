@@ -39,6 +39,7 @@ model User {
   interests     Json?        // Storing top 3 interests as a JSON array
   paymentSettings Json?      // User's connected wallet/bank details
   settings      Json?        // User's app settings (notifications, privacy, etc.)
+  agreedToTerms Boolean      @default(false)
   
   // Status & Moderation
   isActive      Boolean      @default(true)
