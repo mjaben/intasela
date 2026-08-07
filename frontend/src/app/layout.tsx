@@ -15,6 +15,8 @@ import { useEffect } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { useSystemSettingsStore } from "@/store/useSystemSettingsStore";
 
+import PWAInstallBanner from "@/components/PWAInstallBanner";
+
 export const metadata: Metadata = {
   title: "Intasela",
   description: "Premium Social Network and Creator Economy Platform",
@@ -55,6 +57,7 @@ export default function RootLayout({
           </AppShell>
           <ToastProvider />
           <MediaViewerModal />
+          <PWAInstallBanner />
         </div>
       </body>
     </html>
