@@ -20,7 +20,11 @@ import PermissionsOnboarding from "@/components/PermissionsOnboarding";
 import SplashScreen from "@/components/SplashScreen";
 
 export const metadata: Metadata = {
-  title: "Intasela",
+  metadataBase: new URL("https://naijanews360.com.ng"),
+  title: {
+    default: "Intasela | Premium Social Network",
+    template: "%s | Intasela"
+  },
   description: "Premium Social Network and Creator Economy Platform",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -30,7 +34,31 @@ export const metadata: Metadata = {
   },
   icons: {
     apple: '/apple-touch-icon.png',
+    icon: '/icon-192x192.png',
   },
+  openGraph: {
+    type: "website",
+    locale: "en_NG",
+    url: "https://naijanews360.com.ng",
+    siteName: "Intasela",
+    title: "Intasela | Premium Social Network",
+    description: "Premium Social Network and Creator Economy Platform where creators earn.",
+    images: [
+      {
+        url: "/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Intasela Logo",
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Intasela | Premium Social Network",
+    description: "Premium Social Network and Creator Economy Platform",
+    images: ["/icon-512x512.png"],
+    creator: "@intasela",
+  }
 };
 
 export const viewport: Viewport = {

@@ -134,11 +134,12 @@ export default function SidebarNav() {
     <aside className={`hidden sm:flex h-screen sticky top-0 flex-col pt-4 pb-6 transition-all duration-300 flex-shrink-0 border-r border-border/10 ${isCollapsed ? 'w-[80px] px-2' : 'w-[250px] pr-6'}`}>
       {/* Brand Logo & Toggle */}
       <div className={`flex items-center mb-4 ${isCollapsed ? 'flex-col gap-4 mt-2' : 'justify-between px-4 mt-2'}`}>
-        <Link href="/" className="flex items-center gap-1" title={isCollapsed ? "Intasela" : undefined}>
-          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-bold text-primary-foreground flex-shrink-0">
-            In
-          </div>
-          {!isCollapsed && <span className="text-xl font-bold tracking-tight">tasela</span>}
+        <Link href="/" className="flex items-center" title={isCollapsed ? "Intasela" : undefined}>
+          {isCollapsed ? (
+            <img src="/intasela-icon.png" alt="Intasela Icon" className="w-9 h-9 object-contain" />
+          ) : (
+            <img src="/intasela-logo.png" alt="Intasela Logo" className="h-8 object-contain" />
+          )}
         </Link>
         <button 
           onClick={toggleCollapse} 

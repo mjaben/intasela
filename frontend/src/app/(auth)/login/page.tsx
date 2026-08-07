@@ -58,8 +58,9 @@ export default function LoginPage() {
         <Link href="/" className="absolute top-6 right-6 p-2 text-white/50 hover:text-white transition-colors z-50">
           <X size={24} />
         </Link>
-        <div className="text-center mb-10 shrink-0 relative z-10">
-          <h1 className="text-[32px] leading-tight font-bold text-white mb-1 tracking-tight">Welcome Back<br/>to Intasela</h1>
+        <div className="text-center mb-10 shrink-0 relative z-10 flex flex-col items-center">
+          <img src="/intasela-logo.png" alt="Intasela" className="h-10 object-contain mb-6" />
+          <h1 className="text-[32px] leading-tight font-bold text-white mb-1 tracking-tight">Welcome Back</h1>
         </div>
 
       {error && (
