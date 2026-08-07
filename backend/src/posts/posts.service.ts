@@ -1170,17 +1170,7 @@ export class PostsService {
       const hashtagRegex = /#[\w]+/g;
       const hashtags = post.content.match(hashtagRegex) || [];
       
-      // Extract words (3+ characters, ignoring mentions and urls)
-      const cleanContent = post.content
-        .replace(/https?:\/\/\S+/g, '') // remove urls
-        .replace(/@\w+/g, '') // remove mentions
-        .replace(/[^\w\s#]/g, ''); // remove punctuation (keep hashtags and words)
-        
-      const words = cleanContent.split(/\s+/).filter(w => w.length > 3 && !w.startsWith('#'));
-      
-      const allTopics = [...hashtags, ...words];
-      
-      const uniqueTopics = [...new Set(allTopics)]; 
+      const uniqueTopics = [...new Set(hashtags)]; 
       const seenLower = new Set<string>();
       
       for (const topic of uniqueTopics) {
