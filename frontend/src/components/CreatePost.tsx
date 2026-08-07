@@ -484,7 +484,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
                   {/* User Info Header */}
                   <div className="flex items-center gap-3 mb-3">
                     <UserAvatar size="md" src={user?.avatarUrl} fallback={user?.username} />
-                    <span className="font-bold text-white text-[16px]">{user?.name || user?.username}</span>
+                    <span className="font-bold text-white text-[16px]">{user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.username}</span>
                   </div>
                   
                   {/* Input Area */}

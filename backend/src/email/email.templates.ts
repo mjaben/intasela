@@ -185,18 +185,19 @@ export const emailUpdateOtpTemplate = (otp: string) => {
 
 export const payoutNotificationTemplate = (amount: number, status: string) => {
   const formattedAmount = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
-  const content = \`
+  const statusColor = status === 'COMPLETED' ? '#ACC8A2' : '#f59e0b';
+  const content = `
     <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: 'Inter', sans-serif; letter-spacing: -0.5px; text-align: center;">Payout Update</h1>
     <p style="font-size: 16px; line-height: 1.6; color: #A1A1AA; margin-top: 0; margin-bottom: 32px; font-family: 'Inter', sans-serif; text-align: center;">Your withdrawal request status has been updated:</p>
     
     <div style="background: linear-gradient(145deg, #131911 0%, #0A0A0A 100%); border: 1px solid #283724; border-radius: 16px; padding: 32px; text-align: center; margin: 0 0 32px 0;">
       <div style="font-size: 14px; color: #A1A1AA; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; font-family: 'Inter', sans-serif;">Amount</div>
-      <div style="font-size: 36px; font-weight: 800; color: #ffffff; margin: 8px 0 24px 0; font-family: 'Inter', sans-serif;">\${formattedAmount}</div>
+      <div style="font-size: 36px; font-weight: 800; color: #ffffff; margin: 8px 0 24px 0; font-family: 'Inter', sans-serif;">${formattedAmount}</div>
       <div style="font-size: 14px; color: #A1A1AA; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; font-family: 'Inter', sans-serif;">Status</div>
-      <div style="font-size: 18px; font-weight: 800; color: \${status === 'COMPLETED' ? '#ACC8A2' : '#f59e0b'}; margin-top: 8px; font-family: 'Inter', sans-serif;">\${status}</div>
+      <div style="font-size: 18px; font-weight: 800; color: ${statusColor}; margin-top: 8px; font-family: 'Inter', sans-serif;">${status}</div>
     </div>
     
     <p style="font-size: 15px; line-height: 1.6; color: #71717A; font-family: 'Inter', sans-serif; text-align: center; margin: 0;">You can track your earnings and transaction history at any time in your Creator Studio.</p>
-  \`;
+  `;
   return baseEmailLayout("Payout Notification - Intasela", content);
 };
