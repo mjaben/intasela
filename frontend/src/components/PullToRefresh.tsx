@@ -20,14 +20,15 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
   const MAX_PULL = 100;
   const THRESHOLD = 60;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  const hasVibratedForThreshold = useRef(false);
 
+  useEffect(() => {
+    // Listen on window to accurately capture touches anywhere on screen
     const handleTouchStart = (e: TouchEvent) => {
-      if (window.scrollY === 0) {
+      if (window.scrollY <= 0) {
         startY.current = e.touches[0].clientY;
         setIsPulling(true);
+        hasVibratedForThreshold.current = false;
       }
     };
 
@@ -38,12 +39,21 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
       const distance = currentY - startY.current;
 
       if (distance > 0) {
-        // Prevent default scrolling when pulling down at the top
         if (e.cancelable) e.preventDefault();
         
         const dampedDistance = Math.min(distance * 0.4, MAX_PULL);
         setPullDistance(dampedDistance);
         controls.set({ y: dampedDistance });
+
+        // Haptic feedback when crossing the threshold
+        if (dampedDistance > THRESHOLD && !hasVibratedForThreshold.current) {
+          hasVibratedForThreshold.current = true;
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate([10, 50, 10]);
+          }
+        } else if (dampedDistance <= THRESHOLD) {
+          hasVibratedForThreshold.current = false;
+        }
       }
     };
 
@@ -52,24 +62,32 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
       setIsPulling(false);
 
       if (pullDistance > THRESHOLD && !isRefreshing) {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(50);
+        }
         setIsRefreshing(true);
         controls.start({ y: 50 }); // Hold spinner at 50px
-        await onRefresh();
-        setIsRefreshing(false);
+        try {
+          await onRefresh();
+        } finally {
+          setIsRefreshing(false);
+          setPullDistance(0);
+          controls.start({ y: 0 }); // Snap back
+        }
+      } else {
+        setPullDistance(0);
+        controls.start({ y: 0 }); // Snap back
       }
-      
-      setPullDistance(0);
-      controls.start({ y: 0 }); // Snap back
     };
 
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isPulling, isRefreshing, pullDistance, onRefresh, controls]);
 
@@ -83,7 +101,7 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
       >
         <div className="bg-background border border-border shadow-md rounded-full p-2 flex items-center justify-center">
           <Loader2 
-            className={`w-5 h-5 text-primary ${isRefreshing ? 'animate-spin' : ''}`} 
+            className={`w-5 h-5 text-[#ACC8A2] ${isRefreshing ? 'animate-spin' : ''}`} 
             style={{ 
               transform: !isRefreshing ? `rotate(${pullDistance * 3}deg)` : 'none',
               opacity: pullDistance / THRESHOLD

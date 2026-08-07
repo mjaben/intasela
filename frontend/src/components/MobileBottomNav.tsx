@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useRef } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { useFeedStore } from "@/store/useFeedStore";
@@ -12,8 +13,33 @@ export default function MobileBottomNav() {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const { unreadCount } = useNotificationStore();
   const { composerState } = useFeedStore();
+  const router = useRouter();
+  const lastTapRef = useRef<number>(0);
 
   if (composerState.isOpen) return null;
+
+  const handleHomeTap = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const now = Date.now();
+    const isDoubleTap = now - lastTapRef.current < 300;
+    lastTapRef.current = now;
+
+    if (pathname === "/") {
+      if (isDoubleTap) {
+        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate([20, 30, 20]);
+        window.dispatchEvent(new CustomEvent('home:refresh'));
+      } else {
+        if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(30);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } else if (pathname.includes("/posts/") || pathname.startsWith("/orbit")) {
+      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(30);
+      router.back();
+    } else {
+      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(30);
+      router.push("/");
+    }
+  };
 
   const navItems: { name: string; href: string; icon?: string; svg?: React.ReactNode }[] = [
     {
@@ -52,6 +78,37 @@ export default function MobileBottomNav() {
         <div className="flex-1 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] flex items-center justify-around h-[54px] rounded-full px-2">
           {navItems.filter(item => item.name !== "Activity").map((item) => {
             const isActive = pathname === item.href || (item.name === "Profile" && pathname.startsWith("/@"));
+            
+            if (item.name === "Home") {
+              return (
+                <button
+                  key={item.name}
+                  onClick={handleHomeTap}
+                  className={`flex items-center justify-center relative transition-all duration-300 ease-out h-[40px] ${
+                    isActive ? "bg-black dark:bg-[#ACC8A2] rounded-full px-4 gap-2 shadow-md" : "w-[40px] rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+                  }`}
+                >
+                  <div className={`w-[18px] h-[18px] flex items-center justify-center relative transition-all duration-300 ${isActive ? "scale-100" : "scale-90 opacity-60"}`}>
+                    {item.icon ? (
+                      <img 
+                        src={item.icon} 
+                        alt={item.name} 
+                        className={`w-full h-full object-contain ${isActive ? "brightness-0 invert dark:invert-0" : "brightness-0 invert-0 dark:invert"}`} 
+                      />
+                    ) : (
+                      <div className={`${isActive ? "text-white dark:text-[#1A2517]" : "text-black dark:text-white"}`}>{item.svg}</div>
+                    )}
+                  </div>
+                  
+                  {isActive && (
+                    <span className="text-[12px] font-bold text-white dark:text-[#1A2517] tracking-wide whitespace-nowrap">
+                      {item.name}
+                    </span>
+                  )}
+                </button>
+              );
+            }
+
             return (
               <Link
                 key={item.name}

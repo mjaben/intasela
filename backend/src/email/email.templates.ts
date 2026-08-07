@@ -118,25 +118,25 @@ const baseEmailLayout = (title: string, content: string) => `
 
 </body>
 </html>
-\`;
+`;
 
 export const registrationOtpTemplate = (otp: string) => {
-  const content = \`
+  const content = `
     <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: 'Inter', sans-serif; letter-spacing: -0.5px; text-align: center;">Verify Your Email</h1>
     <p style="font-size: 16px; line-height: 1.6; color: #A1A1AA; margin-top: 0; margin-bottom: 32px; font-family: 'Inter', sans-serif; text-align: center;">Welcome to Intasela! Use the 6-digit verification code below to complete your registration:</p>
     
     <div style="background: linear-gradient(145deg, #131911 0%, #0A0A0A 100%); border: 1px solid #283724; border-radius: 16px; padding: 32px; text-align: center; margin: 0 0 32px 0;">
-      <div style="font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #ACC8A2; margin: 0; margin-right: -12px;">\${otp}</div>
+      <div style="font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #ACC8A2; margin: 0; margin-right: -12px;">${otp}</div>
     </div>
     
     <p style="font-size: 14px; line-height: 1.6; color: #71717A; font-family: 'Inter', sans-serif; text-align: center; margin: 0;">This verification code is valid for 15 minutes. Never share this code with anyone.</p>
-  \`;
-  return baseEmailLayout("Verify Registration - Intasela", content);
+  `;
+  return baseEmailLayout('Verify Registration - Intasela', content);
 };
 
 export const welcomeEmailTemplate = (name: string) => {
-  const content = \`
-    <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: 'Inter', sans-serif; letter-spacing: -0.5px;">Welcome to Intasela, \${name}! 🎉</h1>
+  const content = `
+    <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: 'Inter', sans-serif; letter-spacing: -0.5px;">Welcome to Intasela, ${name}! 🎉</h1>
     <p style="font-size: 16px; line-height: 1.6; color: #A1A1AA; margin-top: 0; margin-bottom: 24px; font-family: 'Inter', sans-serif;">We're thrilled to have you on board. Intasela is your new home to create, connect, build communities in Spaces, and earn directly from your content.</p>
     
     <div style="background-color: #131911; border-left: 4px solid #ACC8A2; border-radius: 0 12px 12px 0; padding: 24px; margin-bottom: 32px;">
@@ -151,50 +151,53 @@ export const welcomeEmailTemplate = (name: string) => {
     <div style="text-align: center; margin: 40px 0 16px 0;">
       <a href="https://intasela.com" style="display: inline-block; background-color: #ACC8A2; color: #1A2517; font-weight: 700; font-size: 16px; padding: 16px 32px; border-radius: 9999px; text-decoration: none; text-align: center; font-family: 'Inter', sans-serif; box-shadow: 0 8px 24px rgba(172, 200, 162, 0.25);">Explore Intasela</a>
     </div>
-  \`;
-  return baseEmailLayout("Welcome to Intasela!", content);
+  `;
+  return baseEmailLayout('Welcome to Intasela!', content);
 };
 
 export const forgotPasswordOtpTemplate = (otp: string) => {
-  const content = \`
+  const content = `
     <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: 'Inter', sans-serif; letter-spacing: -0.5px; text-align: center;">Reset Your Password</h1>
     <p style="font-size: 16px; line-height: 1.6; color: #A1A1AA; margin-top: 0; margin-bottom: 32px; font-family: 'Inter', sans-serif; text-align: center;">We received a request to reset your password. Enter the 6-digit code below to proceed:</p>
     
     <div style="background: linear-gradient(145deg, #131911 0%, #0A0A0A 100%); border: 1px solid #283724; border-radius: 16px; padding: 32px; text-align: center; margin: 0 0 32px 0;">
-      <div style="font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #ACC8A2; margin: 0; margin-right: -12px;">\${otp}</div>
+      <div style="font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #ACC8A2; margin: 0; margin-right: -12px;">${otp}</div>
     </div>
     
     <p style="font-size: 14px; line-height: 1.6; color: #71717A; font-family: 'Inter', sans-serif; text-align: center; margin: 0;">This code will expire in 15 minutes. If you did not request a password reset, please ignore this email or contact support immediately.</p>
-  \`;
-  return baseEmailLayout("Reset Password Code - Intasela", content);
+  `;
+  return baseEmailLayout('Reset Password Code - Intasela', content);
 };
 
 export const emailUpdateOtpTemplate = (otp: string) => {
-  const content = \`
+  const content = `
     <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: 'Inter', sans-serif; letter-spacing: -0.5px; text-align: center;">Confirm Email Change</h1>
     <p style="font-size: 16px; line-height: 1.6; color: #A1A1AA; margin-top: 0; margin-bottom: 32px; font-family: 'Inter', sans-serif; text-align: center;">You requested to update your email address on Intasela. Please use the verification code below to confirm this change:</p>
     
     <div style="background: linear-gradient(145deg, #131911 0%, #0A0A0A 100%); border: 1px solid #283724; border-radius: 16px; padding: 32px; text-align: center; margin: 0 0 32px 0;">
-      <div style="font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #ACC8A2; margin: 0; margin-right: -12px;">\${otp}</div>
+      <div style="font-family: 'Courier New', Courier, monospace; font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #ACC8A2; margin: 0; margin-right: -12px;">${otp}</div>
     </div>
     
     <p style="font-size: 14px; line-height: 1.6; color: #71717A; font-family: 'Inter', sans-serif; text-align: center; margin: 0;">This code is valid for 15 minutes.</p>
-  \`;
-  return baseEmailLayout("Confirm Email Change - Intasela", content);
+  `;
+  return baseEmailLayout('Confirm Email Change - Intasela', content);
 };
 
 export const payoutNotificationTemplate = (amount: number, status: string) => {
   const formattedAmount = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
   const statusColor = status === 'COMPLETED' ? '#ACC8A2' : '#f59e0b';
-  const content = '<h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: \'Inter\', sans-serif; letter-spacing: -0.5px; text-align: center;">Payout Update</h1>'
-    + '<p style="font-size: 16px; line-height: 1.6; color: #A1A1AA; margin-top: 0; margin-bottom: 32px; font-family: \'Inter\', sans-serif; text-align: center;">Your withdrawal request status has been updated:</p>'
-    + '<div style="background: linear-gradient(145deg, #131911 0%, #0A0A0A 100%); border: 1px solid #283724; border-radius: 16px; padding: 32px; text-align: center; margin: 0 0 32px 0;">'
-    + '<div style="font-size: 14px; color: #A1A1AA; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; font-family: \'Inter\', sans-serif;">Amount</div>'
-    + '<div style="font-size: 36px; font-weight: 800; color: #ffffff; margin: 8px 0 24px 0; font-family: \'Inter\', sans-serif;">' + formattedAmount + '</div>'
-    + '<div style="font-size: 14px; color: #A1A1AA; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; font-family: \'Inter\', sans-serif;">Status</div>'
-    + '<div style="font-size: 18px; font-weight: 800; color: ' + statusColor + '; margin-top: 8px; font-family: \'Inter\', sans-serif;">' + status + '</div>'
-    + '</div>'
-    + '<p style="font-size: 15px; line-height: 1.6; color: #71717A; font-family: \'Inter\', sans-serif; text-align: center; margin: 0;">You can track your earnings and transaction history at any time in your Creator Studio.</p>';
+  const content = `
+    <h1 style="font-size: 26px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px; line-height: 1.3; font-family: 'Inter', sans-serif; letter-spacing: -0.5px; text-align: center;">Payout Update</h1>
+    <p style="font-size: 16px; line-height: 1.6; color: #A1A1AA; margin-top: 0; margin-bottom: 32px; font-family: 'Inter', sans-serif; text-align: center;">Your withdrawal request status has been updated:</p>
+    
+    <div style="background: linear-gradient(145deg, #131911 0%, #0A0A0A 100%); border: 1px solid #283724; border-radius: 16px; padding: 32px; text-align: center; margin: 0 0 32px 0;">
+      <div style="font-size: 14px; color: #A1A1AA; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; font-family: 'Inter', sans-serif;">Amount</div>
+      <div style="font-size: 36px; font-weight: 800; color: #ffffff; margin: 8px 0 24px 0; font-family: 'Inter', sans-serif;">${formattedAmount}</div>
+      <div style="font-size: 14px; color: #A1A1AA; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; font-family: 'Inter', sans-serif;">Status</div>
+      <div style="font-size: 18px; font-weight: 800; color: ${statusColor}; margin-top: 8px; font-family: 'Inter', sans-serif;">${status}</div>
+    </div>
+    
+    <p style="font-size: 15px; line-height: 1.6; color: #71717A; font-family: 'Inter', sans-serif; text-align: center; margin: 0;">You can track your earnings and transaction history at any time in your Creator Studio.</p>
+  `;
   return baseEmailLayout('Payout Notification - Intasela', content);
 };
-

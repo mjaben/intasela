@@ -9,6 +9,8 @@ import CreatePost from "@/components/CreatePost";
 import { useUserStore } from "@/store/useUserStore";
 import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import { motion, AnimatePresence } from "framer-motion";
+import PullToRefresh from "@/components/PullToRefresh";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -20,6 +22,7 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [isHomeRefreshing, setIsHomeRefreshing] = useState(false);
   
   const postsRef = useRef<any[]>([]);
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -94,6 +97,20 @@ export default function Home() {
     fetchPosts(true);
   }, [activeTab]);
 
+  const handleHomeRefreshRef = useRef<() => void>();
+  handleHomeRefreshRef.current = async () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsHomeRefreshing(true);
+    await fetchPosts(true);
+    setIsHomeRefreshing(false);
+  };
+  
+  useEffect(() => {
+    const handler = () => handleHomeRefreshRef.current?.();
+    window.addEventListener('home:refresh', handler);
+    return () => window.removeEventListener('home:refresh', handler);
+  }, []);
+
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       const target = entries[0];
@@ -155,9 +172,10 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full max-w-[650px] mx-auto min-h-screen relative">
-      {/* Top Header */}
-      <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border z-30 flex">
+    <PullToRefresh onRefresh={async () => { await fetchPosts(true); }}>
+      <div className="w-full max-w-[650px] mx-auto min-h-screen relative">
+        {/* Top Header */}
+        <header className="sticky top-0 bg-background/80 backdrop-blur-md border-b border-border z-30 flex">
         <button 
           onClick={() => setActiveTab("For you")}
           className={`flex-1 px-8 py-4 text-center font-bold text-[15px] transition-colors hover:bg-accent/50 relative ${activeTab === "For you" ? "text-white" : "text-gray-400 font-medium"}`}
@@ -183,6 +201,22 @@ export default function Home() {
           )}
         </button>
       </header>
+
+      {/* Double Tap Refresh Spinner */}
+      <AnimatePresence>
+        {isHomeRefreshing && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.8 }}
+            className="absolute top-[80px] left-0 right-0 flex justify-center z-50 pointer-events-none"
+          >
+            <div className="bg-background border border-border shadow-md rounded-full p-2 flex items-center justify-center">
+              <Loader2 className="w-5 h-5 text-[#ACC8A2] animate-spin" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* New Post Up Button */}
       <AnimatePresence>
@@ -300,5 +334,6 @@ createdAt={post.createdAt}
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }
