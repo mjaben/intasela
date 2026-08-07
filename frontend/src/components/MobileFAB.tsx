@@ -19,7 +19,13 @@ export default function MobileFAB() {
 
   if (!isAuthenticated) return null;
   if (composerState.isOpen) return null;
-  if (pathname && (pathname.includes('/posts/') || pathname.includes('/orbit'))) return null;
+  if (pathname && (
+    pathname.includes('/posts/') || 
+    pathname.includes('/orbit') ||
+    pathname.startsWith('/creator-studio') ||
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/ads')
+  )) return null;
 
   return (
     <button

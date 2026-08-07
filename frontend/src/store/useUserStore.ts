@@ -9,6 +9,7 @@ interface UserState {
     firstName?: string;
     lastName?: string;
     walletBalance?: number;
+    createdAt?: string;
   } | null;
   walletBalance: number;
   isAuthenticated: boolean;

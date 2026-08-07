@@ -10,9 +10,18 @@ import { motion } from "framer-motion";
 type TabType = "overview" | "analytics" | "settings";
 type PeriodType = "today" | "yesterday" | "7days" | "month" | "all";
 
+// Returns true if the user's account is older than 72 hours
+function isOver72Hours(createdAt?: string | null): boolean {
+  if (!createdAt) return false;
+  const created = new Date(createdAt).getTime();
+  const now = Date.now();
+  return now - created >= 72 * 60 * 60 * 1000;
+}
+
 export default function CreatorStudioPage() {
   const router = useRouter();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const user = useUserStore((state) => state.user);
   const addToast = useToastStore((state) => state.addToast);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,6 +31,9 @@ export default function CreatorStudioPage() {
   const [period, setPeriod] = useState<PeriodType>("all");
 
   const updateUser = useUserStore((state) => state.updateUser);
+
+  // 72-hour maturity check
+  const earningsUnlocked = isOver72Hours(user?.createdAt);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -150,60 +162,95 @@ export default function CreatorStudioPage() {
               
               <div className="relative z-20">
                 <h2 className="text-white/60 font-medium mb-1 uppercase tracking-wider text-[10px]">Available Balance</h2>
-                <div className="flex items-baseline gap-2 mb-6">
-                  <span className="text-4xl font-bold text-white tracking-tight">
-                    {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(balance)}
-                  </span>
-                  <span className="text-white/40 text-sm font-medium tracking-wide">NGN</span>
-                </div>
 
-                <div className="mb-6 max-w-sm">
-                  <div className="flex justify-between text-[10px] text-white/50 mb-2 font-medium tracking-wide">
-                    <span>Progress to payout</span>
-                    <span>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(balance)} / {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(threshold)}</span>
+                {earningsUnlocked ? (
+                  <>
+                    <div className="flex items-baseline gap-2 mb-6">
+                      <span className="text-4xl font-bold text-white tracking-tight">
+                        {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(balance)}
+                      </span>
+                      <span className="text-white/40 text-sm font-medium tracking-wide">NGN</span>
+                    </div>
+
+                    <div className="mb-6 max-w-sm">
+                      <div className="flex justify-between text-[10px] text-white/50 mb-2 font-medium tracking-wide">
+                        <span>Progress to payout</span>
+                        <span>{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(balance)} / {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(threshold)}</span>
+                      </div>
+                      <div className="h-1 w-full bg-[#0F141C] rounded-full overflow-hidden shadow-inner">
+                        <div 
+                          className="h-full bg-white/20 transition-all duration-1000 ease-out rounded-full" 
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <button 
+                      disabled={balance < threshold}
+                      onClick={() => addToast("Withdrawals coming soon!", "success")}
+                      className={`text-sm font-medium py-2.5 px-6 rounded-full transition-colors flex items-center gap-2 ${
+                        balance >= threshold 
+                          ? "bg-white/10 hover:bg-white/20 text-white cursor-pointer border border-white/10" 
+                          : "bg-white/5 text-white/30 cursor-not-allowed border border-white/5"
+                      }`}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                      Withdraw Funds
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-4xl font-bold text-white/20 tracking-tight select-none blur-sm">
+                        ₦ ·····
+                      </div>
+                      <div className="bg-white/10 border border-white/10 rounded-full px-3 py-1 flex items-center gap-1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span className="text-[11px] font-semibold text-white/60">Locked</span>
+                      </div>
+                    </div>
+                    <p className="text-white/40 text-sm max-w-xs">
+                      Your balance will be visible after <span className="text-white/70 font-semibold">72 hours</span> from account creation. This helps us ensure fair and accurate earnings tracking.
+                    </p>
                   </div>
-                  <div className="h-1 w-full bg-[#0F141C] rounded-full overflow-hidden shadow-inner">
-                    <div 
-                      className="h-full bg-white/20 transition-all duration-1000 ease-out rounded-full" 
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                </div>
-                
-                <button 
-                  disabled={balance < threshold}
-                  onClick={() => addToast("Withdrawals coming soon!", "success")}
-                  className={`text-sm font-medium py-2.5 px-6 rounded-full transition-colors flex items-center gap-2 ${
-                    balance >= threshold 
-                      ? "bg-white/10 hover:bg-white/20 text-white cursor-pointer border border-white/10" 
-                      : "bg-white/5 text-white/30 cursor-not-allowed border border-white/5"
-                  }`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                  Withdraw Funds
-                </button>
+                )}
               </div>
             </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
-                <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider font-mono mb-2">Period Earnings</h3>
-                <p className="text-3xl font-bold text-[#ACC8A2] tracking-tight">
-                  {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(data?.periodEarned || 0)}
-                </p>
-              </div>
+              {/* Monetization Events always visible */}
               <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg">
                 <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider font-mono mb-2">Monetization Events</h3>
                 <p className="text-3xl font-bold text-white tracking-tight">
                   {data?.periodMonetizedPosts || 0}
                 </p>
+                <p className="text-muted-foreground text-xs mt-1">eligible content interactions</p>
+              </div>
+              {/* Period Earnings - locked until 72h */}
+              <div className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-lg relative overflow-hidden">
+                <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider font-mono mb-2">Period Earnings</h3>
+                {earningsUnlocked ? (
+                  <p className="text-3xl font-bold text-[#ACC8A2] tracking-tight">
+                    {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(data?.periodEarned || 0)}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-3xl font-bold text-white/20 blur-sm select-none">₦ ···</p>
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px] rounded-3xl">
+                      <div className="flex items-center gap-1.5 bg-white/10 border border-white/10 rounded-full px-3 py-1">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span className="text-[11px] font-semibold text-white/60">72h lock</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Earning History */}
+            {/* Recent Transactions (bulk payouts + withdrawals only) */}
             <div className="pt-4">
-              <h2 className="text-xl font-bold mb-4 px-1 text-white">Recent Transactions</h2>
+              <h2 className="text-xl font-bold text-white mb-4 px-1">Recent Transactions</h2>
               <div className="bg-black/40 border border-white/10 rounded-3xl overflow-hidden min-h-[200px] relative shadow-inner">
                 {loading && (
                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm">
@@ -211,38 +258,54 @@ export default function CreatorStudioPage() {
                    </div>
                 )}
                 
-                {data?.history && data.history.length > 0 ? (
+                {data?.transactions && data.transactions.length > 0 ? (
                   <div className="divide-y divide-white/5">
-                    {data.history.slice(0, 10).map((item: any) => (
-                      <div key={item.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-colors">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#ACC8A2] bg-[#ACC8A2]/10 px-2 py-0.5 rounded border border-[#ACC8A2]/20">
-                              {item.type}
-                            </span>
-                            <p className="text-foreground font-medium truncate">
-                              {item.post?.content || "Media content"}
-                            </p>
+                    {data.transactions.slice(0, 20).map((tx: any, i: number) => {
+                      const isWithdrawal = tx.type === 'WITHDRAWAL';
+                      return (
+                        <div key={tx.id ?? i} className="p-5 flex items-center justify-between hover:bg-white/5 transition-colors">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                              isWithdrawal ? 'bg-red-500/10 border border-red-500/20' : 'bg-[#ACC8A2]/10 border border-[#ACC8A2]/20'
+                            }`}>
+                              {isWithdrawal ? (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                              ) : (
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ACC8A2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-foreground font-semibold text-sm">
+                                {isWithdrawal ? 'Withdrawal' : 'Bulk Payout'}
+                              </p>
+                              <p className="text-muted-foreground text-xs">
+                                {new Date(tx.createdAt).toLocaleDateString(undefined, {
+                                  year: 'numeric', month: 'short', day: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-muted-foreground text-xs">
-                            {new Date(item.createdAt).toLocaleDateString(undefined, {
-                              year: 'numeric', month: 'short', day: 'numeric',
-                              hour: '2-digit', minute: '2-digit'
-                            })}
-                          </p>
+                          <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full border shrink-0 ${
+                            isWithdrawal 
+                              ? 'bg-red-500/10 border-red-500/20' 
+                              : 'bg-[#ACC8A2]/10 border-[#ACC8A2]/20'
+                          }`}>
+                            <span className={`font-bold text-sm ${
+                              isWithdrawal ? 'text-red-400' : 'text-[#ACC8A2]'
+                            }`}>
+                              {isWithdrawal ? '-' : '+'}{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(tx.amount || 0)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 bg-[#ACC8A2]/10 px-3 py-1.5 rounded-full border border-[#ACC8A2]/20 shrink-0">
-                          <span className="text-[#ACC8A2] font-bold text-sm">
-                            +{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(item.amount || 0)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   !loading && (
-                    <div className="p-12 text-center text-muted-foreground">
-                      <p>No transactions in this period.</p>
+                    <div className="p-12 text-center text-muted-foreground flex flex-col items-center gap-3">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                      <p className="text-sm">No bulk payouts or withdrawals yet.</p>
                     </div>
                   )
                 )}
