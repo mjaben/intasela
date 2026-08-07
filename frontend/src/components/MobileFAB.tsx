@@ -5,7 +5,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function MobileFAB() {
-  const { openComposer } = useFeedStore();
+  const { openComposer, composerState } = useFeedStore();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const router = useRouter();
   const pathname = usePathname();
@@ -18,6 +18,7 @@ export default function MobileFAB() {
   };
 
   if (!isAuthenticated) return null;
+  if (composerState.isOpen) return null;
   if (pathname && (pathname.includes('/posts/') || pathname.includes('/orbit'))) return null;
 
   return (

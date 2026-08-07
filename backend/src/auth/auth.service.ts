@@ -131,7 +131,7 @@ export class AuthService {
   }
 
   async resetPassword(data: { email: string; otp: string; newPassword: string }) {
-    const user = await this.usersService.findOne(data.email);
+    const user = await this.usersService.findByEmailOrUsername(data.email);
     if (!user || !user.emailVerificationOtp || user.emailVerificationOtp !== data.otp) {
       throw new BadRequestException('Invalid or expired reset code');
     }

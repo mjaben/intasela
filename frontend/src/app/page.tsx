@@ -172,7 +172,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Composer (What's on your mind?) */}
-      <div className="p-4 border-b border-border">
+      <div className="hidden sm:block p-4 border-b border-border">
         {isAuthenticated ? (
           <CreatePost onPostCreated={fetchPosts} />
         ) : showLoginPrompt ? (

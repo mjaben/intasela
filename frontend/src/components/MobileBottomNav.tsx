@@ -4,12 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useNotificationStore } from "@/store/useNotificationStore";
+import { useFeedStore } from "@/store/useFeedStore";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const { unreadCount } = useNotificationStore();
+  const { composerState } = useFeedStore();
+
+  if (composerState.isOpen) return null;
 
   const navItems: { name: string; href: string; icon?: string; svg?: React.ReactNode }[] = [
     {

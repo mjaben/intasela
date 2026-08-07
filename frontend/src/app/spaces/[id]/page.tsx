@@ -385,7 +385,7 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {isMember && (
-        <div className="p-4 border-b border-border">
+        <div className="hidden sm:block p-4 border-b border-border">
           <CreatePost spaceId={space.id} onPostCreated={fetchPosts} />
         </div>
       )}

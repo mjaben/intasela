@@ -21,8 +21,12 @@ export default function ProfilePage() {
   const [likes, setLikes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [activeTab, setActiveTab] = useState("posts"); // posts, replies, likes
+  const [activeTab, setActiveTab] = useState("posts"); // posts, replies, reselas, likes, orbit
+  const [selaFilter, setSelaFilter] = useState<"all" | "sela">("all");
+  const [selaFilterOpen, setSelaFilterOpen] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+
+  const touchStartX = useRef<number | null>(null);
 
   const globalFollowState = useFollowStore(s => s.followMap[username]);
   const followingChangeCount = useFollowStore(s => s.followingChangeCount);
@@ -152,8 +156,53 @@ export default function ProfilePage() {
     ? `${profile.state ? profile.state + ', ' : ''}${profile.country || ''}`
     : null;
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    const tabs = ["posts", "replies", "reselas", "likes", "orbit"];
+    const currentIndex = tabs.indexOf(activeTab);
+
+    let newTab = activeTab;
+
+    // Swipe left (next tab)
+    if (diff > 50 && currentIndex < tabs.length - 1) {
+      newTab = tabs[currentIndex + 1];
+    }
+    // Swipe right (prev tab)
+    else if (diff < -50 && currentIndex > 0) {
+      newTab = tabs[currentIndex - 1];
+    }
+
+    if (newTab !== activeTab) {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      setActiveTab(newTab);
+    }
+    touchStartX.current = null;
+  };
+
+  const selaFeedPosts = posts.filter((post) => {
+    if (selaFilter === "all") return true;
+    return !post.parent && !post.reselaedBy;
+  });
+
+  const reselaPosts = posts.filter(post => post.reselaedBy === profile.username);
+
+  const orbitVideos = posts.filter(post => post.mediaType === "VIDEO");
+
   return (
-    <main className="flex-1 min-h-screen relative bg-background">
+    <main 
+      className="flex-1 min-h-screen relative bg-background overflow-x-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Substack-style Cover / Profile Header Area */}
       <div className="w-full bg-gradient-to-b from-white/10 to-background relative px-6 py-12 border-b border-white/10 flex justify-between items-center">
         
@@ -245,31 +294,120 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-white/10">
-        {[{id: 'posts', label: 'Selas'}, {id: 'replies', label: 'Replies'}, {id: 'likes', label: 'Likes'}].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-4 text-center font-bold text-[15px] transition-colors hover:bg-white/5 relative ${
-              activeTab === tab.id ? 'text-white' : 'text-gray-400'
-            }`}
-          >
-            {tab.label}
-            {activeTab === tab.id && (
-              <motion.div
-                layoutId="profileTabIndicator"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
-              />
-            )}
-          </button>
-        ))}
+      <div className="flex border-b border-white/10 overflow-x-auto no-scrollbar">
+        {[
+          {
+            id: 'posts', 
+            label: 'Sela',
+            icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGUlEQVR4nO2Zu2sVQRSHPxOTImpIETVpIlj5wj9BV73aqCQ+wtUIdkHEJySVKX0gonZq6xUNqRJLg0WwsfZt4hO7oIRAJOgVzJWB38oQdvfu3ruv4v5git09M3O+nZkzwxloqKGG4lArcAwYAz4Ci0AlobIIfFBfRfUdi44CXxJ0vFr5DByuB6AZuGk1+AI4C2wC2khObcBm4Jz6dPu/ATTV0qAL8QsYrLWROtUEnAJ+WzCRdMSC2EH22mnBHApbqVXzsqKRyItOy6dPYQNA0VoTWUynoDX7Sr71E0JjMjYLO2+6IN8ehTGekbGJHF7aAkwAT33KKNCzrE4nUAqoY5eJgL63yrfpMCA/Zbza5/vjELH/K7DBqnM94t4x4dP3Gn1fCAPiNuanKX0fAgrLyl7guQeMu+5MmQNOetQ1ZUg2U3X4FxnE8fne7gPTC3zX+1mf+k6eQIJguoAnel/WSOUaJAjGhNE7ev932V7l5BEkCMboErAkmGKWILvDNFYFZsSaZgYiVZCStfN3xgBz1woAA2mCrAfexQhj1syk3v9IE8RoHfBGdi8jwKwCnqneN2Cj1Z4ZkUraIG4ojXNk+qy+SzH4F94wAZgTwC1gbRz+VTM00+A2cDwhmGqKDeSBZWOmQ9owlbj3ETfKdCcUAFIDcUPlpEJonCPTkybIgBUy71nf44AZTRPEUXajrOeRGGB2ZXloLOrgt+QB8z4ijJP16XdQMBWdnZprhHGyBnFHpmwFgO4aYJw8gKA1M2tFtb6IME4WIF7Jh4ISC3NWO0UfmH1JJx8WZGhSL7Wmg+xiUkF4wNSSDmqPkg5yE3QmGeYlkzwbD5lsK3kcALuqJOvGAxJ02+Sb+RlV9VDGF8mfhkIc8/+rX8avrTCaBzUDb+Wbufaoqhbd4ZkKZ8iPzsunGfkYSr3aqc2+sIfsVZAvxqcDUStf0x8o6z4vi2m2UlcJf+TLlVoaMZc8V/UXKjoEDgPbgQ6SU4f6GLYOnsaHy8CKeho+aIXkLMo0sD+uv9SiS8iSIsd8go7Pq4/76tNMr4Yaaoj69A9vwTyZmjM3rwAAAABJRU5ErkJggg=="
+          }, 
+          {
+            id: 'replies', 
+            label: 'Replies',
+            svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          }, 
+          {
+            id: 'reselas', 
+            label: 'Resela',
+            svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          }, 
+          {
+            id: 'likes', 
+            label: 'Likes',
+            svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          },
+          {
+            id: 'orbit',
+            label: 'Orbit',
+            svg: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+          }
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(50);
+                setActiveTab(tab.id);
+              }}
+              className={`flex-1 py-4 flex items-center justify-center gap-2 font-bold text-[15px] transition-colors hover:bg-white/5 relative overflow-hidden min-w-[70px] shrink-0 ${
+                isActive ? "text-white" : "text-gray-400"
+              }`}
+            >
+              <div className={`w-[18px] h-[18px] shrink-0 transition-transform duration-300 flex items-center justify-center ${isActive ? "scale-100" : "scale-90"}`}>
+                {tab.icon ? (
+                  <img 
+                    src={tab.icon} 
+                    alt={tab.label} 
+                    className={`w-full h-full object-contain brightness-0 invert ${isActive ? "opacity-100" : "opacity-60"}`} 
+                  />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center ${isActive ? "text-white" : "text-gray-400 opacity-80"}`}>
+                    {tab.svg}
+                  </div>
+                )}
+              </div>
+              
+              <div className={`transition-all duration-300 ease-out overflow-hidden flex items-center ${isActive ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0"}`}>
+                <span className="text-[14px] whitespace-nowrap">
+                  {tab.label}
+                </span>
+              </div>
+
+              {isActive && (
+                <motion.div
+                  layoutId="profileTabIndicator"
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-[#ACC8A2] rounded-t-full mx-auto w-12"
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Feed Content */}
-      <div className="divide-y divide-white/10">
+      <div className="divide-y divide-white/10 pb-20">
         {activeTab === 'posts' && (
-          posts.length > 0 ? (
-            posts.map((post: any) => (
+          <div className="flex flex-col">
+            <div className="px-4 py-3 flex items-center justify-between border-b border-white/5 relative z-30">
+              <span className="text-[13px] font-bold text-white/50 tracking-wider font-mono uppercase">Showing</span>
+              <div className="relative">
+                <button 
+                  onClick={() => setSelaFilterOpen(!selaFilterOpen)}
+                  className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[13px] rounded-full px-4 py-1.5 transition-all outline-none focus:ring-1 focus:ring-[#ACC8A2]/50 font-medium"
+                >
+                  {selaFilter === "all" ? "All Activity" : "Selas Only"}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${selaFilterOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+
+                {selaFilterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setSelaFilterOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-48 bg-[#1A2517]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in slide-in-from-top-2 fade-in duration-200">
+                      <div className="flex flex-col py-1.5">
+                        <button 
+                          onClick={() => { setSelaFilter("all"); setSelaFilterOpen(false); }}
+                          className={`flex items-center justify-between px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-white/5 ${selaFilter === "all" ? "text-[#ACC8A2]" : "text-white/80"}`}
+                        >
+                          All Activity
+                          {selaFilter === "all" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                        </button>
+                        <button 
+                          onClick={() => { setSelaFilter("sela"); setSelaFilterOpen(false); }}
+                          className={`flex items-center justify-between px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-white/5 ${selaFilter === "sela" ? "text-[#ACC8A2]" : "text-white/80"}`}
+                        >
+                          Selas Only
+                          {selaFilter === "sela" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {selaFeedPosts.length > 0 ? (
+              selaFeedPosts.map((post: any) => (
               <PostCard 
                 key={post.id} 
                 id={post.id}
@@ -300,11 +438,12 @@ createdAt={post.createdAt}
                 }}
               />
             ))
-          ) : (
-            <div className="p-8 text-center text-gray-400">
-              @{profile.username} hasn't dropped any selas yet.
-            </div>
-          )
+            ) : (
+              <div className="p-8 text-center text-gray-400">
+                @{profile.username} hasn't dropped any selas yet.
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === 'replies' && (
@@ -343,6 +482,46 @@ createdAt={post.createdAt}
           )
         )}
 
+        {activeTab === 'reselas' && (
+          reselaPosts.length > 0 ? (
+            reselaPosts.map((post: any) => (
+              <PostCard 
+                key={post.id} 
+                id={post.id}
+                createdAt={post.createdAt}
+                author={{
+                  name: post.author.firstName || post.author.username,
+                  username: post.author.username,
+                  avatarUrl: post.author.avatarUrl,
+                  isFollowing: post.author.isFollowing,
+                  isFollower: post.author.isFollower
+                }}
+                content={post.content} 
+                earned={post.earned}
+                stats={post.stats}
+                userInteractions={post.userInteractions}
+                quotedPost={post.quotedPost}
+                poll={post.poll}
+                reselaedBy={post.reselaedBy}
+                mediaType={post.mediaType}
+                mediaUrl={post.mediaUrl}
+                mediaUrls={post.mediaUrls}
+                thumbnailUrl={post.thumbnailUrl}
+                onDelete={handleDelete}
+                onUnresela={(id) => {
+                  if (post.reselaedBy === profile.username) {
+                    setPosts(posts.filter((p: any) => p.id !== id));
+                  }
+                }}
+              />
+            ))
+          ) : (
+            <div className="p-8 text-center text-gray-400">
+              @{profile.username} hasn't reselaed anything yet.
+            </div>
+          )
+        )}
+
         {activeTab === 'likes' && (
           likes.length > 0 ? (
             likes.map((post: any) => (
@@ -374,6 +553,37 @@ createdAt={post.createdAt}
           ) : (
             <div className="p-8 text-center text-gray-400">
               @{profile.username} hasn't liked any selas yet.
+            </div>
+          )
+        )}
+
+        {activeTab === 'orbit' && (
+          orbitVideos.length > 0 ? (
+            <div className="grid grid-cols-3 gap-1 p-1">
+              {orbitVideos.map((video: any) => (
+                <div 
+                  key={video.id} 
+                  className="aspect-[9/16] relative bg-white/5 cursor-pointer group overflow-hidden"
+                  onClick={() => router.push(`/orbit?videoId=${video.id}`)}
+                >
+                  <img 
+                    src={video.thumbnailUrl || video.mediaUrl} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    alt="Video thumbnail"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100" />
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1.5 z-10">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span className="text-white text-[12px] font-bold shadow-sm">
+                      {video.stats?.views ? (video.stats.views > 1000 ? `${(video.stats.views/1000).toFixed(1)}K` : video.stats.views) : 0}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-gray-400">
+              @{profile.username} hasn't posted any Orbit videos yet.
             </div>
           )
         )}

@@ -33,11 +33,30 @@ import { SimulatorModule } from './simulator/simulator.module';
     AdsModule,
     SpacesModule,
     SimulatorModule,
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: Number(process.env.REDIS_PORT) || 6379,
-      },
+    BullModule.forRootAsync({
+      useFactory: () => {
+        if (process.env.REDIS_URL) {
+          const url = new URL(process.env.REDIS_URL);
+          return {
+            connection: {
+              host: url.hostname,
+              port: Number(url.port),
+              username: url.username || 'default',
+              password: url.password,
+              tls: url.protocol === 'rediss:' ? {} : undefined,
+            }
+          };
+        }
+        return {
+          connection: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: Number(process.env.REDIS_PORT) || 6379,
+            username: process.env.REDIS_USERNAME || 'default',
+            password: process.env.REDIS_PASSWORD || undefined,
+            tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
+          }
+        };
+      }
     }),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),

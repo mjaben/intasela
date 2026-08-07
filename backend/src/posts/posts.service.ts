@@ -901,20 +901,29 @@ export class PostsService {
     });
 
     if (existing) {
-      // Remove it (Unlike / Unresela)
+      // Remove it (Unlike / Unresela / Remove interest)
       await this.prisma.engagement.delete({
         where: { id: existing.id }
       });
       return { status: 'removed' };
     } else {
+      // If setting an interest, clear the opposite if it exists
+      if (type === 'INTERESTED' || type === 'NOT_INTERESTED') {
+        const oppositeType = type === 'INTERESTED' ? 'NOT_INTERESTED' : 'INTERESTED';
+        await this.prisma.engagement.deleteMany({
+          where: { userId, postId, type: oppositeType }
+        });
+      }
+
       // Create it
       await this.prisma.engagement.create({
         data: { userId, postId, type }
       });
 
-      // Create Notification if actor is not the author and type is not BOOKMARK
+      // Create Notification if actor is not the author and type should notify
       const post = await this.prisma.post.findUnique({ where: { id: postId } });
-      if (post && post.authorId !== userId && type !== 'BOOKMARK') {
+      const silentTypes = ['BOOKMARK', 'INTERESTED', 'NOT_INTERESTED'];
+      if (post && post.authorId !== userId && !silentTypes.includes(type)) {
         await this.prisma.notification.create({
           data: {
             recipientId: post.authorId,
