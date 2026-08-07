@@ -17,8 +17,12 @@ export default function Home() {
   const [error, setError] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(true);
   const [activeTab, setActiveTab] = useState<"For you" | "Following">("For you");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   
   const postsRef = useRef<any[]>([]);
+  const loaderRef = useRef<HTMLDivElement>(null);
   
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const blockedUsers = useBlockMuteStore(s => s.blockedUsers);
@@ -29,47 +33,83 @@ export default function Home() {
     postsRef.current = posts;
   }, [posts]);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (reset = false) => {
     try {
-      const cacheKey = `feed_${activeTab}`;
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        setPosts(JSON.parse(cached));
-        if (posts.length === 0) setLoading(true);
-      } else {
+      if (reset) {
+        setPage(1);
+        setHasMore(true);
         setLoading(true);
+        const cacheKey = `feed_${activeTab}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached && posts.length === 0) {
+          setPosts(JSON.parse(cached));
+        }
+      } else {
+        setIsFetchingMore(true);
       }
       
+      const targetPage = reset ? 1 : page + 1;
       setError(false);
-      setNewPosts([]);
+      if (reset) setNewPosts([]);
       
       const token = localStorage.getItem("access_token");
       const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
       
-      let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts`;
+      let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts?page=${targetPage}`;
       if (activeTab === "Following") {
-        url += "?type=following";
+        url += "&type=following";
       }
 
       const res = await fetch(url, { headers });
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       
-      setPosts(data);
-      localStorage.setItem(cacheKey, JSON.stringify(data));
+      if (data.length < 20) {
+        setHasMore(false);
+      }
+      
+      if (reset) {
+        setPosts(data);
+        localStorage.setItem(`feed_${activeTab}`, JSON.stringify(data));
+      } else {
+        setPosts(prev => {
+          // Prevent duplicates
+          const newItems = data.filter((d: any) => !prev.some(p => p.id === d.id));
+          return [...prev, ...newItems];
+        });
+        setPage(targetPage);
+      }
     } catch (err) {
       console.error("Failed to fetch posts:", err);
-      if (posts.length === 0) {
+      if (posts.length === 0 && reset) {
         setError(true);
       }
     } finally {
       setLoading(false);
+      setIsFetchingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchPosts();
+    fetchPosts(true);
   }, [activeTab]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const target = entries[0];
+      if (target.isIntersecting && hasMore && !loading && !isFetchingMore) {
+        fetchPosts(false);
+      }
+    }, {
+      rootMargin: "100px"
+    });
+    
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, [hasMore, loading, isFetchingMore, page, activeTab]);
 
   useEffect(() => {
     const pollInterval = setInterval(async () => {
@@ -241,6 +281,24 @@ createdAt={post.createdAt}
           ))
         )}
       </div>
+
+      {/* Loader for Infinite Scroll */}
+      {hasMore && !loading && posts.length >= 20 && (
+        <div ref={loaderRef} className="py-8 flex justify-center">
+          {isFetchingMore && (
+            <svg className="animate-spin h-6 w-6 text-[#ACC8A2]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
+        </div>
+      )}
+      
+      {!hasMore && posts.length > 0 && (
+        <div className="py-12 text-center text-gray-500 text-sm font-medium pb-24">
+          You've caught up! No more posts to show.
+        </div>
+      )}
     </div>
   );
 }

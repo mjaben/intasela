@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PostCard from "@/components/PostCard";
@@ -38,6 +38,12 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
   const [spaceMembers, setSpaceMembers] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"POSTS" | "PENDING">("POSTS");
   const [showPendingAlert, setShowPendingAlert] = useState(false);
+  
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const loaderRef = useRef<HTMLDivElement>(null);
+  
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const addToast = useToastStore((state) => state.addToast);
@@ -68,16 +74,41 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
     }
   };
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (reset = false) => {
     try {
+      if (reset) {
+        setPage(1);
+        setHasMore(true);
+        if (posts.length === 0) setLoading(true);
+      } else {
+        setIsFetchingMore(true);
+      }
+      
+      const targetPage = reset ? 1 : page + 1;
       const token = localStorage.getItem("access_token");
       const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts?spaceId=${resolvedParams.id}`, { headers });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/posts?spaceId=${resolvedParams.id}&page=${targetPage}`, { headers });
       if (!res.ok) throw new Error("Failed to fetch posts");
       const data = await res.json();
-      setPosts(data);
+      
+      if (data.length < 20) {
+        setHasMore(false);
+      }
+      
+      if (reset) {
+        setPosts(data);
+      } else {
+        setPosts(prev => {
+          const newItems = data.filter((d: any) => !prev.some(p => p.id === d.id));
+          return [...prev, ...newItems];
+        });
+        setPage(targetPage);
+      }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsFetchingMore(false);
+      setLoading(false);
     }
   };
 
@@ -109,10 +140,27 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => {
     fetchSpace();
-    fetchPosts();
+    fetchPosts(true);
     fetchSpaceMembers();
     fetchPendingPosts();
   }, [resolvedParams.id]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const target = entries[0];
+      if (target.isIntersecting && hasMore && !loading && !isFetchingMore) {
+        fetchPosts(false);
+      }
+    }, {
+      rootMargin: "100px"
+    });
+    
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, [hasMore, loading, isFetchingMore, page, resolvedParams.id]);
 
   useEffect(() => {
     if (!space || pendingPosts.length === 0) return;
@@ -433,7 +481,7 @@ export default function SpacePage({ params }: { params: Promise<{ id: string }> 
                 <PostCard 
                   key={post.id}
                   id={post.id}
-createdAt={post.createdAt}
+                  createdAt={post.createdAt}
                   author={{
                     name: post.author.firstName || post.author.username,
                     username: post.author.username,
@@ -453,44 +501,61 @@ createdAt={post.createdAt}
                   approvalStatus={post.approvalStatus}
                   authorRole={postAuthorRole}
                   poll={post.poll}
-                  onDelete={() => fetchPosts()}
+                  onDelete={() => fetchPosts(true)}
                 />
               );
             })
-        )
-      ) : (
-        pendingPosts.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No pending selas to review.</div>
+          )
         ) : (
-          pendingPosts.map(post => {
-            const postAuthorRole = spaceMembers.find(m => m.user?.username === post.author.username)?.role;
-            return (
-              <div key={post.id} className="relative border-b border-border group">
-                <PostCard 
-                  id={post.id}
-createdAt={post.createdAt}
-                  author={{
-                    name: post.author.firstName || post.author.username,
-                    username: post.author.username,
-                    avatarUrl: post.author.avatarUrl
-                  }}
-                  content={post.content}
-                  earned={post.earned || 0}
-                  stats={{ likes: 0, reselas: 0, replies: 0, views: 0 }}
-                  approvalStatus={post.approvalStatus}
-                  authorRole={postAuthorRole}
-                  poll={post.poll}
-                />
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1 rounded-md backdrop-blur-sm z-10">
-                  <button onClick={() => handleApprovePost(post.id)} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded">Approve</button>
-                  <button onClick={() => handleRejectPost(post.id)} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded">Reject</button>
+          pendingPosts.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">No pending selas to review.</div>
+          ) : (
+            pendingPosts.map(post => {
+              const postAuthorRole = spaceMembers.find(m => m.user?.username === post.author.username)?.role;
+              return (
+                <div key={post.id} className="relative border-b border-border group">
+                  <PostCard 
+                    id={post.id}
+                    createdAt={post.createdAt}
+                    author={{
+                      name: post.author.firstName || post.author.username,
+                      username: post.author.username,
+                      avatarUrl: post.author.avatarUrl
+                    }}
+                    content={post.content}
+                    earned={post.earned || 0}
+                    stats={{ likes: 0, reselas: 0, replies: 0, views: 0 }}
+                    approvalStatus={post.approvalStatus}
+                    authorRole={postAuthorRole}
+                    poll={post.poll}
+                  />
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 p-1 rounded-md backdrop-blur-sm z-10">
+                    <button onClick={() => handleApprovePost(post.id)} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded">Approve</button>
+                    <button onClick={() => handleRejectPost(post.id)} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded">Reject</button>
+                  </div>
                 </div>
-              </div>
-            );
-          })
-        )
-      )}
+              );
+            })
+          )
+        )}
       </div>
+
+      {activeTab === 'POSTS' && hasMore && !loading && posts.length >= 20 && (
+        <div ref={loaderRef} className="py-8 flex justify-center">
+          {isFetchingMore && (
+            <svg className="animate-spin h-6 w-6 text-[#ACC8A2]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
+        </div>
+      )}
+      
+      {activeTab === 'POSTS' && !hasMore && posts.length > 0 && (
+        <div className="py-12 text-center text-gray-500 text-sm font-medium pb-24">
+          You've caught up! No more posts to show.
+        </div>
+      )}
     </div>
   );
 }

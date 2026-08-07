@@ -58,7 +58,7 @@ export class PostsService {
     };
   }
 
-  async getFeed(currentUserId?: string, type?: string, spaceId?: string) {
+  async getFeed(currentUserId?: string, type?: string, spaceId?: string, page: number = 1, limit: number = 20) {
     let whereClause: any = { parentId: null, status: 'PUBLISHED' };
 
     if (spaceId) {
@@ -139,7 +139,9 @@ export class PostsService {
 
     if (type === 'following') {
       // Standard chronological feed for 'Following' tab
-      return candidates.slice(0, 20).map(post => this.formatPost(post, currentUserId));
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      return candidates.slice(startIndex, endIndex).map(post => this.formatPost(post, currentUserId));
     }
 
     // --- ALGORITHMIC RANKING ---
@@ -153,7 +155,7 @@ export class PostsService {
         const reqBody = {
           user_id: currentUserId,
           type: type || 'for-you',
-          limit: 20,
+          limit: 300,
           interests: userInterests
         };
         
@@ -176,7 +178,9 @@ export class PostsService {
             
             // If python didn't return enough valid posts, we can pad with our local ranking
             if (rankedPosts.length > 0) {
-                return rankedPosts.map(post => this.formatPost(post, currentUserId));
+                const startIndex = (page - 1) * limit;
+                const endIndex = startIndex + limit;
+                return rankedPosts.slice(startIndex, endIndex).map(post => this.formatPost(post, currentUserId));
             }
           }
         } else {
@@ -225,8 +229,10 @@ export class PostsService {
     // Sort by score descending
     scoredPosts.sort((a, b) => b.score - a.score);
 
-    // Take top 20
-    const topPosts = scoredPosts.slice(0, 20).map(item => item.post);
+    // Apply offset pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const topPosts = scoredPosts.slice(startIndex, endIndex).map(item => item.post);
 
     return topPosts.map(post => this.formatPost(post, currentUserId));
   }

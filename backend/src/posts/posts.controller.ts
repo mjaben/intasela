@@ -14,7 +14,7 @@ export class PostsController {
   ) {}
 
   @Get()
-  async getFeed(@Headers('authorization') authHeader: string, @Query('type') type?: string, @Query('spaceId') spaceId?: string) {
+  async getFeed(@Headers('authorization') authHeader: string, @Query('type') type?: string, @Query('spaceId') spaceId?: string, @Query('page') page?: string) {
     let currentUserId: string | undefined;
     if (authHeader) {
       try {
@@ -25,7 +25,8 @@ export class PostsController {
         // invalid token, treat as anonymous
       }
     }
-    return this.postsService.getFeed(currentUserId, type, spaceId);
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    return this.postsService.getFeed(currentUserId, type, spaceId, pageNumber);
   }
 
   @Get('orbit')
