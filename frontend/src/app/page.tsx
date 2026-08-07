@@ -97,7 +97,7 @@ export default function Home() {
     fetchPosts(true);
   }, [activeTab]);
 
-  const handleHomeRefreshRef = useRef<() => void>();
+  const handleHomeRefreshRef = useRef<(() => void) | null>(null);
   handleHomeRefreshRef.current = async () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setIsHomeRefreshing(true);
