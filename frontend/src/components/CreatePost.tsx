@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
 import ReactMarkdown from 'react-markdown';
+import { useHaptic } from "@/hooks/useHaptic";
 
 export default function CreatePost({ onPostCreated, hideInline = false, spaceId }: { onPostCreated: () => void, hideInline?: boolean, spaceId?: string }) {
   const [content, setContent] = useState("");
@@ -34,6 +35,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
   const user = useUserStore((state) => state.user);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   
+  const { trigger, PRESETS } = useHaptic();
   const { composerState, openComposer, closeComposer } = useFeedStore();
   const { isOpen, mode, targetPost } = composerState;
   
@@ -200,6 +202,7 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
         throw new Error(errData?.message || "Failed to create post");
       }
 
+      trigger(PRESETS.success);
       setContent(""); // Clear input on success
       setMediaFiles([]);
       setUploadedMediaData([]);
@@ -213,7 +216,8 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
       closeComposer(); // Close modal
       onPostCreated(); // Refresh feed
     } catch (err: any) {
-      setError(err.message);
+      trigger(PRESETS.error);
+      setError(err.message || "Failed to create post. Please try again.");
     } finally {
       setLoading(false);
     }
