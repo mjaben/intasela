@@ -412,7 +412,10 @@ function OrbitPlayer({ post }: { post: any }) {
 
           {/* Bottom Info Overlay (Only for Vertical Videos) */}
           {!isWideVideo && (
-            <div className="absolute bottom-0 left-0 w-full p-4 pb-[calc(110px+var(--safe-area-inset-bottom))] md:pb-6 pt-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none z-20">
+            <div 
+              className="absolute bottom-0 left-0 w-full p-4 md:pb-6 pt-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none z-20"
+              style={{ paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 0px))' }}
+            >
             <div className="flex flex-col gap-2 max-w-[85%] md:max-w-full pointer-events-auto">
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => router.push(`/@${post.author.username}`)}>
@@ -444,9 +447,11 @@ function OrbitPlayer({ post }: { post: any }) {
                 )}
               </div>
               <div className="pointer-events-auto">
-                <p className={`text-white/90 text-[15px] leading-snug drop-shadow-md ${isCaptionExpanded ? '' : 'line-clamp-2'}`}>
-                  {post.content}
-                </p>
+                <div className={`overflow-y-auto no-scrollbar transition-all ${isCaptionExpanded ? 'max-h-[35vh]' : ''}`}>
+                  <p className={`text-white/90 text-[15px] leading-snug drop-shadow-md ${isCaptionExpanded ? '' : 'line-clamp-2'}`}>
+                    {post.content}
+                  </p>
+                </div>
                 {post.content && post.content.length > 70 && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); setIsCaptionExpanded(!isCaptionExpanded); }}
@@ -463,7 +468,10 @@ function OrbitPlayer({ post }: { post: any }) {
 
         {/* Action Buttons (Only for Vertical Videos) */}
         {!isWideVideo && (
-          <div className="absolute bottom-[calc(110px+var(--safe-area-inset-bottom))] md:bottom-4 right-2 md:-right-[60px] flex flex-col gap-3 items-center z-30">
+          <div 
+            className="absolute right-2 md:-right-[60px] flex flex-col gap-3 items-center z-30 md:!bottom-4"
+            style={{ bottom: 'calc(110px + env(safe-area-inset-bottom, 0px))' }}
+          >
           {/* Like */}
           <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
             <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center transition group-hover:scale-110">
