@@ -312,16 +312,18 @@ function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
   const adSlotId = slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '5819377787';
 
   return (
-    <div className={`w-full my-3 flex flex-col overflow-hidden border border-border/50 rounded-xl ${pushedRef.current && !isFilled ? 'min-h-0' : 'min-h-[90px]'}`}>
-      <span className={`text-muted-foreground/40 text-[9px] uppercase tracking-widest font-bold px-2 pt-1.5 text-left ${!isFilled ? 'hidden' : 'block'}`}>Ads</span>
-      <div ref={containerRef} className="w-full min-w-[250px] max-w-full overflow-hidden block">
-        <ins ref={insRef}
-             className="adsbygoogle"
-             style={{ display: "block", minWidth: "250px", width: "100%" }}
-             data-ad-client="ca-pub-1173851541726956"
-             data-ad-slot={adSlotId}
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
+    <div className={`w-full my-3 flex flex-col items-center overflow-hidden ${pushedRef.current && !isFilled ? 'min-h-0' : ''}`}>
+      <div className={`flex flex-col border border-border/50 rounded-xl overflow-hidden ${isFilled ? 'w-full' : 'min-h-[90px] w-full'}`}>
+        <span className={`text-muted-foreground/40 text-[9px] uppercase tracking-widest font-bold px-2 pt-1.5 text-left ${!isFilled ? 'hidden' : 'block'}`}>Ads</span>
+        <div ref={containerRef} className="w-full min-w-[250px] max-w-full overflow-hidden block">
+          <ins ref={insRef}
+               className="adsbygoogle"
+               style={{ display: "block", minWidth: "250px", width: "100%" }}
+               data-ad-client="ca-pub-1173851541726956"
+               data-ad-slot={adSlotId}
+               data-ad-format="auto"
+               data-full-width-responsive="true"></ins>
+        </div>
       </div>
     </div>
   );

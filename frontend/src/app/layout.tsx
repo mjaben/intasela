@@ -21,6 +21,7 @@ import PWAInstallBanner from "@/components/PWAInstallBanner";
 import PermissionsOnboarding from "@/components/PermissionsOnboarding";
 import SplashScreen from "@/components/SplashScreen";
 import VignetteSafeAreaFix from "@/components/VignetteSafeAreaFix";
+import HapticProvider from "@/components/HapticProvider";
 
 
 export const metadata: Metadata = {
@@ -103,6 +104,7 @@ export default function RootLayout({
         <div className="relative min-h-screen flex flex-col w-full">
           <SplashScreen />
           <VignetteSafeAreaFix />
+          <HapticProvider />
           <AppShell>
             {children}
           </AppShell>

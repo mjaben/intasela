@@ -30,7 +30,9 @@ export default function MobileFAB() {
   return (
     <button
       onClick={handleClick}
-      className="sm:hidden fixed bottom-[100px] right-4 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-50"
+      className="sm:hidden fixed right-5 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-transform active:scale-95 z-[900]"
+      style={{ bottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}
+      data-haptic="medium"
       aria-label="Create Sela"
     >
       <svg 

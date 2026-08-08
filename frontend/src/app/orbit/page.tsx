@@ -20,7 +20,7 @@ function OrbitContent() {
   const touchStartX = useRef<number | null>(null);
 
   const orbitAdIndices = useMemo(() => {
-    return getRandomizedAdIndices(posts.length, 3, 6, `orbit_${feedType}`);
+    return getRandomizedAdIndices(posts.length, 7, 12, `orbit_${feedType}`);
   }, [posts.length, feedType]);
 
 

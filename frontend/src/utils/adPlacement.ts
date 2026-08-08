@@ -5,8 +5,8 @@
  */
 export function getRandomizedAdIndices(
   totalItems: number,
-  minGap: number = 3,
-  maxGap: number = 6,
+  minGap: number = 8,
+  maxGap: number = 15,
   seedStr?: string
 ): Set<number> {
   const adIndices = new Set<number>();

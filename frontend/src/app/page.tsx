@@ -35,7 +35,7 @@ export default function Home() {
   const blockedUsers = useBlockMuteStore(s => s.blockedUsers);
   
   const filteredPosts = posts.filter(post => !blockedUsers.some(u => u.username === post.author.username));
-  const adIndices = useMemo(() => getRandomizedAdIndices(filteredPosts.length, 3, 6, `feed_${activeTab}`), [filteredPosts.length, activeTab]);
+  const adIndices = useMemo(() => getRandomizedAdIndices(filteredPosts.length, 8, 14, `feed_${activeTab}`), [filteredPosts.length, activeTab]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;

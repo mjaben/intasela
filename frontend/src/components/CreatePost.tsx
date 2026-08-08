@@ -658,7 +658,10 @@ export default function CreatePost({ onPostCreated, hideInline = false, spaceId 
           </div>
 
           {/* Bottom Floating Action Bar */}
-          <div className="absolute bottom-6 left-4 right-4 flex items-center gap-3 bg-[#1A2517]/80 backdrop-blur-3xl border border-white/10 p-3 rounded-[32px] shadow-2xl z-20">
+          <div
+            className="absolute bottom-0 left-0 right-0 flex items-center gap-3 bg-[#1A2517]/90 backdrop-blur-3xl border-t border-white/10 px-4 pt-3 z-20"
+            style={{ paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))' }}
+          >
             <button
               type="button"
               onClick={() => {

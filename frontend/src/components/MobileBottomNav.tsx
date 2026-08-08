@@ -84,6 +84,7 @@ export default function MobileBottomNav() {
                 <button
                   key={item.name}
                   onClick={handleHomeTap}
+                  data-haptic="light"
                   className={`flex items-center justify-center relative transition-all duration-300 ease-out h-[40px] ${
                     isActive ? "bg-black dark:bg-[#ACC8A2] rounded-full px-4 gap-2 shadow-md" : "w-[40px] rounded-full hover:bg-black/5 dark:hover:bg-white/10"
                   }`}
@@ -113,6 +114,7 @@ export default function MobileBottomNav() {
               <Link
                 key={item.name}
                 href={item.href}
+                data-haptic="light"
                 className={`flex items-center justify-center relative transition-all duration-300 ease-out h-[40px] ${
                   isActive ? "bg-black dark:bg-[#ACC8A2] rounded-full px-4 gap-2 shadow-md" : "w-[40px] rounded-full hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
@@ -143,6 +145,7 @@ export default function MobileBottomNav() {
         {isAuthenticated && (
           <Link
             href="/activity"
+            data-haptic="light"
             className="w-[54px] h-[54px] shrink-0 bg-white/95 dark:bg-[#1A2517]/95 backdrop-blur-2xl border border-black/5 dark:border-[#ACC8A2]/20 shadow-[0_8px_24px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] rounded-full flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95"
           >
             <div className="w-[20px] h-[20px] relative flex items-center justify-center">

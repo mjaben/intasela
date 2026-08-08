@@ -49,7 +49,7 @@ export default function PostDetail() {
   }, [postId]);
 
   const replyAdIndices = useMemo(() => {
-    return getRandomizedAdIndices(post?.replies?.length || 0, 3, 5, `reply_${postId}`);
+    return getRandomizedAdIndices(post?.replies?.length || 0, 5, 9, `reply_${postId}`);
   }, [post?.replies?.length, postId]);
 
   if (loading) {
