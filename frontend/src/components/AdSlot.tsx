@@ -110,8 +110,9 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
 
   if (loading) {
     return (
-      <div className={`w-full bg-muted/20 animate-pulse rounded-lg my-4 flex items-center justify-center ${format === "vertical" ? "h-[600px]" : "h-[90px]"}`}>
-        <span className="text-muted-foreground/50 text-xs">Loading Ad...</span>
+      <div className={`w-full bg-card/40 border border-border/40 animate-pulse rounded-2xl my-3 flex items-center justify-between px-4 ${format === "vertical" ? "h-[600px]" : "h-[80px]"}`}>
+        <span className="text-[10px] text-muted-foreground/60 bg-muted/40 font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/30">Ads</span>
+        <span className="text-muted-foreground/40 text-xs font-medium">Loading...</span>
       </div>
     );
   }
@@ -143,11 +144,14 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
           )}
           
           <div className="absolute bottom-0 left-0 w-full p-6 text-white">
-            <div className="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 backdrop-blur-md hover:bg-black/70 transition-colors cursor-pointer" title="Ad options">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-white/80 bg-black/60 font-bold uppercase tracking-wider px-1.5 py-0.5 rounded backdrop-blur-sm border border-white/20">Ads</span>
+              <div className="bg-black/50 text-white rounded-full p-1.5 backdrop-blur-md hover:bg-black/70 transition-colors cursor-pointer" title="Ad options">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+              </div>
             </div>
             
-            {creative.headline && <h3 className="font-bold text-3xl mb-1 text-white leading-tight">{creative.headline}</h3>}
+            {creative.headline && <h3 className="font-bold text-2xl sm:text-3xl mb-1 text-white leading-tight">{creative.headline}</h3>}
             {creative.description && <p className="text-white/90 text-sm mb-3 max-w-[80%]">{creative.description}</p>}
             
             <div className="flex items-center gap-2 text-[13px] font-bold text-white/90">
@@ -161,15 +165,24 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
       );
     }
 
+    const isReplyFormat = format === "reply";
+    const isVertical = format === "vertical";
+
     return (
       <div 
         ref={containerRef}
         onClick={handleAdClick}
-        className={`w-full bg-card border border-border flex flex-col rounded-xl my-4 overflow-hidden cursor-pointer hover:border-primary/50 transition-colors group ${format === "vertical" ? "h-auto min-h-[600px]" : "h-auto min-h-[90px] sm:flex-row"}`}
+        className={`w-full bg-card/70 border border-border flex flex-col rounded-2xl my-3 overflow-hidden cursor-pointer hover:border-primary/40 transition-all group shadow-sm ${
+          isVertical 
+            ? "h-auto min-h-[500px]" 
+            : isReplyFormat 
+            ? "p-3 sm:flex-row gap-3" 
+            : "p-4 sm:flex-row gap-4"
+        }`}
       >
         {/* Creative Image/Video */}
         {creative.mediaUrl && (
-          <div className={`${format === "vertical" ? "w-full h-[250px]" : "w-full sm:w-[150px] h-[150px] sm:h-auto"} bg-muted shrink-0 relative overflow-hidden`}>
+          <div className={`${isVertical ? "w-full h-[220px]" : isReplyFormat ? "w-full sm:w-[120px] h-[100px] sm:h-auto" : "w-full sm:w-[140px] h-[120px] sm:h-auto"} rounded-xl bg-muted shrink-0 relative overflow-hidden`}>
             {creative.mediaType === 'VIDEO' ? (
               <video src={creative.mediaUrl} autoPlay muted loop className="w-full h-full object-cover" />
             ) : (
@@ -179,13 +192,19 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
         )}
         
         {/* Ad Content */}
-        <div className="p-4 flex flex-col flex-1 justify-center relative">
-          <span className="absolute top-2 right-2 text-[10px] uppercase font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Promoted</span>
-          {creative.headline && <h4 className="font-bold text-[15px] mb-1 line-clamp-2 pr-12">{creative.headline}</h4>}
-          {creative.description && <p className="text-muted-foreground text-[13px] line-clamp-2 mb-3">{creative.description}</p>}
+        <div className="flex flex-col flex-1 justify-between relative pt-1">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="text-[10px] text-muted-foreground/80 bg-muted/40 font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/40">Ads</span>
+            {creative.advertiserName && (
+              <span className="text-[11px] text-muted-foreground/70 font-medium truncate">by {creative.advertiserName}</span>
+            )}
+          </div>
+
+          {creative.headline && <h4 className="font-bold text-[14px] text-foreground mb-1 line-clamp-2 leading-snug">{creative.headline}</h4>}
+          {creative.description && <p className="text-muted-foreground text-[12px] line-clamp-2 mb-2 leading-relaxed">{creative.description}</p>}
           
           {creative.ctaText && creative.ctaText !== "None" && (
-            <div className="mt-auto self-start bg-primary/10 text-primary font-bold text-xs px-3 py-1.5 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+            <div className="mt-2 self-start bg-primary/15 text-primary font-bold text-xs px-3 py-1 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
               {creative.ctaText}
             </div>
           )}
@@ -199,8 +218,14 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
   
   if (process.env.NODE_ENV === 'development') {
     return (
-      <div className={`w-full my-4 flex flex-col items-center justify-center bg-muted/30 border border-dashed border-muted-foreground/30 min-h-[50px] ${isVertical ? 'h-[600px]' : 'h-[90px]'}`}>
-        <span className="text-muted-foreground/50 text-[10px] uppercase tracking-widest font-bold">Google AdSense Placeholder</span>
+      <div className={`w-full my-3 p-4 bg-card/60 border border-border rounded-2xl flex flex-col justify-between ${isVertical ? 'h-[500px]' : 'min-h-[80px]'}`}>
+        <div className="flex items-center justify-between w-full">
+          <span className="text-[10px] text-muted-foreground/70 bg-muted/40 font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/40">Ads</span>
+          <span className="text-[11px] text-muted-foreground/50 font-medium">Google AdSense Placeholder</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center my-2">
+          <span className="text-muted-foreground/40 text-xs font-semibold">Promoted Content</span>
+        </div>
       </div>
     );
   }

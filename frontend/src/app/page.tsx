@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import PostCard from "@/components/PostCard";
 import PostSkeleton from "@/components/PostSkeleton";
 import ErrorState from "@/components/ErrorState";
@@ -11,6 +11,8 @@ import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/PullToRefresh";
 import { Loader2 } from "lucide-react";
+import { getRandomizedAdIndices } from "@/utils/adPlacement";
+
 
 export default function Home() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -31,6 +33,8 @@ export default function Home() {
   const blockedUsers = useBlockMuteStore(s => s.blockedUsers);
   
   const filteredPosts = posts.filter(post => !blockedUsers.some(u => u.username === post.author.username));
+  const adIndices = useMemo(() => getRandomizedAdIndices(filteredPosts.length, 3, 6, `feed_${activeTab}`), [filteredPosts.length, activeTab]);
+
 
   useEffect(() => {
     postsRef.current = posts;
@@ -304,10 +308,10 @@ createdAt={post.createdAt}
                 onDelete={(id) => setPosts((prev) => prev.filter(p => p.id !== id))}
               />
               
-              {/* Insert Ad every 3 posts */}
-              {(index + 1) % 3 === 0 && (
-                <div className="px-6 py-2">
-                  <AdSlot format="horizontal" slotId="feed" />
+              {/* Randomized Ad Placement */}
+              {adIndices.has(index) && (
+                <div className="px-4 sm:px-6 py-1">
+                  <AdSlot format="horizontal" slotId={`feed_${index}`} />
                 </div>
               )}
             </div>

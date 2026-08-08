@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PostCard from "@/components/PostCard";
 import ThreadedReply from "@/components/ThreadedReply";
 import CreatePost from "@/components/CreatePost";
+import AdSlot from "@/components/AdSlot";
 import { useUserStore } from "@/store/useUserStore";
 import { useFeedStore } from "@/store/useFeedStore";
+import { getRandomizedAdIndices } from "@/utils/adPlacement";
+
 
 export default function PostDetail() {
   const params = useParams();
@@ -45,7 +48,12 @@ export default function PostDetail() {
     if (postId) fetchPost();
   }, [postId]);
 
+  const replyAdIndices = useMemo(() => {
+    return getRandomizedAdIndices(post?.replies?.length || 0, 3, 5, `reply_${postId}`);
+  }, [post?.replies?.length, postId]);
+
   if (loading) {
+
     return <div className="p-8 text-center text-gray-400">Loading sela...</div>;
   }
 
@@ -131,12 +139,18 @@ createdAt={post.createdAt}
       {post.replies && post.replies.length > 0 && (
         <div className="border-t border-border">
           {post.replies.map((reply: any, index: number) => (
-            <ThreadedReply 
-              key={reply.id} 
-              reply={reply} 
-              isLastInList={index === post.replies.length - 1} 
-              onReplyDeleted={() => fetchPost()}
-            />
+            <div key={reply.id}>
+              <ThreadedReply 
+                reply={reply} 
+                isLastInList={index === post.replies.length - 1} 
+                onReplyDeleted={() => fetchPost()}
+              />
+              {replyAdIndices.has(index) && (
+                <div className="px-4 py-2 border-b border-border/40 bg-accent/5">
+                  <AdSlot format="reply" slotId={`reply_${index}`} />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useBlockMuteStore } from "@/store/useBlockMuteStore";
 import { useToastStore } from "@/store/useToastStore";
+import AdSlot from "@/components/AdSlot";
+import { getRandomizedAdIndices } from "@/utils/adPlacement";
 
 function OrbitContent() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -16,6 +18,11 @@ function OrbitContent() {
   const videoId = searchParams.get('videoId');
 
   const touchStartX = useRef<number | null>(null);
+
+  const orbitAdIndices = useMemo(() => {
+    return getRandomizedAdIndices(posts.length, 3, 6, `orbit_${feedType}`);
+  }, [posts.length, feedType]);
+
 
   useEffect(() => {
     const fetchOrbitPosts = async () => {
@@ -106,8 +113,17 @@ function OrbitContent() {
         ) : posts.length === 0 ? (
           <div className="flex items-center justify-center h-full text-white">No videos yet.</div>
         ) : (
-          posts.map((post) => (
-            <OrbitPlayer key={post.id} post={post} />
+          posts.map((post, index) => (
+            <div key={post.id} className="contents">
+              <OrbitPlayer post={post} />
+              {orbitAdIndices.has(index) && (
+                <div className="w-full h-[calc(100dvh-60px)] md:h-[100vh] md:py-6 snap-start snap-always flex flex-col items-center justify-center p-4 relative bg-[#0f150e]">
+                  <div className="w-full max-w-[500px] h-full flex flex-col items-center justify-center">
+                    <AdSlot format="vertical" slotId={`orbit_${index}`} />
+                  </div>
+                </div>
+              )}
+            </div>
           ))
         )}
       </div>
