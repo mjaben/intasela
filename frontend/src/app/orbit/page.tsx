@@ -117,9 +117,13 @@ function OrbitContent() {
             <div key={post.id} className="contents">
               <OrbitPlayer post={post} />
               {orbitAdIndices.has(index) && (
-                <div className="w-full h-[calc(100dvh-60px)] md:h-[100vh] md:py-6 snap-start snap-always flex flex-col items-center justify-center p-4 relative bg-[#0f150e]">
-                  <div className="w-full max-w-[500px] h-full flex flex-col items-center justify-center">
-                    <AdSlot format="vertical" slotId={`orbit_${index}`} />
+                <div className="w-full h-[calc(100dvh-60px)] md:h-[100vh] md:py-6 snap-start snap-always flex items-center justify-center bg-transparent relative">
+                  <div className="relative flex flex-col w-full h-full md:w-auto md:min-w-[400px] md:max-w-full md:rounded-[20px]">
+                    <div className="w-full h-full relative bg-[#0a0a0a] md:rounded-[20px] overflow-hidden flex flex-col items-center justify-center shadow-2xl shrink-0 p-4">
+                      <div className="w-full max-w-[500px]">
+                        <AdSlot format="vertical" slotId={`orbit_${index}`} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
