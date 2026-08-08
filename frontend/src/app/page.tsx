@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/PullToRefresh";
 import { Loader2 } from "lucide-react";
 import { getRandomizedAdIndices } from "@/utils/adPlacement";
+import { hapticTap } from "@/utils/haptic";
 
 
 export default function Home() {
@@ -28,12 +29,30 @@ export default function Home() {
   
   const postsRef = useRef<any[]>([]);
   const loaderRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
   
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const blockedUsers = useBlockMuteStore(s => s.blockedUsers);
   
   const filteredPosts = posts.filter(post => !blockedUsers.some(u => u.username === post.author.username));
   const adIndices = useMemo(() => getRandomizedAdIndices(filteredPosts.length, 3, 6, `feed_${activeTab}`), [filteredPosts.length, activeTab]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (diff > 50 && activeTab === "For you") {
+      hapticTap();
+      setActiveTab("Following");
+    } else if (diff < -50 && activeTab === "Following") {
+      hapticTap();
+      setActiveTab("For you");
+    }
+    touchStartX.current = null;
+  };
 
 
   useEffect(() => {
@@ -177,7 +196,11 @@ export default function Home() {
 
   return (
     <PullToRefresh onRefresh={async () => { await fetchPosts(true); }}>
-      <div className="w-full max-w-[650px] mx-auto min-h-screen relative">
+      <div
+        className="w-full max-w-[650px] mx-auto min-h-screen relative"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <header className="sticky top-[calc(60px+var(--safe-area-inset-top))] sm:top-0 bg-[#0f150e]/90 backdrop-blur-md border-b border-border z-30 flex">
         <button 
           onClick={() => setActiveTab("For you")}

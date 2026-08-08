@@ -218,13 +218,13 @@ export default function AdSlot({ format = "horizontal", slotId }: AdSlotProps) {
   
   if (process.env.NODE_ENV === 'development') {
     return (
-      <div className={`w-full my-3 p-4 bg-card/60 border border-border rounded-2xl flex flex-col justify-between ${isVertical ? 'h-[500px]' : 'min-h-[80px]'}`}>
-        <div className="flex items-center justify-between w-full">
-          <span className="text-[10px] text-muted-foreground/70 bg-muted/40 font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/40">Ads</span>
-          <span className="text-[11px] text-muted-foreground/50 font-medium">Google AdSense Placeholder</span>
+      <div className={`w-full my-3 bg-card/60 border border-border/50 rounded-xl flex flex-col justify-between ${isVertical ? 'h-[500px]' : 'min-h-[80px]'}`}>
+        <div className="flex items-center justify-between w-full px-3 pt-2">
+          <span className="text-[9px] text-muted-foreground/50 font-bold uppercase tracking-widest">Ads</span>
+          <span className="text-[10px] text-muted-foreground/40 font-medium">Google AdSense Placeholder</span>
         </div>
         <div className="flex-1 flex items-center justify-center my-2">
-          <span className="text-muted-foreground/40 text-xs font-semibold">Promoted Content</span>
+          <span className="text-muted-foreground/30 text-xs font-semibold">Promoted Content</span>
         </div>
       </div>
     );
@@ -312,8 +312,8 @@ function AdSenseNative({ slotId, format }: { slotId: string, format: string }) {
   const adSlotId = slotId === 'feed' ? '5819377787' : slotId === 'sidebar' ? '8871150173' : slotId === 'reply' ? '9641689755' : '5819377787';
 
   return (
-    <div className={`w-full my-4 flex flex-col items-center justify-center overflow-hidden ${pushedRef.current && !isFilled ? 'min-h-0' : 'min-h-[90px]'}`}>
-      <span className={`text-muted-foreground/40 text-[10px] uppercase tracking-widest font-bold mb-1 w-full text-center ${!isFilled ? 'hidden' : 'block'}`}>Advertisement</span>
+    <div className={`w-full my-3 flex flex-col overflow-hidden border border-border/50 rounded-xl ${pushedRef.current && !isFilled ? 'min-h-0' : 'min-h-[90px]'}`}>
+      <span className={`text-muted-foreground/40 text-[9px] uppercase tracking-widest font-bold px-2 pt-1.5 text-left ${!isFilled ? 'hidden' : 'block'}`}>Ads</span>
       <div ref={containerRef} className="w-full min-w-[250px] max-w-full overflow-hidden block">
         <ins ref={insRef}
              className="adsbygoogle"

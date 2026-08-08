@@ -8,6 +8,7 @@ import { useFollowStore } from "@/store/useFollowStore";
 import { motion } from "framer-motion";
 import PostSkeleton from "@/components/PostSkeleton";
 import ErrorState from "@/components/ErrorState";
+import { hapticTap } from "@/utils/haptic";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -180,9 +181,7 @@ export default function ProfilePage() {
     }
 
     if (newTab !== activeTab) {
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate(50);
-      }
+      hapticTap();
       setActiveTab(newTab);
     }
     touchStartX.current = null;
