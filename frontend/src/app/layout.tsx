@@ -20,6 +20,8 @@ import NextTopLoader from 'nextjs-toploader';
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import PermissionsOnboarding from "@/components/PermissionsOnboarding";
 import SplashScreen from "@/components/SplashScreen";
+import VignetteSafeAreaFix from "@/components/VignetteSafeAreaFix";
+
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://naijanews360.com.ng"),
@@ -100,6 +102,7 @@ export default function RootLayout({
         <NextTopLoader color="#ACC8A2" showSpinner={false} shadow="0 0 10px #ACC8A2,0 0 5px #ACC8A2" />
         <div className="relative min-h-screen flex flex-col w-full">
           <SplashScreen />
+          <VignetteSafeAreaFix />
           <AppShell>
             {children}
           </AppShell>

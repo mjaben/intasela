@@ -80,3 +80,39 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ==========================================
+   PWA & Mobile Safe Area Inset Fixes for Vignette Ads
+   ========================================== */
+
+/* Google AdSense Vignette Containers & Auto Ads Safe Area Insets */
+#google_vignette,
+div[id*="google_vignette"],
+ins.adsbygoogle-vignette,
+.google-auto-placed,
+div[id^="google_ads_iframe"],
+div[id^="aswift_"] {
+  padding-top: max(env(safe-area-inset-top, 0px), 24px) !important;
+  box-sizing: border-box !important;
+}
+
+/* Push down internal containers and vignette frame below status bar */
+#google_vignette > div,
+div[id*="google_vignette"] > div,
+.google-auto-placed > div,
+#google_vignette iframe,
+div[id*="google_vignette"] iframe {
+  margin-top: env(safe-area-inset-top, 0px) !important;
+}
+
+/* Target AdSense vignette dismiss / close button header element */
+#dismiss-button,
+div#dismiss-button,
+div[aria-label="Close ad"],
+button[aria-label="Close ad"],
+.adsbygoogle-vignette-close-button {
+  top: max(calc(env(safe-area-inset-top, 0px) + 12px), 24px) !important;
+  right: 16px !important;
+  z-index: 2147483647 !important;
+}
+

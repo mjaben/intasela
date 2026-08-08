@@ -124,7 +124,8 @@ export default function MediaViewerModal() {
       {/* Left Area - Media */}
       <div className="flex-1 relative flex items-center justify-center h-full">
         {/* Top Bar */}
-        <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center">
+        <div className="absolute top-[calc(1rem+var(--safe-area-inset-top))] left-4 right-4 z-20 flex justify-between items-center">
+
           <button 
             onClick={closeViewer}
             className="p-2 rounded-full bg-black/50 text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
